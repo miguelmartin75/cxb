@@ -5,6 +5,17 @@
 #include "cxb.h"
 
 
-TEST_CASE( "foo", "[Foo]" ) {
-    REQUIRE(foo() == 42);
+TEST_CASE( "push_back", "[Seq]" ) {
+    Seq<int> xs;
+    REQUIRE(xs.len == 0);
+    REQUIRE(xs.capacity() == SEQ_MIN_CAP);
+
+    for(int i = 0; i < 256; ++i) {
+        xs.push_back(i);
+    }
+
+    REQUIRE(xs.len == 256);
+    for(int i = 0; i < 256; ++i) {
+        REQUIRE(xs[i] == i);
+    }
 }
