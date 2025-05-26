@@ -8,7 +8,7 @@
 TEST_CASE( "push_back", "[Seq]" ) {
     Seq<int> xs;
     REQUIRE(xs.len == 0);
-    REQUIRE(xs.capacity() == SEQ_MIN_CAP);
+    REQUIRE(xs.capacity() == 32);
 
     for(int i = 0; i < 256; ++i) {
         xs.push_back(i);
