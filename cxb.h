@@ -168,10 +168,7 @@ struct Allocator {
     template <class T, class ...Args>
     inline T* realloc(T* head, size_t old_count, size_t count = 1, Args&& ...args) {
         T* result = (T*)this->alloc_impl(this, false, (void*)head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
-        // TODO: std::forward?
         for(size_t i = old_count; i < count; ++i) {
-            // new (result+i) T{(Args &&)args...};
-            // new (result+i) T{std::forward<Args...>(args...)};
             new (result+i) T{cxb::forward<Args>(args)...};
         }
         return result;
@@ -189,10 +186,7 @@ struct Allocator {
         );
         T* data = (T*)(new_header + sizeof(H));
 
-        // TODO: std::forward?
         for(size_t i = old_count; i < count; ++i) {
-            // new (data+i) T{(Args &&)args...};
-            // new (data+i) T{std::forward<Args...>(args...)};
             new (data+i) T{cxb::forward<Args>(args)...};
         }
         return AllocationWithHeader<T, H>{data, (H*)new_header};
@@ -261,7 +255,7 @@ struct Seq {
     }
 
 
-    // ** SECTION: allocating methods
+    // ** SECTION: allocator-related methods
     inline Seq<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
@@ -308,9 +302,6 @@ struct Seq {
             reserve(new_len);
         }
         for(int i = len; i < new_len; ++i) {
-            // TODO: std::forward?
-            // new (data+i) T{(Args &&)args...};
-            // new (data+i) T{std::forward<Args...>(args)...)};
             new (data+i) T{cxb::forward<Args>(args)...};
         }
         len = new_len;
@@ -362,7 +353,7 @@ struct Str8 {
     inline const char& operator[](size_t idx) const { return data[idx]; }
 };
 
-// * SECTION: math
+/* SECTION: math types */
 // TODO
 struct Vec2f {
     f32 x, y;
@@ -428,7 +419,8 @@ static const Mat33f identity3x3 = {
 };
 
 
-// * SECTION: variants
+/* SECTION: variant types */
+
 // TODO: eval if wanted
 template <class T>
 struct Optional {
