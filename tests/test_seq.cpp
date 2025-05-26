@@ -1,7 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 
-#define CXB_IMPL
 #include "cxb.h"
 
 
@@ -18,4 +17,14 @@ TEST_CASE( "push_back", "[Seq]" ) {
     for(int i = 0; i < 256; ++i) {
         REQUIRE(xs[i] == i);
     }
+}
+
+TEST_CASE( "copy", "[Seq]" ) {
+    Seq<int> xs;
+    xs.resize(64, 2);
+    for(int i = 0; i < xs.len; ++i) {
+        REQUIRE(xs[i] == 2);
+    }
+
+    Seq<int> ys = xs;
 }

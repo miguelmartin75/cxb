@@ -1,17 +1,44 @@
+/*
+# cxb: Base library for CX (Orthodox-C++)
+
+This library is my own style (Miguel's) of writing C++. This does include RAII
+by default, but it can be disabled. Please see below in the "configuration"
+section.
+
+Inspiration:
+- Nim
+- Zig
+- Python
+
+# Containers
+* Seq<T>
+
+*/
+
 #pragma once
 
-// * SECTION: includes
+/* SECTION: configuration */
+// #define CXB_DISABLE_RAII
+// #define CXB_ALLOC_TEMPLATE
+#define CXB_MALLOCATOR_MIN_CAP 32
+#define CXB_MALLOCATOR_GROW_FN(x) (x) + (x)/2  /* 3/2 without overflow */
+
+#ifdef CXB_ALLOC_TEMPLATE
+#error "CXB_ALLOC_TEMPLATE unsupported"
+#endif
+
+/* SECTION: includes */
 #include <string.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h> // TODO: removeme
 #include <stdio.h>
+#include <type_traits> // 27ms
+/* NOTE: #include <utility>  // 98ms */
 
-// * SECTION: constants
-// TODO: constexpr?
-#define MALLOCATOR_MIN_CAP 32
 
-// * SECTION: macros
+/* SECTION: macros */
+// NOTE some macros are copied/modified from Blend2D, see: https://github.com/blend2d/blend2d/blob/bae3b6c600186a69a9f212243ed9700dc93a314a/src/blend2d/api.h#L563
 #define CXB_EXPORT
 #define CXB_INTERNAL static
 #define CXB_FORCE_INLINE __attribute__((always_inline))
@@ -25,6 +52,34 @@
 //#define INFO(msg)
 //#define WARN(msg)
 //#define FATAL(msg)
+
+#if defined(__GNUC__)
+  #define CXB_INLINE inline __attribute__((__always_inline__))
+#elif defined(_MSC_VER)
+  #define CXB_INLINE __forceinline
+#else
+  #define CXB_INLINE inline
+#endif
+
+#if defined(__clang__)
+  #define CXB_INLINE_NODEBUG inline __attribute__((__always_inline__, __nodebug__))
+#elif defined(__GNUC__)
+  #define CXB_INLINE_NODEBUG inline __attribute__((__always_inline__, __artificial__))
+#else
+  #define CXB_INLINE_NODEBUG CXB_INLINE
+#endif
+
+
+#define CXB_COMP constexpr CXB_INLINE_NODEBUG
+#define CXB_COMP_INLINE constexpr CXB_INLINE
+
+#if defined(__clang_major__) && __clang_major__ >= 6
+  #define CXB_PURE CXB_COMP __attribute__((__pure__))
+#elif defined(__GNUC__) && __GNUC__ >= 6
+  #define CXB_PURE CXB_COMP __attribute__((__pure__))
+#else
+  #define CXB_PURE CXB_COMP
+#endif
 
 // * SECTION: primitives
 typedef uint8_t byte8;
@@ -43,7 +98,26 @@ typedef int32_t rune;
 typedef __uint128_t u128;
 typedef __int128_t i128;
 
-CXB_EXPORT int foo();
+namespace cxb {
+
+template<typename T>
+CXB_PURE typename std::remove_reference<T>::type&& move(T&& v) noexcept { return static_cast<typename std::remove_reference<T>::type&&>(v); }
+
+template<typename T>
+CXB_PURE T&& forward(typename std::remove_reference<T>::type& v) noexcept { return static_cast<T&&>(v); }
+
+template<typename T>
+CXB_PURE T&& forward(typename std::remove_reference<T>::type&& v) noexcept { return static_cast<T&&>(v); }
+
+template<typename T>
+CXB_COMP_INLINE void swap(T& t1, T& t2) noexcept {
+  T temp(move(t1));
+  t1 = move(t2);
+  t2 = move(temp);
+}
+
+}
+
 
 template <class T> inline T min(const T& a, const T& b) { return a < b ? a : b; }
 template <class T> inline T max(const T& a, const T& b) { return a > b ? a : b; }
@@ -88,7 +162,9 @@ struct Allocator {
         T* result = (T*)this->alloc_impl(this, false, (void*)head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
         // TODO: std::forward?
         for(size_t i = old_count; i < count; ++i) {
-            new (result+i) T{(Args &&)args...};
+            // new (result+i) T{(Args &&)args...};
+            // new (result+i) T{std::forward<Args...>(args...)};
+            new (result+i) T{cxb::forward<Args>(args)...};
         }
         return result;
     }
@@ -107,7 +183,9 @@ struct Allocator {
 
         // TODO: std::forward?
         for(size_t i = old_count; i < count; ++i) {
-            new (data+i) T{(Args &&)args...};
+            // new (data+i) T{(Args &&)args...};
+            // new (data+i) T{std::forward<Args...>(args...)};
+            new (data+i) T{cxb::forward<Args>(args)...};
         }
         return AllocationWithHeader<T, H>{data, (H*)new_header};
     }
@@ -133,72 +211,48 @@ struct Allocator {
     }
 };
 
-size_t mallocator_growth_sug_impl(const Allocator* a, size_t count);
-void* mallocator_alloc_impl(Allocator* a, bool fill_zeros, void* head, size_t num_bytes, size_t alignment, size_t old_n_bytes);
-void malloctor_free_impl(Allocator* a, void* head);
 
 struct Mallocator: Allocator {
-    Mallocator() : Allocator{mallocator_growth_sug_impl, mallocator_alloc_impl, malloctor_free_impl} {}
+    Mallocator();
 };
-static thread_local Mallocator mallocator;
-
-inline size_t mallocator_growth_sug_impl(const Allocator* a, size_t count) {
-    // 3/2, with less chance to overflow
-    return max(size_t{MALLOCATOR_MIN_CAP}, count + count / 2);
-}
-
-inline void* mallocator_alloc_impl(Allocator* a, bool fill_zeros, void* head, size_t num_bytes, size_t alignment, size_t old_n_bytes) {
-    // TODO: alignment
-    if(old_n_bytes > 0) {
-        REQUIRES(head != nullptr);
-        REQUIRES(num_bytes > old_n_bytes);
-
-        void* data = realloc(head, num_bytes);
-        if(fill_zeros) {
-            if(!data) {
-                data = calloc(num_bytes, 1);
-                memcpy(data, head, old_n_bytes);
-            } else {
-                memset((char*)(data) + old_n_bytes, 0, num_bytes - old_n_bytes);
-            }
-
-        } else {
-            if(!data) {
-                data = malloc(num_bytes);
-                memcpy(data, head, old_n_bytes);
-            }
-        }
-
-        return data;
-    } else {
-        REQUIRES(head == nullptr);
-
-        if(fill_zeros) {
-            return calloc(num_bytes, 1);
-        }
-        return malloc(num_bytes);
-    }
-}
-
-inline void malloctor_free_impl(Allocator* a, void* head) {
-    free(head);
-}
 
 struct Arena: Allocator {
-    Arena() : Allocator{} {}
+    Arena();
 };
 
-// * SECTION: containers
-template <class T>
+extern thread_local Mallocator default_alloc;
+
+
+/* SECTION: containers */
+template <class T>  // NOTE: could use allocator as template param
 struct Seq {
     Allocator* allocator;
     T* data;
     size_t len;
 
-    Seq(Allocator* allocator = &mallocator) : allocator{allocator}, data{nullptr}, len{0} { reserve(0); }
-    Seq(size_t n, Allocator* allocator = &mallocator) : allocator{allocator}, data{nullptr}, len{0} { reserve(n); }
-    ~Seq() { destroy(); }
+    Seq(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0} { reserve(0); }
+#ifndef CXB_DISABLE_RAII
+    CXB_FORCE_INLINE ~Seq() { destroy(); }
+#endif
 
+    // creates a slice
+    Seq(const Seq<T>& o) : allocator{nullptr}, data{o.data}, len{o.len} { }
+
+    // ** SECTION: slice compatible methods
+    inline size_t size() const { return len; }
+    inline bool empty() const { return len == 0; }
+    inline T& operator[](size_t idx) { return data[idx]; }
+    inline const T& operator[](size_t idx) const { return data[idx]; }
+    inline T& back() { return data[len-1]; }
+    inline Seq<T> slice(size_t i, size_t j = 0) {
+        Seq<T> c = *this;
+        c.data = c.data + i;
+        c.len = j == 0 ? c.len : j - i + 1;
+        return c;
+    }
+
+
+    // ** SECTION: allocating methods
     inline Seq<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
@@ -240,12 +294,14 @@ struct Seq {
 
     template <class... Args>
     inline void resize(size_t new_len, Args&&... args) { 
-        if(!data || capacity() < new_len) {
+        if(capacity() < new_len) {
             reserve(new_len);
         }
         for(int i = len; i < new_len; ++i) {
             // TODO: std::forward?
-            new (data+i) T{(Args &&)args...};
+            // new (data+i) T{(Args &&)args...};
+            // new (data+i) T{std::forward<Args...>(args)...)};
+            new (data+i) T{cxb::forward<Args>(args)...};
         }
         len = new_len;
     }
@@ -271,12 +327,6 @@ struct Seq {
         data[this->len++] = T{};
         return data[this->len - 1];
     }
-
-    inline size_t size() const { return len; }
-    inline bool empty() const { return len == 0; }
-    inline T& operator[](size_t idx) { return data[idx]; }
-    inline const T& operator[](size_t idx) const { return data[idx]; }
-    inline T& back() { return data[len-1]; }
 
     inline T pop_back() {
         T ret = data[len - 1];
