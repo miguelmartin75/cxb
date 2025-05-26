@@ -1,3 +1,4 @@
 build/**
 .cache
 prototype/**
+compile_commands.json
