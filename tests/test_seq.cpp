@@ -1,7 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 
-#include "cxb.h"
+#include <cxb.h>
+using namespace cxb;
 
 
 TEST_CASE( "push_back", "[Seq]" ) {
@@ -26,5 +27,10 @@ TEST_CASE( "copy", "[Seq]" ) {
         REQUIRE(xs[i] == 2);
     }
 
-    Seq<int> ys = xs;
+    Seq<int> view = xs;
+    REQUIRE(view.allocator == nullptr);
+
+    Seq<int> real_copy = xs.copy();
+    REQUIRE(real_copy.allocator == xs.allocator);
+    REQUIRE(real_copy.data != xs.data);
 }

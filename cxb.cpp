@@ -1,5 +1,7 @@
 #include "cxb.h"
 
+CXB_NS_BEGIN
+
 thread_local Mallocator default_alloc = {};
 
 // * SECTION: allocators
@@ -52,3 +54,5 @@ void malloctor_free_impl(Allocator* a, void* head) {
 
 // TODO
 Arena::Arena() {}
+
+CXB_NS_END

@@ -20,6 +20,7 @@ Inspiration:
 /* SECTION: configuration */
 // #define CXB_DISABLE_RAII
 // #define CXB_ALLOC_TEMPLATE
+// #define CXB_NO_NAMESPACE
 #define CXB_MALLOCATOR_MIN_CAP 32
 #define CXB_MALLOCATOR_GROW_FN(x) (x) + (x)/2  /* 3/2 without overflow */
 
@@ -42,6 +43,14 @@ Inspiration:
 #define CXB_EXPORT
 #define CXB_INTERNAL static
 #define CXB_FORCE_INLINE __attribute__((always_inline))
+
+#ifdef CXB_NO_NAMESPACE
+#define CXB_NS_BEGIN 
+#define CXB_NS_END
+#else
+#define CXB_NS_BEGIN namespace cxb {
+#define CXB_NS_END }
+#endif
 
 #define COUNTOF_LIT(a)    (size_t)(sizeof(a) / sizeof(*(a)))
 #define LENGTHOF_LIT(s)   (countof(s) - 1)
@@ -81,7 +90,9 @@ Inspiration:
   #define CXB_PURE CXB_COMP
 #endif
 
-// * SECTION: primitives
+/* * SECTION: primitives */
+CXB_NS_BEGIN
+
 typedef uint8_t byte8;
 typedef float f32;
 typedef double f64;
@@ -98,7 +109,14 @@ typedef int32_t rune;
 typedef __uint128_t u128;
 typedef __int128_t i128;
 
-namespace cxb {
+/* SECTION: primitive functions */
+template <class T> CXB_PURE T min(const T& a, const T& b) { return a < b ? a : b; }
+template <class T> CXB_PURE T max(const T& a, const T& b) { return a > b ? a : b; }
+template <class T> CXB_PURE T clamp(const T& x, const T& a, const T& b) { 
+    REQUIRES(a < b);
+    return max(min(b, x), a);
+}
+
 
 template<typename T>
 CXB_PURE typename std::remove_reference<T>::type&& move(T&& v) noexcept { return static_cast<typename std::remove_reference<T>::type&&>(v); }
@@ -114,16 +132,6 @@ CXB_COMP_INLINE void swap(T& t1, T& t2) noexcept {
   T temp(move(t1));
   t1 = move(t2);
   t2 = move(temp);
-}
-
-}
-
-
-template <class T> inline T min(const T& a, const T& b) { return a < b ? a : b; }
-template <class T> inline T max(const T& a, const T& b) { return a > b ? a : b; }
-template <class T> inline T clamp(const T& x, const T& a, const T& b) { 
-    REQUIRES(a < b);
-    return max(min(b, x), a);
 }
 
 // TODO: placement new?
@@ -231,6 +239,7 @@ struct Seq {
     size_t len;
 
     Seq(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0} { reserve(0); }
+    Seq(T* data, size_t n = 0, Allocator* allocator = &default_alloc) : allocator{allocator}, data{data}, len{n} { reserve(0); }
 #ifndef CXB_DISABLE_RAII
     CXB_FORCE_INLINE ~Seq() { destroy(); }
 #endif
@@ -256,8 +265,9 @@ struct Seq {
     inline Seq<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
+        Seq<T> result{nullptr, 0, to_allocator};
         // TODO
-        // to_allocator->alloc_impl(false, );
+        return result;
     }
 
     inline size_t* start_mem() { 
@@ -352,10 +362,6 @@ struct Str8 {
     inline const char& operator[](size_t idx) const { return data[idx]; }
 };
 
-#define s8_lit(s) (Str8{(char *)&s[0], lengthof(s)})
-#define s8_str(s) (Str8{(char *)&s[0], (size_t)s.size()})
-#define s8_cstr(s) (Str8{(char *)&s[0], (size_t)strlen(s)})
-
 // * SECTION: math
 // TODO
 struct Vec2f {
@@ -431,7 +437,12 @@ struct Optional {
     bool exists;
 };
 
+CXB_NS_END
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
 #endif
+
+#define s8_lit(s) (Str8{(char *)&s[0], lengthof(s)})
+#define s8_str(s) (Str8{(char *)&s[0], (size_t)s.size()})
+#define s8_cstr(s) (Str8{(char *)&s[0], (size_t)strlen(s)})
