@@ -10,7 +10,7 @@ TEST_CASE( "push_back", "[Seq]" ) {
     {
         Seq<int> xs;
         REQUIRE(xs.len == 0);
-        REQUIRE(xs.capacity() == 32);
+        REQUIRE(xs.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 256; ++i) {
             xs.push_back(i);
