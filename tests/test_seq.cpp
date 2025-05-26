@@ -6,18 +6,26 @@ using namespace cxb;
 
 
 TEST_CASE( "push_back", "[Seq]" ) {
-    Seq<int> xs;
-    REQUIRE(xs.len == 0);
-    REQUIRE(xs.capacity() == 32);
+    size_t allocated_bytes = 0;
+    {
+        Seq<int> xs;
+        REQUIRE(xs.len == 0);
+        REQUIRE(xs.capacity() == 32);
 
-    for(int i = 0; i < 256; ++i) {
-        xs.push_back(i);
-    }
+        for(int i = 0; i < 256; ++i) {
+            xs.push_back(i);
+        }
+        size_t active_bytes = default_alloc.n_active_bytes;
+        allocated_bytes = default_alloc.n_allocated_bytes;
+        REQUIRE(active_bytes == allocated_bytes);
 
-    REQUIRE(xs.len == 256);
-    for(int i = 0; i < 256; ++i) {
-        REQUIRE(xs[i] == i);
+        REQUIRE(xs.len == 256);
+        for(int i = 0; i < 256; ++i) {
+            REQUIRE(xs[i] == i);
+        }
     }
+    REQUIRE(default_alloc.n_active_bytes == 0);
+    REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
 }
 
 TEST_CASE( "copy", "[Seq]" ) {

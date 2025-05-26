@@ -42,7 +42,6 @@ Inspiration:
 // NOTE some macros are copied/modified from Blend2D, see: https://github.com/blend2d/blend2d/blob/bae3b6c600186a69a9f212243ed9700dc93a314a/src/blend2d/api.h#L563
 #define CXB_EXPORT
 #define CXB_INTERNAL static
-#define CXB_FORCE_INLINE __attribute__((always_inline))
 
 #ifdef CXB_NO_NAMESPACE
 #define CXB_NS_BEGIN 
@@ -79,15 +78,15 @@ Inspiration:
 #endif
 
 
-#define CXB_COMP constexpr CXB_INLINE_NODEBUG
-#define CXB_COMP_INLINE constexpr CXB_INLINE
+#define CXB_COMPTIME constexpr CXB_INLINE_NODEBUG
+#define CXB_COMPTIME_INLINE constexpr CXB_INLINE
 
 #if defined(__clang_major__) && __clang_major__ >= 6
-  #define CXB_PURE CXB_COMP __attribute__((__pure__))
+  #define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
 #elif defined(__GNUC__) && __GNUC__ >= 6
-  #define CXB_PURE CXB_COMP __attribute__((__pure__))
+  #define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
 #else
-  #define CXB_PURE CXB_COMP
+  #define CXB_PURE CXB_COMPTIME
 #endif
 
 /* * SECTION: primitives */
@@ -105,19 +104,22 @@ typedef uint64_t u64;
 typedef int64_t ll;
 typedef int32_t rune;
 
-// TODO: ifdef on clang/gcc
+#if defined(__GNUC__)
 typedef __uint128_t u128;
 typedef __int128_t i128;
+#else
+// TODO: support MSVC, etc.
+#endif
 
 /* SECTION: primitive functions */
-template <class T> CXB_PURE T min(const T& a, const T& b) { return a < b ? a : b; }
-template <class T> CXB_PURE T max(const T& a, const T& b) { return a > b ? a : b; }
-template <class T> CXB_PURE T clamp(const T& x, const T& a, const T& b) { 
+template <class T> CXB_PURE const T& min(const T& a, const T& b) { return a < b ? a : b; }
+template <class T> CXB_PURE const T& max(const T& a, const T& b) { return a > b ? a : b; }
+template <class T> CXB_PURE const T& clamp(const T& x, const T& a, const T& b) { 
     REQUIRES(a < b);
     return max(min(b, x), a);
 }
 
-
+// NOTE: move/forward/swap are copied from Blend2D
 template<typename T>
 CXB_PURE typename std::remove_reference<T>::type&& move(T&& v) noexcept { return static_cast<typename std::remove_reference<T>::type&&>(v); }
 
@@ -128,7 +130,7 @@ template<typename T>
 CXB_PURE T&& forward(typename std::remove_reference<T>::type&& v) noexcept { return static_cast<T&&>(v); }
 
 template<typename T>
-CXB_COMP_INLINE void swap(T& t1, T& t2) noexcept {
+CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
   T temp(move(t1));
   t1 = move(t2);
   t2 = move(temp);
@@ -139,8 +141,8 @@ CXB_COMP_INLINE void swap(T& t1, T& t2) noexcept {
 
 struct Allocator {
     size_t (*growth_sug_impl)(const Allocator* a, size_t count);
-    void* (*alloc_impl)(Allocator* a, bool fill_zeros, void* head, size_t num_bytes, size_t alignment, size_t old_n_bytes);
-    void (*free_impl)(Allocator* a, void* head);
+    void* (*alloc_impl)(Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
+    void (*free_impl)(Allocator* a, void* head, size_t n_bytes);
 
     template <class T, class H>
     struct AllocationWithHeader {
@@ -180,7 +182,7 @@ struct Allocator {
             this,                              // allocator
             false,                             // fill_zeros
             (void*)header,                     // header
-            sizeof(T) * count + sizeof(H),     // num_bytes
+            sizeof(T) * count + sizeof(H),     // n_bytes
             alignof(T) + sizeof(H),            // alignment
             sizeof(T) * old_count + sizeof(H)  // old bytes
         );
@@ -198,7 +200,7 @@ struct Allocator {
             this,                                               // allocator
             true,                                               // fill_zeros
             (void*)header,                                      // header
-            sizeof(T) * count + sizeof(H),                      // num_bytes
+            sizeof(T) * count + sizeof(H),                      // n_bytes
             alignof(T) + sizeof(H),                             // alignment
             sizeof(T) * old_count + sizeof(H) * (old_count > 0) // old bytes
         );
@@ -208,14 +210,22 @@ struct Allocator {
 
 
     template <class T>
-    inline void free(T* head) {
-        this->free_impl(this, (void*)head);
+    inline void free(T* head, size_t count) {
+        this->free_impl(this, (void*)head, sizeof(T) * count);
+    }
+
+    template <class H, class T>
+    inline void free_with_header(T* head, size_t count) {
+        this->free_impl(this, (char*)(head) - sizeof(H), sizeof(T) * count + sizeof(H));
     }
 };
 
 
 struct Mallocator: Allocator {
     Mallocator();
+    size_t n_active_bytes;
+    size_t n_allocated_bytes;
+    size_t n_freed_bytes;
 };
 
 struct Arena: Allocator {
@@ -235,7 +245,7 @@ struct Seq {
     Seq(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0} { reserve(0); }
     Seq(T* data, size_t n = 0, Allocator* allocator = &default_alloc) : allocator{allocator}, data{data}, len{n} { reserve(0); }
 #ifndef CXB_DISABLE_RAII
-    CXB_FORCE_INLINE ~Seq() { destroy(); }
+    CXB_INLINE ~Seq() { destroy(); }
 #endif
 
     // creates a slice
@@ -278,7 +288,7 @@ struct Seq {
 
     inline void destroy() {
         if(data && allocator) { 
-            allocator->free(start_mem());
+            allocator->free_with_header<size_t>(data, capacity());
             data = nullptr; 
         }
     }
