@@ -21,7 +21,7 @@ Inspiration:
 // #define CXB_DISABLE_RAII
 // #define CXB_ALLOC_TEMPLATE
 // #define CXB_NO_NAMESPACE
-#define CXB_USE_C11_ATOMIC  /* note: C11 stdatomic.h takes less time to compile */
+#define CXB_USE_C11_ATOMIC /* note: C11 stdatomic.h takes less time to compile */
 #define CXB_MALLOCATOR_MIN_CAP 32
 #define CXB_MALLOCATOR_GROW_FN(x) (x) + (x) / 2 /* 3/2 without overflow */
 
@@ -69,12 +69,20 @@ extern "C" {
 #define CXB_NS_END }
 #endif
 
+#if defined(__clang__)
+#define BREAKPOINT() __builtin_debugtrap()
+#elif defined(__GNUC__)
+#define BREAKPOINT() __builtin_trap()
+#else
+#define BREAKPOINT() abort()
+#endif
+
 #define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
 #define LENGTHOF_LIT(s) (countof(s) - 1)
 #define ASSERT(x, msg)                                                                                                 \
-    if(!(x)) __builtin_debugtrap()
+    if(!(x)) BREAKPOINT()
 #define REQUIRES(x)                                                                                                    \
-    if(!(x)) __builtin_debugtrap()
+    if(!(x)) BREAKPOINT()
 #define LIKELY(x) x
 #define UNLIKELY(x) x
 // #define INFO(msg)
