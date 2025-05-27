@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project(cxb LANGUAGES C CXX VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
 set(CXB_SRCS "cxb.cpp")
@@ -12,7 +13,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-ftime-trace)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # GCC doesn't support -ftime-trace, but we can add other GCC-specific flags if needed
-    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Wall -Wextra -std=c11)
 endif()
 
 add_library(cxb SHARED ${CXB_SRCS})
