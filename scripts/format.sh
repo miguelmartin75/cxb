@@ -19,6 +19,10 @@ if ! command -v clang-format &> /dev/null; then
     exit 1
 fi
 
+echo "clang-format version: "
+echo $(clang-format --version)
+echo ""
+
 # Find all C/C++ files, excluding patterns from .gitignore
 FILES=$(find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" | grep -v "./build" | grep -v "./.cache" | grep -v "./prototype")
 
