@@ -38,7 +38,8 @@ Inspiration:
 #include <type_traits> // 27ms
 
 #ifdef CXB_USE_C11_ATOMIC
-#if defined(__STDC_NO_ATOMICS__)
+// NOTE: GCC doesn't support _Atomic in C++
+#if defined(__STDC_NO_ATOMICS__) || (defined(__GNUC__) && !defined(__clang__))
 #warning "Using std::atomic as C11 _Atomic is not available"
 #undef CXB_USE_C11_ATOMIC
 #endif
