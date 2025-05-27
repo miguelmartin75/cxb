@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# To install: 
+# cp scripts/hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+echo -e "${YELLOW}Running pre-commit format check...${NC}"
+./scripts/format.sh --check
