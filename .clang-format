@@ -20,9 +20,9 @@ SpaceBeforeAssignmentOperators: true
 SpaceBeforeRangeBasedForLoopColon: true
 SpacesBeforeTrailingComments: 1
 AlignTrailingComments: true
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignOperands: true
+AlignConsecutiveAssignments: None
+AlignConsecutiveDeclarations: None
+AlignOperands: Align
 AlignAfterOpenBracket: Align
 BinPackArguments: false
 BinPackParameters: false
@@ -61,5 +61,4 @@ PenaltyBreakString: 1000
 PenaltyBreakTemplateDeclaration: 10
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 200
-SortIncludes: true
 SpacesInAngles: false
