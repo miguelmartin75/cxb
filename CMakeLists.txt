@@ -6,7 +6,15 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
 set(CXB_SRCS "cxb.cpp")
-add_compile_options(-ftime-trace)
+
+# Add compiler-specific options
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-ftime-trace)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # GCC doesn't support -ftime-trace, but we can add other GCC-specific flags if needed
+    add_compile_options(-Wall -Wextra)
+endif()
+
 add_library(cxb SHARED ${CXB_SRCS})
 
 find_package(Catch2 3 REQUIRED)
