@@ -10,6 +10,11 @@ add_compile_options(-ftime-trace)
 add_library(cxb SHARED ${CXB_SRCS})
 
 find_package(Catch2 3 REQUIRED)
+
+enable_testing()
+
 add_executable(test_seq tests/test_seq.cpp)
 target_include_directories(test_seq PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_seq PRIVATE Catch2::Catch2WithMain cxb)
+
+add_test(NAME seq_tests COMMAND test_seq)

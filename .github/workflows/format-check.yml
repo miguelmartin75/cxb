@@ -1,0 +1,81 @@
+name: Format Check
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  format-check:
+    name: Check Code Formatting
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Install clang-format
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format
+    
+    - name: Get changed files
+      id: changed-files
+      run: |
+        # Get list of changed C/C++ files in this PR
+        git diff --name-only origin/${{ github.base_ref }}...HEAD | \
+        grep -E '\.(cpp|hpp|h|c)$' | \
+        grep -v "^prototype/" > changed_files.txt || true
+        
+        if [ -s changed_files.txt ]; then
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "Changed files:"
+          cat changed_files.txt
+        else
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+          echo "No C/C++ files changed"
+        fi
+    
+    - name: Check formatting on changed files
+      if: steps.changed-files.outputs.has_changes == 'true'
+      run: |
+        echo "Checking formatting on changed files..."
+        
+        # Check if any files need formatting
+        formatting_issues=false
+        while IFS= read -r file; do
+          if [ -f "$file" ]; then
+            echo "Checking $file..."
+            if ! clang-format --dry-run --Werror "$file" 2>/dev/null; then
+              echo "❌ $file needs formatting"
+              formatting_issues=true
+            else
+              echo "✅ $file is properly formatted"
+            fi
+          fi
+        done < changed_files.txt
+        
+        if [ "$formatting_issues" = true ]; then
+          echo ""
+          echo "💡 To fix formatting issues, run:"
+          echo "   clang-format -i \$(find . -name '*.cpp' -o -name '*.h' -o -name '*.hpp' -o -name '*.c')"
+          echo ""
+          echo "Or format specific files:"
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "   clang-format -i $file"
+            fi
+          done < changed_files.txt
+          exit 1
+        fi
+    
+    - name: Show diff for formatting issues
+      if: failure()
+      run: |
+        echo "Showing formatting differences:"
+        while IFS= read -r file; do
+          if [ -f "$file" ]; then
+            echo "=== $file ==="
+            clang-format "$file" | diff -u "$file" - || true
+            echo ""
+          fi
+        done < changed_files.txt
