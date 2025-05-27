@@ -12,8 +12,7 @@ set(CXB_SRCS "cxb.cpp")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-ftime-trace)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # GCC doesn't support -ftime-trace, but we can add other GCC-specific flags if needed
-    add_compile_options(-Wall -Wextra -std=c11)
+    add_compile_options(-Wall -Wextra)
 endif()
 
 add_library(cxb SHARED ${CXB_SRCS})

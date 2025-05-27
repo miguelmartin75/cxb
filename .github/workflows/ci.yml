@@ -46,12 +46,12 @@ jobs:
             echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main" | sudo tee /etc/apt/sources.list.d/llvm.list
             sudo apt-get update
             sudo apt-get install -y clang-20
-          # else
-          #   # Install newer GCC for better C11 support
-          #   sudo apt-get install -y software-properties-common
-          #   sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-          #   sudo apt-get update
-          #   sudo apt-get install -y gcc-12 g++-12
+          else
+            # Install GCC for C11 support
+            sudo apt-get install -y software-properties-common
+            sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
+            sudo apt-get update
+            sudo apt-get install -y gcc-12 g++-12
           fi
 
       - name: Install Catch2
@@ -68,8 +68,8 @@ jobs:
             export CC=clang-20
             export CXX=clang++-20
           else
-            export CC=gcc
-            export CXX=g++
+            export CC=gcc-12
+            export CXX=g++-12
           fi
           cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX
 
