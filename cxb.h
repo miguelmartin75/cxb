@@ -21,7 +21,7 @@ Inspiration:
 // #define CXB_DISABLE_RAII
 // #define CXB_ALLOC_TEMPLATE
 // #define CXB_NO_NAMESPACE
-#define CXB_USE_C11_ATOMIC
+#define CXB_USE_C11_ATOMIC  /* note: C11 stdatomic.h takes less time to compile */
 #define CXB_MALLOCATOR_MIN_CAP 32
 #define CXB_MALLOCATOR_GROW_FN(x) (x) + (x) / 2 /* 3/2 without overflow */
 
@@ -496,9 +496,9 @@ struct Allocator {
 
 struct Mallocator : Allocator {
     Mallocator();
-    _Atomic i64 n_active_bytes;
-    _Atomic i64 n_allocated_bytes;
-    _Atomic i64 n_freed_bytes;
+    Atomic<i64> n_active_bytes;
+    Atomic<i64> n_allocated_bytes;
+    Atomic<i64> n_freed_bytes;
 };
 
 struct Arena : Allocator {
