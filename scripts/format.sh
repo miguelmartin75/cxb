@@ -52,7 +52,7 @@ if [ "$CHECK_ONLY" = true ]; then
     
     if [ "$NEEDS_FORMATTING" = true ]; then
         echo
-        echo -e "${YELLOW}Some files need formatting. Run ./format.sh to fix them.${NC}"
+        echo -e "${YELLOW}Some files need formatting. Run ./scripts/format.sh to fix them.${NC}"
         exit 1
     else
         echo

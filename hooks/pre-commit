@@ -48,7 +48,7 @@ if [ "$NEEDS_FORMATTING" = true ]; then
     echo
     echo -e "${RED}Commit aborted due to formatting issues.${NC}"
     echo -e "${YELLOW}To fix formatting, run:${NC}"
-    echo "  ./format.sh"
+    echo "  ./scripts/format.sh"
     echo
     echo "Then add the formatted files and commit again:"
     echo "  git add -u"

@@ -40,12 +40,12 @@ This project uses clang-format for consistent code formatting. The configuration
 
 #### Format all files
 ```bash
-./format.sh
+./scripts/format.sh
 ```
 
 #### Check formatting without making changes
 ```bash
-./format.sh --check
+./scripts/format.sh --check
 ```
 
 #### Format specific files manually

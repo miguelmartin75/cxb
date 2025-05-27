@@ -125,8 +125,8 @@ echo
 echo -e "${GREEN}🎉 Development environment setup complete!${NC}"
 echo
 echo -e "${BLUE}Next steps:${NC}"
-echo "1. Check code formatting: ./format.sh --check"
-echo "2. Format code: ./format.sh"
+echo "1. Check code formatting: ./scripts/format.sh --check"
+echo "2. Format code: ./scripts/format.sh"
 echo "3. Build project: cmake --build build"
 echo "4. Run tests: cd build && ctest"
 echo
