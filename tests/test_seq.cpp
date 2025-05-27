@@ -1,11 +1,9 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-
 #include <cxb.h>
 using namespace cxb;
 
-
-TEST_CASE( "push_back", "[Seq]" ) {
+TEST_CASE("push_back", "[Seq]") {
     size_t allocated_bytes = 0;
     {
         Seq<int> xs;
@@ -28,7 +26,7 @@ TEST_CASE( "push_back", "[Seq]" ) {
     REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
 }
 
-TEST_CASE( "copy", "[Seq]" ) {
+TEST_CASE("copy", "[Seq]") {
     Seq<int> xs;
     xs.resize(64, 2);
     for(int i = 0; i < xs.len; ++i) {
