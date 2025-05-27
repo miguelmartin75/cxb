@@ -37,18 +37,9 @@ Inspiration:
 #include <string.h>
 #include <type_traits> // 27ms
 
-// Check for C11 _Atomic support
-#if !defined(__STDC_NO_ATOMICS__)
-#include <stdatomic.h>
-#define HAS_C11_ATOMIC 1
-#else
-#include <atomic>
-#define HAS_C11_ATOMIC 0
-#endif
-
 #ifdef CXB_USE_C11_ATOMIC
-#if HAS_C11_ATOMIC == 0
-#warning "Using std::atomic as C11 Atomics are not available"
+#if defined(__STDC_NO_ATOMICS__)
+#warning "Using std::atomic as C11 _Atomic is not available"
 #undef CXB_USE_C11_ATOMIC
 #endif
 #endif
@@ -60,6 +51,7 @@ extern "C" {
 #else
 #include <atomic> // 114-128ms
 #endif
+
 /* NOTE: #include <utility>  // 98ms */
 
 /* SECTION: macros */
@@ -133,7 +125,7 @@ typedef int32_t rune;
 enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
 
 namespace detail {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
 constexpr memory_order to_c11_order(MemoryOrderOption order) {
     switch(order) {
         case MemoryOrderOption::Relaxed:
@@ -174,7 +166,7 @@ class Atomic {
                   "AtomicWrapper only supports integral and pointer types");
 
   private:
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
     _Atomic T value;
 #else
     std::atomic<T> value;
@@ -182,7 +174,7 @@ class Atomic {
 
   public:
     constexpr Atomic(T desired = T{}) noexcept
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         : value(desired)
 #else
         : value(desired)
@@ -196,7 +188,7 @@ class Atomic {
     Atomic& operator=(Atomic&&) = delete;
 
     CXB_INLINE void store(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         atomic_store_explicit(&value, desired, detail::to_c11_order(order));
 #else
         value.store(desired, detail::to_std_order(order));
@@ -204,7 +196,7 @@ class Atomic {
     }
 
     CXB_INLINE T load(MemoryOrderOption order = MemoryOrderOption::SeqCst) const noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_load_explicit(&value, detail::to_c11_order(order));
 #else
         return value.load(detail::to_std_order(order));
@@ -212,7 +204,7 @@ class Atomic {
     }
 
     CXB_INLINE T exchange(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_exchange_explicit(&value, desired, detail::to_c11_order(order));
 #else
         return value.exchange(desired, detail::to_std_order(order));
@@ -223,7 +215,7 @@ class Atomic {
                                           T desired,
                                           MemoryOrderOption success = MemoryOrderOption::SeqCst,
                                           MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_weak_explicit(
             &value, &expected, desired, detail::to_c11_order(success), detail::to_c11_order(failure));
 #else
@@ -236,7 +228,7 @@ class Atomic {
                                             T desired,
                                             MemoryOrderOption success = MemoryOrderOption::SeqCst,
                                             MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_strong_explicit(
             &value, &expected, desired, detail::to_c11_order(success), detail::to_c11_order(failure));
 #else
@@ -249,7 +241,7 @@ class Atomic {
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_fetch_add_explicit(&value, arg, detail::to_c11_order(order));
 #else
         return value.fetch_add(arg, detail::to_std_order(order));
@@ -259,7 +251,7 @@ class Atomic {
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_fetch_sub_explicit(&value, arg, detail::to_c11_order(order));
 #else
         return value.fetch_sub(arg, detail::to_std_order(order));
@@ -269,7 +261,7 @@ class Atomic {
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_fetch_and_explicit(&value, arg, detail::to_c11_order(order));
 #else
         return value.fetch_and(arg, detail::to_std_order(order));
@@ -279,7 +271,7 @@ class Atomic {
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_fetch_or_explicit(&value, arg, detail::to_c11_order(order));
 #else
         return value.fetch_or(arg, detail::to_std_order(order));
@@ -289,7 +281,7 @@ class Atomic {
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_fetch_xor_explicit(&value, arg, detail::to_c11_order(order));
 #else
         return value.fetch_xor(arg, detail::to_std_order(order));
@@ -351,7 +343,7 @@ class Atomic {
     }
 
     bool is_lock_free() const noexcept {
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         return atomic_is_lock_free(&value);
 #else
         return value.is_lock_free();
@@ -359,7 +351,7 @@ class Atomic {
     }
 
     static constexpr bool is_always_lock_free =
-#if HAS_C11_ATOMIC
+#ifdef CXB_USE_C11_ATOMIC
         true; // C11 doesn't have a compile-time check
 #else
         std::atomic<T>::is_always_lock_free;
