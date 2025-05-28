@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-#include <cxb.h>
+#include <cxb/cxb.h>
 using namespace cxb;
 
 TEST_CASE("push_back", "[Seq]") {

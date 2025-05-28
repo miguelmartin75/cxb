@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
-set(CXB_SRCS "cxb.cpp")
+set(CXB_SRCS "cxb/cxb.cpp")
 
 # Add compiler-specific options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
