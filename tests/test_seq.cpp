@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
-using namespace cxb;
+CXB_USE_NS;
 
 TEST_CASE("push_back", "[Seq]") {
     size_t allocated_bytes = 0;

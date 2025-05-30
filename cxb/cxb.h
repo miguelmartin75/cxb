@@ -64,9 +64,11 @@ extern "C" {
 #ifdef CXB_NAMESPACE
 #define CXB_NS_BEGIN namespace cxb {
 #define CXB_NS_END }
+#define CXB_USE_NS using namespace cxb
 #else
 #define CXB_NS_BEGIN
 #define CXB_NS_END
+#define CXB_USE_NS
 #endif
 
 #if defined(__clang__)
@@ -133,7 +135,7 @@ typedef int32_t rune;
 
 enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
 
-namespace detail {
+namespace _cxb {
 #ifdef CXB_USE_C11_ATOMIC
 constexpr memory_order to_c11_order(MemoryOrderOption order) {
     switch(order) {
@@ -167,7 +169,7 @@ constexpr std::memory_order to_std_order(MemoryOrderOption order) {
     return std::memory_order_seq_cst;
 }
 #endif
-} // namespace detail
+} // namespace _cxb
 
 template <typename T>
 class Atomic {
@@ -182,7 +184,7 @@ class Atomic {
 #endif
 
   public:
-    constexpr Atomic(T desired = T{}) noexcept
+    CXB_COMPTIME Atomic(T desired = T{}) noexcept
 #ifdef CXB_USE_C11_ATOMIC
         : value(desired)
 #else
@@ -198,25 +200,25 @@ class Atomic {
 
     CXB_INLINE void store(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        atomic_store_explicit(&value, desired, detail::to_c11_order(order));
+        atomic_store_explicit(&value, desired, _cxb::to_c11_order(order));
 #else
-        value.store(desired, detail::to_std_order(order));
+        value.store(desired, _cxb::to_std_order(order));
 #endif
     }
 
     CXB_INLINE T load(MemoryOrderOption order = MemoryOrderOption::SeqCst) const noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_load_explicit(&value, detail::to_c11_order(order));
+        return atomic_load_explicit(&value, _cxb::to_c11_order(order));
 #else
-        return value.load(detail::to_std_order(order));
+        return value.load(_cxb::to_std_order(order));
 #endif
     }
 
     CXB_INLINE T exchange(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_exchange_explicit(&value, desired, detail::to_c11_order(order));
+        return atomic_exchange_explicit(&value, desired, _cxb::to_c11_order(order));
 #else
-        return value.exchange(desired, detail::to_std_order(order));
+        return value.exchange(desired, _cxb::to_std_order(order));
 #endif
     }
 
@@ -226,10 +228,9 @@ class Atomic {
                                           MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_weak_explicit(
-            &value, &expected, desired, detail::to_c11_order(success), detail::to_c11_order(failure));
+            &value, &expected, desired, _cxb::to_c11_order(success), _cxb::to_c11_order(failure));
 #else
-        return value.compare_exchange_weak(
-            expected, desired, detail::to_std_order(success), detail::to_std_order(failure));
+        return value.compare_exchange_weak(expected, desired, _cxb::to_std_order(success), _cxb::to_std_order(failure));
 #endif
     }
 
@@ -239,10 +240,10 @@ class Atomic {
                                             MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_strong_explicit(
-            &value, &expected, desired, detail::to_c11_order(success), detail::to_c11_order(failure));
+            &value, &expected, desired, _cxb::to_c11_order(success), _cxb::to_c11_order(failure));
 #else
         return value.compare_exchange_strong(
-            expected, desired, detail::to_std_order(success), detail::to_std_order(failure));
+            expected, desired, _cxb::to_std_order(success), _cxb::to_std_order(failure));
 #endif
     }
 
@@ -251,9 +252,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_add_explicit(&value, arg, detail::to_c11_order(order));
+        return atomic_fetch_add_explicit(&value, arg, _cxb::to_c11_order(order));
 #else
-        return value.fetch_add(arg, detail::to_std_order(order));
+        return value.fetch_add(arg, _cxb::to_std_order(order));
 #endif
     }
 
@@ -261,9 +262,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_sub_explicit(&value, arg, detail::to_c11_order(order));
+        return atomic_fetch_sub_explicit(&value, arg, _cxb::to_c11_order(order));
 #else
-        return value.fetch_sub(arg, detail::to_std_order(order));
+        return value.fetch_sub(arg, _cxb::to_std_order(order));
 #endif
     }
 
@@ -271,9 +272,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_and_explicit(&value, arg, detail::to_c11_order(order));
+        return atomic_fetch_and_explicit(&value, arg, _cxb::to_c11_order(order));
 #else
-        return value.fetch_and(arg, detail::to_std_order(order));
+        return value.fetch_and(arg, _cxb::to_std_order(order));
 #endif
     }
 
@@ -281,9 +282,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_or_explicit(&value, arg, detail::to_c11_order(order));
+        return atomic_fetch_or_explicit(&value, arg, _cxb::to_c11_order(order));
 #else
-        return value.fetch_or(arg, detail::to_std_order(order));
+        return value.fetch_or(arg, _cxb::to_std_order(order));
 #endif
     }
 
@@ -291,9 +292,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_xor_explicit(&value, arg, detail::to_c11_order(order));
+        return atomic_fetch_xor_explicit(&value, arg, _cxb::to_c11_order(order));
 #else
-        return value.fetch_xor(arg, detail::to_std_order(order));
+        return value.fetch_xor(arg, _cxb::to_std_order(order));
 #endif
     }
 
@@ -739,7 +740,6 @@ CXB_NS_END
 #ifdef CXB_IMPL
 #include "cxb.cpp"
 #endif
-
 
 #define s8_lit(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s)})
 #define s8_str(s) (Str8{(char*) &s[0], (size_t) s.size()})
