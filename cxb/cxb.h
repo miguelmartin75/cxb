@@ -20,8 +20,8 @@ Inspiration:
 /* SECTION: configuration */
 // #define CXB_DISABLE_RAII
 // #define CXB_ALLOC_TEMPLATE
-// #define CXB_NO_NAMESPACE
-#define CXB_USE_C11_ATOMIC /* note: C11 stdatomic.h takes less time to compile */
+// #define CXB_NAMESPACE
+// #define CXB_USE_C11_ATOMIC /* note: C11 stdatomic.h takes less time to compile */
 #define CXB_MALLOCATOR_MIN_CAP 32
 #define CXB_MALLOCATOR_GROW_FN(x) (x) + (x) / 2 /* 3/2 without overflow */
 
@@ -61,12 +61,12 @@ extern "C" {
 #define CXB_EXPORT
 #define CXB_INTERNAL static
 
-#ifdef CXB_NO_NAMESPACE
-#define CXB_NS_BEGIN
-#define CXB_NS_END
-#else
+#ifdef CXB_NAMESPACE
 #define CXB_NS_BEGIN namespace cxb {
 #define CXB_NS_END }
+#else
+#define CXB_NS_BEGIN
+#define CXB_NS_END
 #endif
 
 #if defined(__clang__)
@@ -78,7 +78,7 @@ extern "C" {
 #endif
 
 #define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
-#define LENGTHOF_LIT(s) (countof(s) - 1)
+#define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
 #define ASSERT(x, msg)                                                                                                 \
     if(!(x)) BREAKPOINT()
 #define REQUIRES(x)                                                                                                    \
@@ -453,7 +453,7 @@ struct Allocator {
         T* result =
             (T*) this->alloc_impl(this, false, (void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
         for(size_t i = old_count; i < count; ++i) {
-            new(result + i) T{cxb::forward<Args>(args)...};
+            new(result + i) T{forward<Args>(args)...};
         }
         return result;
     }
@@ -473,7 +473,7 @@ struct Allocator {
         T* data = (T*) (new_header + sizeof(H));
 
         for(size_t i = old_count; i < count; ++i) {
-            new(data + i) T{cxb::forward<Args>(args)...};
+            new(data + i) T{forward<Args>(args)...};
         }
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
@@ -607,7 +607,7 @@ struct Seq {
         }
         for(int i = len; i < new_len; ++i) {
             // TODO: new []
-            new(data + i) T{cxb::forward<Args>(args)...};
+            new(data + i) T{forward<Args>(args)...};
         }
         len = new_len;
     }
@@ -740,6 +740,7 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
-#define s8_lit(s) (Str8{(char*) &s[0], lengthof(s)})
+
+#define s8_lit(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s)})
 #define s8_str(s) (Str8{(char*) &s[0], (size_t) s.size()})
 #define s8_cstr(s) (Str8{(char*) &s[0], (size_t) strlen(s)})
