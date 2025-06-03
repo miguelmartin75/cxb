@@ -534,9 +534,10 @@ struct Seq {
             reserve(0);
         }
     }
-
-    // creates a slice
     Seq(const Seq<T>& o) : allocator{nullptr}, data{o.data}, len{o.len} {}
+    Seq(Seq<T>&& o) : allocator{o.allocator}, data{o.data}, len{o.len} {
+        o.allocator = nullptr;
+    }
 
 #ifndef CXB_DISABLE_RAII
     CXB_INLINE ~Seq() {
@@ -545,22 +546,22 @@ struct Seq {
 #endif
 
     // ** SECTION: slice compatible methods
-    inline size_t size() const {
+    CXB_INLINE size_t size() const {
         return len;
     }
-    inline bool empty() const {
+    CXB_INLINE bool empty() const {
         return len == 0;
     }
-    inline T& operator[](size_t idx) {
+    CXB_INLINE T& operator[](size_t idx) {
         return data[idx];
     }
-    inline const T& operator[](size_t idx) const {
+    CXB_INLINE const T& operator[](size_t idx) const {
         return data[idx];
     }
-    inline T& back() {
+    CXB_INLINE T& back() {
         return data[len - 1];
     }
-    inline Seq<T> slice(size_t i, size_t j = 0) {
+    CXB_INLINE Seq<T> slice(size_t i, size_t j = 0) {
         Seq<T> c = *this;
         c.data = c.data + i;
         c.len = j == 0 ? c.len : j - i + 1;
@@ -568,6 +569,11 @@ struct Seq {
     }
 
     // ** SECTION: allocator-related methods
+    CXB_INLINE Seq<T>& copy_(Allocator* to_allocator = &default_alloc) {
+        *this = move(this->copy(to_allocator));
+        return *this;
+    }
+
     inline Seq<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
@@ -580,29 +586,29 @@ struct Seq {
         return result;
     }
 
-    inline size_t* start_mem() {
+    CXB_INLINE size_t* start_mem() {
         if(this->data == nullptr) return nullptr;
         return ((size_t*) this->data) - 1;
     }
 
-    inline size_t& _capacity() {
+    CXB_INLINE size_t& _capacity() {
         REQUIRES(data);
         return *start_mem();
     }
 
-    inline size_t capacity() {
+    CXB_INLINE size_t capacity() {
         if(!data) return 0;
         return *start_mem();
     }
 
-    inline void destroy() {
+    CXB_INLINE void destroy() {
         if(data && allocator) {
             allocator->free_with_header<size_t>(data, capacity());
             data = nullptr;
         }
     }
 
-    inline void reserve(size_t cap) {
+    CXB_INLINE void reserve(size_t cap) {
         REQUIRES(allocator != nullptr);
 
         size_t* alloc_mem = start_mem();
@@ -668,32 +674,54 @@ struct Str8 {
         struct {
             size_t len : 62;
             bool null_term : 1;
-            bool owned : 1;
         };
         size_t metadata;
     };
 
-    Str8(Allocator* allocator = &default_alloc)
-        : allocator{allocator}, data{nullptr}, len{0}, null_term{false}, owned{true} {
+    Str8(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0}, null_term{false} {
         reserve(0);
     }
-    Str8(const char* cstr, size_t n = SIZE_MAX, bool owned = false, Allocator* allocator = nullptr)
-        : allocator{allocator}, data{nullptr}, len{n}, null_term{true}, owned{owned} {
+
+    Str8(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
+        : allocator{allocator}, data{nullptr}, len{n}, null_term{true} {
         if(len == SIZE_MAX) {
             len = strlen(cstr);
         }
 
-        if(owned) {
-            reserve(n + 1);
-            memcpy(data, cstr, n);
-            data[n] = '\0';
-        } else {
+        size_t actual_len = n == SIZE_MAX ? (cstr ? strlen(cstr) : 0) : n;
+        len = actual_len;
+
+        if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
+        } else {
+            reserve(actual_len + 1);
+            if(actual_len > 0) {
+                memcpy(data, cstr, actual_len);
+            }
+            data[actual_len] = '\0';
         }
     }
 
-    // creates a slice
     Str8(const Str8& o) : allocator{nullptr}, data{o.data}, metadata{o.metadata} {}
+
+    Str8(Str8&& o) : allocator{o.allocator}, data{o.data}, metadata{o.metadata} {
+        o.allocator = nullptr;
+    }
+
+    CXB_INLINE Str8& operator=(Str8& o) {
+        allocator = o.allocator;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
+
+    CXB_INLINE Str8& operator=(Str8&& o) {
+        allocator = o.allocator;
+        o.allocator = nullptr;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
 
 #ifndef CXB_DISABLE_RAII
     CXB_INLINE ~Str8() {
@@ -723,51 +751,67 @@ struct Str8 {
         size_t new_len = j == 0 ? len - i : j - i;
         c.len = new_len;
         c.null_term = i + new_len == len ? this->null_term : false;
-        c.owned = false;
         return c;
     }
-    CXB_INLINE const char* c_str() {
-        REQUIRES(null_term);
+    CXB_INLINE const char* c_str(Allocator* copy_alloc_if_not = nullptr) {
+        if(!null_term) {
+            ensure_null_terminated(copy_alloc_if_not);
+        }
         return data;
     }
 
+    CXB_INLINE bool operator==(const Str8& o) const {
+        if(size() != o.size()) return false;
+        for(size_t i = 0; i < size(); ++i) {
+            if((*this)[i] != o[i]) return false;
+        }
+        return true;
+    }
+
+    CXB_INLINE bool operator!=(const Str8& o) const {
+        return !(*this == o);
+    }
+
+    CXB_INLINE bool operator<(const Str8& o) const {
+        for(size_t i = 0; i < min(len, o.len); ++i) {
+            if((*this)[i] < o[i]) return true;
+            if((*this)[i] > o[i]) return false;
+        }
+        return len < o.len;
+    }
+
     // ** SECTION: allocator-related methods
-    inline Str8 copy(Allocator* to_allocator = nullptr, bool ensure_zero_term = false) {
+    CXB_INLINE Str8& copy_(Allocator* to_allocator = &default_alloc) {
+        *this = move(this->copy(to_allocator));
+        return *this;
+    }
+
+    CXB_INLINE Str8 copy(Allocator* to_allocator = nullptr, bool ensure_zero_term = false) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
         bool nt = null_term || ensure_zero_term;
-        Str8 result{nullptr, 0, false, to_allocator};
-        result.reserve(len + (nt ? 1 : 0));
-        if(data && len > 0) {
-            memcpy(result.data, data, len);
-            if(nt) {
-                result.data[len] = '\0';
-            }
-        }
-        result.len = len;
-        result.null_term = nt;
-        result.owned = true;
+        Str8 result{data, len, to_allocator};
         return result;
     }
 
-    inline size_t* start_mem() {
+    CXB_INLINE size_t* start_mem() {
         if(this->data == nullptr) return nullptr;
         return ((size_t*) this->data) - 1;
     }
 
-    inline size_t& _capacity() {
-        REQUIRES(data);
+    CXB_INLINE size_t& _capacity() {
+        REQUIRES(allocator);
         return *start_mem();
     }
 
-    inline size_t capacity() {
+    CXB_INLINE size_t capacity() {
         if(!data) return 0;
         return *start_mem();
     }
 
-    inline void destroy() {
-        if(data && allocator && owned) {
+    CXB_INLINE void destroy() {
+        if(data && allocator) {
             allocator->free_with_header<size_t>(data, capacity());
             data = nullptr;
         }
@@ -782,20 +826,19 @@ struct Str8 {
         auto mem = allocator->recalloc_with_header<size_t, char>(alloc_mem, old_count, new_count);
         data = mem.data;
         _capacity() = new_count;
-        owned = true;
     }
 
     inline void resize(size_t new_len, char fill_char = '\0') {
         bool was_null_terminated = null_term;
-        size_t reserve_size = new_len + (was_null_terminated ? 1 : 0);
+        size_t reserve_size = new_len + was_null_terminated;
 
         if(capacity() < reserve_size) {
             reserve(reserve_size);
         }
 
         size_t old_len = len;
-        for(size_t i = old_len; i < new_len; ++i) {
-            data[i] = fill_char;
+        if(new_len > old_len) {
+            memset(data + old_len, fill_char, new_len - old_len);
         }
 
         if(was_null_terminated) {
@@ -808,22 +851,22 @@ struct Str8 {
 
     inline void push_back(char c) {
         REQUIRES(UNLIKELY(allocator != nullptr));
-        size_t current_len = len;
-        bool null_term_val = null_term;
-        size_t needed_cap = current_len + 1 + (null_term_val ? 1 : 0);
-
+        size_t needed_cap = len + null_term + 1;
         if(capacity() < needed_cap) {
             size_t new_cap = allocator->growth_sug(capacity());
             if(new_cap < needed_cap) new_cap = needed_cap;
             reserve(new_cap);
         }
 
-        data[current_len] = c;
-        if(null_term_val) {
-            data[current_len + 1] = '\0';
+        data[len] = c;
+        if(UNLIKELY(c == '\0')) {
+            null_term = true;
+        } else {
+            len += 1;
+            if(null_term) {
+                data[len + 1] = '\0';
+            }
         }
-        len = current_len + 1;
-        null_term = null_term_val;
     }
 
     CXB_INLINE char& push() {
@@ -831,43 +874,40 @@ struct Str8 {
         return data[len - 1];
     }
 
-    inline char pop_back() {
-        size_t current_len = len;
-        REQUIRES(current_len > 0);
-        char ret = data[current_len - 1];
-        len = current_len - 1;
-        if(null_term && current_len > 0) {
-            data[current_len - 1] = '\0';
+    CXB_INLINE char pop_back() {
+        REQUIRES(len > 0);
+        char ret = data[len - 1];
+        if(null_term && len > 0) {
+            data[len - 1] = '\0';
         }
+        len--;
         return ret;
     }
 
-    inline void extend(const Str8& other) {
-        size_t other_len = other.len;
-        if(other_len == 0) return;
+    void extend(Str8 other) {
+        if(other.len == 0) return;
+        REQUIRES(allocator);
 
-        size_t current_len = len;
-        size_t needed_cap = current_len + other_len + null_term;
-
+        size_t needed_cap = len + other.len;
         if(capacity() < needed_cap) {
             size_t new_cap = allocator->growth_sug(capacity());
             if(new_cap < needed_cap) new_cap = needed_cap;
             reserve(new_cap);
         }
 
-        memcpy(data + current_len, other.data, other_len);
-        if(null_term) {
-            data[current_len + other_len] = '\0';
-        }
-        len = current_len + other_len;
-        null_term = null_term;
+        memcpy(data + len, other.data, other.len);
+        len += other.len;
+    }
+
+    CXB_INLINE void operator+=(Str8 other) {
+        this->extend(other);
     }
 
     CXB_INLINE void extend(const char* str, size_t n = SIZE_MAX) {
         if(!str) {
             return;
         }
-        this->extend(Str8{str, n});
+        this->extend(Str8{str, n, nullptr});
     }
 
     CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
@@ -875,7 +915,10 @@ struct Str8 {
 
         REQUIRES(allocator != nullptr || copy_alloc_if_not != nullptr);
         if(allocator == nullptr) {
-            *this = this->copy(copy_alloc_if_not, true);
+            *this = move(this->copy(copy_alloc_if_not, true));
+        } else {
+            this->push_back('\0');
+            this->null_term = true;
         }
     }
 };
@@ -957,6 +1000,6 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
-#define s8_lit(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s), false, nullptr})
-#define s8_str(s) (Str8{(char*) s.c_str(), (size_t) s.size(), false, nullptr})
-#define s8_cstr(s) (Str8{(char*) s, (size_t) strlen(s), true, nullptr})
+#define s8_lit(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s), nullptr})
+#define s8_str(s) (Str8{(char*) s.c_str(), (size_t) s.size(), nullptr})
+#define s8_cstr(s) (Str8{(char*) s, (size_t) strlen(s), nullptr})
