@@ -309,6 +309,176 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
 }
 
+TEST_CASE("UTF-8 batch decoding - ASCII text", "[Utf8Batch]") {
+    Str8 ascii_text("Hello, World! This is a test string with ASCII characters only.");
+
+    // Test with different batch sizes
+    rune buffer[64];
+
+    // Test single batch that fits everything
+    auto result = utf8_decode_batch(ascii_text.data, ascii_text.size(), buffer, 64);
+    REQUIRE(result.all_valid);
+    REQUIRE(result.count == ascii_text.size()); // ASCII: 1 byte = 1 codepoint
+    REQUIRE(result.bytes_consumed == ascii_text.size());
+    REQUIRE(result.capacity == 64);
+
+    // Verify codepoints match
+    for(size_t i = 0; i < result.count; ++i) {
+        REQUIRE(buffer[i] == static_cast<rune>(ascii_text[i]));
+    }
+
+    // Test with smaller buffer
+    rune small_buffer[10];
+    auto small_result = utf8_decode_batch(ascii_text.data, ascii_text.size(), small_buffer, 10);
+    REQUIRE(small_result.all_valid);
+    REQUIRE(small_result.count == 10);
+    REQUIRE(small_result.bytes_consumed == 10); // First 10 bytes for ASCII
+
+    // Verify first 10 characters
+    for(size_t i = 0; i < 10; ++i) {
+        REQUIRE(small_buffer[i] == static_cast<rune>(ascii_text[i]));
+    }
+}
+
+TEST_CASE("UTF-8 batch decoding - Mixed Unicode", "[Utf8Batch]") {
+    // String with mixed content: "Hi 👋 🌍!"
+    Str8 mixed_text("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+
+    rune buffer[32];
+    auto result = utf8_decode_batch(mixed_text.data, mixed_text.size(), buffer, 32);
+
+    REQUIRE(result.all_valid);
+    REQUIRE(result.count == 7); // H, i, space, emoji1, space, emoji2, !
+    REQUIRE(result.bytes_consumed == mixed_text.size());
+
+    // Verify specific codepoints
+    REQUIRE(buffer[0] == 'H');
+    REQUIRE(buffer[1] == 'i');
+    REQUIRE(buffer[2] == ' ');
+    REQUIRE(buffer[3] == 0x1F44B); // 👋
+    REQUIRE(buffer[4] == ' ');
+    REQUIRE(buffer[5] == 0x1F30D); // 🌍
+    REQUIRE(buffer[6] == '!');
+}
+
+TEST_CASE("UTF-8 batch decoding - Invalid sequences", "[Utf8Batch]") {
+    // Create string with invalid UTF-8 sequence
+    u8 invalid_data[] = {'H', 'e', 'l', 0xFF, 'l', 'o'}; // 0xFF is invalid UTF-8
+
+    rune buffer[16];
+    auto result = utf8_decode_batch(invalid_data, sizeof(invalid_data), buffer, 16);
+
+    REQUIRE_FALSE(result.all_valid);
+    REQUIRE(result.count == 5); // Should decode H, e, l, skip invalid, l, o
+    REQUIRE(result.bytes_consumed == sizeof(invalid_data));
+
+    // Verify valid characters were decoded
+    REQUIRE(buffer[0] == 'H');
+    REQUIRE(buffer[1] == 'e');
+    REQUIRE(buffer[2] == 'l');
+    REQUIRE(buffer[3] == 'l');
+    REQUIRE(buffer[4] == 'o');
+}
+
+TEST_CASE("Utf8BatchIterator basic functionality", "[Utf8BatchIterator]") {
+    Str8 text("Hello 🌍 World!");
+    Utf8BatchIterator iter(text, 8);
+
+    REQUIRE(iter.has_next());
+    REQUIRE(iter.get_batch_size() == 8);
+    REQUIRE(iter.remaining_bytes() == text.size());
+
+    rune buffer[8];
+    auto result = iter.next_batch(buffer);
+
+    REQUIRE(result.count <= 8);
+    REQUIRE(result.count > 0);
+    REQUIRE(iter.remaining_bytes() < text.size());
+
+    // Test reset functionality
+    iter.reset();
+    REQUIRE(iter.remaining_bytes() == text.size());
+}
+
+TEST_CASE("Utf8BatchIterator complete iteration", "[Utf8BatchIterator]") {
+    Str8 text("Test 🚀 String");
+    Utf8BatchIterator iter(text, 4);
+
+    Seq<rune> all_codepoints;
+    rune buffer[4];
+
+    while(iter.has_next()) {
+        auto result = iter.next_batch(buffer);
+        for(size_t i = 0; i < result.count; ++i) {
+            all_codepoints.push_back(buffer[i]);
+        }
+    }
+
+    // Verify we got all codepoints by comparing with single-character iteration
+    Utf8Iterator single_iter(text);
+    size_t single_count = 0;
+    while(single_iter.has_next()) {
+        auto result = single_iter.next();
+        if(result.valid) {
+            REQUIRE(single_count < all_codepoints.size());
+            REQUIRE(all_codepoints[single_count] == result.codepoint);
+            single_count++;
+        }
+    }
+
+    REQUIRE(single_count == all_codepoints.size());
+}
+
+TEST_CASE("Utf8BatchIterator explicit capacity", "[Utf8BatchIterator]") {
+    Str8 text("Hello World");
+    Utf8BatchIterator iter(text);
+
+    rune buffer[16];
+    auto result = iter.next_batch(buffer, 16);
+
+    REQUIRE(result.capacity == 16);
+    REQUIRE(result.count == 11); // "Hello World" is 11 characters
+    REQUIRE(result.all_valid);
+
+    // Verify content
+    const char* expected = "Hello World";
+    for(size_t i = 0; i < result.count; ++i) {
+        REQUIRE(buffer[i] == static_cast<rune>(expected[i]));
+    }
+}
+
+TEST_CASE("Utf8BatchIterator template array", "[Utf8BatchIterator]") {
+    Str8 text("Test");
+    Utf8BatchIterator iter(text);
+
+    rune buffer[8];
+    auto result = UTF8_BATCH_DECODE_ARRAY(iter, buffer);
+
+    REQUIRE(result.capacity == 8);
+    REQUIRE(result.count == 4); // "Test" is 4 characters
+    REQUIRE(result.all_valid);
+
+    // Verify content
+    REQUIRE(buffer[0] == 'T');
+    REQUIRE(buffer[1] == 'e');
+    REQUIRE(buffer[2] == 's');
+    REQUIRE(buffer[3] == 't');
+}
+
+TEST_CASE("Utf8BatchIterator batch size modification", "[Utf8BatchIterator]") {
+    Str8 text("Test string for batch size testing");
+    Utf8BatchIterator iter(text, 5);
+
+    REQUIRE(iter.get_batch_size() == 5);
+
+    iter.set_batch_size(10);
+    REQUIRE(iter.get_batch_size() == 10);
+
+    rune buffer[15];
+    auto result = iter.next_batch(buffer, 15);
+    REQUIRE(result.capacity == 15); // Should use explicit capacity, not default batch size
+}
+
 TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
     // Create a large ASCII string for benchmarking with varied content
     Str8 ascii_text;
@@ -370,7 +540,7 @@ TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
         }
     }
 
-    BENCHMARK("UTF-8 decode") {
+    BENCHMARK("UTF-8 decode single") {
         Utf8Iterator iter(unicode_text);
         size_t total_chars = 0;
         u64 checksum = 0;
@@ -380,6 +550,57 @@ TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
             if(!result.valid) break;
             total_chars++;
             checksum ^= result.codepoint;
+        }
+
+        return checksum;
+    };
+
+    BENCHMARK("UTF-8 decode batch (32)") {
+        Utf8BatchIterator iter(unicode_text, 32);
+        rune buffer[32];
+        size_t total_chars = 0;
+        u64 checksum = 0;
+
+        while(iter.has_next()) {
+            auto result = iter.next_batch(buffer);
+            for(size_t i = 0; i < result.count; ++i) {
+                checksum ^= buffer[i];
+            }
+            total_chars += result.count;
+        }
+
+        return checksum;
+    };
+
+    BENCHMARK("UTF-8 decode batch (64)") {
+        Utf8BatchIterator iter(unicode_text, 64);
+        rune buffer[64];
+        size_t total_chars = 0;
+        u64 checksum = 0;
+
+        while(iter.has_next()) {
+            auto result = iter.next_batch(buffer);
+            for(size_t i = 0; i < result.count; ++i) {
+                checksum ^= buffer[i];
+            }
+            total_chars += result.count;
+        }
+
+        return checksum;
+    };
+
+    BENCHMARK("UTF-8 decode via next_batch on regular iterator") {
+        Utf8Iterator iter(unicode_text);
+        rune buffer[32];
+        size_t total_chars = 0;
+        u64 checksum = 0;
+
+        while(iter.has_next()) {
+            auto result = iter.next_batch(buffer, 32);
+            for(size_t i = 0; i < result.count; ++i) {
+                checksum ^= buffer[i];
+            }
+            total_chars += result.count;
         }
 
         return checksum;
@@ -417,7 +638,7 @@ TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
             auto encode_result = utf8_encode(codepoint);
             if(encode_result.valid) {
                 for(u8 j = 0; j < encode_result.byte_count; ++j) {
-                    unicode_text.extend(Str8{(char*) encode_result.bytes, encode_result.byte_count, nullptr});
+                    unicode_text.extend(S8_DATA(encode_result.bytes, encode_result.byte_count));
                 }
             }
         }

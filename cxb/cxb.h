@@ -938,6 +938,14 @@ struct Utf8EncodeResult {
     bool valid;
 };
 
+struct Utf8BatchDecodeResult {
+    rune* codepoints;
+    size_t count;
+    size_t bytes_consumed;
+    size_t capacity;
+    bool all_valid;
+};
+
 CXB_INLINE Utf8DecodeResult utf8_decode(const u8* bytes, size_t max_bytes) {
     if(max_bytes == 0 || bytes == nullptr) {
         return {0, 0, false};
@@ -997,6 +1005,51 @@ CXB_INLINE Utf8DecodeResult utf8_decode(const u8* bytes, size_t max_bytes) {
 
 CXB_INLINE Utf8DecodeResult utf8_decode(const char* str, size_t max_bytes) {
     return utf8_decode(reinterpret_cast<const u8*>(str), max_bytes);
+}
+
+CXB_INLINE Utf8BatchDecodeResult utf8_decode_batch(const u8* bytes,
+                                                   size_t max_bytes,
+                                                   rune* output_buffer,
+                                                   size_t buffer_capacity) {
+    Utf8BatchDecodeResult result = {output_buffer, 0, 0, buffer_capacity, true};
+
+    if(bytes == nullptr || output_buffer == nullptr || buffer_capacity == 0) {
+        result.all_valid = false;
+        return result;
+    }
+
+    size_t byte_pos = 0;
+    size_t codepoint_count = 0;
+
+    while(byte_pos < max_bytes && codepoint_count < buffer_capacity) {
+        auto decode_result = utf8_decode(bytes + byte_pos, max_bytes - byte_pos);
+
+        if(!decode_result.valid) {
+            result.all_valid = false;
+            // Skip invalid byte and continue
+            if(decode_result.bytes_consumed == 0) {
+                byte_pos += 1; // Skip at least one byte to avoid infinite loop
+            } else {
+                byte_pos += decode_result.bytes_consumed;
+            }
+            continue;
+        }
+
+        output_buffer[codepoint_count] = decode_result.codepoint;
+        codepoint_count++;
+        byte_pos += decode_result.bytes_consumed;
+    }
+
+    result.count = codepoint_count;
+    result.bytes_consumed = byte_pos;
+    return result;
+}
+
+CXB_INLINE Utf8BatchDecodeResult utf8_decode_batch(const char* str,
+                                                   size_t max_bytes,
+                                                   rune* output_buffer,
+                                                   size_t buffer_capacity) {
+    return utf8_decode_batch(reinterpret_cast<const u8*>(str), max_bytes, output_buffer, buffer_capacity);
 }
 
 CXB_INLINE Utf8EncodeResult utf8_encode(rune codepoint) {
@@ -1087,7 +1140,80 @@ struct Utf8Iterator {
     CXB_INLINE void reset() {
         pos = 0;
     }
+
+    CXB_INLINE Utf8BatchDecodeResult next_batch(rune* output_buffer, size_t buffer_capacity) {
+        if(!has_next()) {
+            return {output_buffer, 0, 0, buffer_capacity, true};
+        }
+
+        auto result = utf8_decode_batch(s.data + pos, s.len - pos, output_buffer, buffer_capacity);
+        if(result.all_valid || result.count > 0) {
+            pos += result.bytes_consumed;
+        }
+        return result;
+    }
+
+    CXB_INLINE size_t remaining_bytes() const {
+        return pos < s.len ? s.len - pos : 0;
+    }
+
+    CXB_INLINE size_t estimate_remaining_codepoints() const {
+        // Conservative estimate: assume worst case of 1 codepoint per byte
+        // In practice, ASCII text will have 1:1 ratio, while emoji-heavy text will be closer to 1:4
+        return remaining_bytes();
+    }
 };
+
+struct Utf8BatchIterator {
+    Str8 s;
+    size_t pos;
+    size_t default_batch_size;
+
+    Utf8BatchIterator(const Str8& str, size_t batch_size = 32) : s{str}, pos{0}, default_batch_size{batch_size} {}
+
+    CXB_INLINE bool has_next() const {
+        return pos < s.len;
+    }
+
+    CXB_INLINE Utf8BatchDecodeResult next_batch(rune* output_buffer, size_t buffer_capacity) {
+        if(!has_next()) {
+            return {output_buffer, 0, 0, buffer_capacity, true};
+        }
+
+        auto result = utf8_decode_batch(s.data + pos, s.len - pos, output_buffer, buffer_capacity);
+        if(result.all_valid || result.count > 0) {
+            pos += result.bytes_consumed;
+        }
+        return result;
+    }
+
+    CXB_INLINE Utf8BatchDecodeResult next_batch(rune* output_buffer) {
+        return next_batch(output_buffer, default_batch_size);
+    }
+
+    CXB_INLINE size_t remaining_bytes() const {
+        return pos < s.len ? s.len - pos : 0;
+    }
+
+    CXB_INLINE size_t estimate_remaining_codepoints() const {
+        return remaining_bytes();
+    }
+
+    CXB_INLINE void reset() {
+        pos = 0;
+    }
+
+    CXB_INLINE void set_batch_size(size_t new_batch_size) {
+        default_batch_size = new_batch_size;
+    }
+
+    CXB_INLINE size_t get_batch_size() const {
+        return default_batch_size;
+    }
+};
+
+// Helper macro for convenient array-based batch decoding
+#define UTF8_BATCH_DECODE_ARRAY(iterator, array) (iterator).next_batch((array), sizeof(array) / sizeof((array)[0]))
 
 /* SECTION: math types */
 // TODO
@@ -1167,5 +1293,6 @@ CXB_NS_END
 #endif
 
 #define S8_LIT(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s), nullptr})
-#define s8_str(s) (Str8{(char*) s.c_str(), (size_t) s.size(), nullptr})
-#define s8_cstr(s) (Str8{(char*) s, (size_t) strlen(s), nullptr})
+#define S8_DATA(c, len) (Str8{(char*) &c[0], len, nullptr})
+#define S8_STR(s) (Str8{(char*) s.c_str(), (size_t) s.size(), nullptr})
+#define S8_CSTR(s) (Str8{(char*) s, (size_t) strlen(s), nullptr})
