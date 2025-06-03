@@ -1,6 +1,8 @@
 #define CATCH_CONFIG_MAIN
+#include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
+#include <random>
 CXB_USE_NS;
 
 TEST_CASE("Str8 default constructor", "[Str8]") {
@@ -305,4 +307,141 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     auto next_result = iter.next();
     REQUIRE(next_result.codepoint == peek_result);
     REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
+}
+
+TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
+    // Create a large ASCII string for benchmarking with varied content
+    Str8 ascii_text;
+    std::mt19937 rng(42); // Fixed seed for reproducibility
+    std::uniform_int_distribution<int> char_dist('A', 'Z');
+
+    // Create varied ASCII content to prevent optimization
+    for(int i = 0; i < 1000; ++i) {
+        for(int j = 0; j < 45; ++j) {
+            ascii_text.push_back(static_cast<char>(char_dist(rng)));
+        }
+        ascii_text.push_back(' ');
+    }
+
+    BENCHMARK("UTF-8 decode ASCII with utf8_decode") {
+        size_t pos = 0;
+        size_t total_chars = 0;
+        u64 checksum = 0;
+
+        while(pos < ascii_text.size()) {
+            auto result = utf8_decode(ascii_text.data + pos, ascii_text.size() - pos);
+            if(!result.valid) break;
+            pos += result.bytes_consumed;
+            checksum ^= result.codepoint;
+        }
+
+        return checksum;
+    };
+
+    BENCHMARK("UTF-8 decode ASCII with Utf8Iterator") {
+        Utf8Iterator iter(ascii_text);
+        size_t total_chars = 0;
+        u64 checksum = 0;
+
+        while(iter.has_next()) {
+            auto result = iter.next();
+            if(!result.valid) break;
+            total_chars++;
+            checksum ^= result.codepoint; // Prevent optimization
+        }
+
+        return total_chars;
+    };
+}
+
+TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
+    Str8 unicode_text;
+    const char* samples[] = {
+        "Hello 🌍 World! ",   // ASCII + emoji
+        "Café naïve résumé ", // ASCII + accented chars
+        "こんにちは世界 ",    // Japanese
+        "🚀🌟💫⭐🎉 ",        // Multiple emojis
+        "Привет мир! "        // Cyrillic
+    };
+
+    for(int i = 0; i < 200; ++i) {
+        for(const char* sample : samples) {
+            unicode_text.extend(sample);
+        }
+    }
+
+    BENCHMARK("UTF-8 decode") {
+        Utf8Iterator iter(unicode_text);
+        size_t total_chars = 0;
+        u64 checksum = 0;
+
+        while(iter.has_next()) {
+            auto result = iter.next();
+            if(!result.valid) break;
+            total_chars++;
+            checksum ^= result.codepoint;
+        }
+
+        return checksum;
+    };
+}
+
+TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
+    Str8 ascii_text;
+    Str8 unicode_text;
+
+    std::mt19937 rng(123);
+    std::uniform_int_distribution<int> ascii_dist(32, 126);
+
+    for(int i = 0; i < 10000; ++i) {
+        while(ascii_text.size() < 100) {
+            ascii_text.push_back(static_cast<char>(ascii_dist(rng)));
+        }
+        ascii_text.push_back('\n');
+    }
+
+    u32 unicode_codepoints[] = {
+        0x1F600, 0x1F601, 0x1F602, 0x1F603, 0x1F604, 0x1F605, 0x1F606, 0x1F607, // Smileys
+        0x1F680, 0x1F681, 0x1F682, 0x1F683, 0x1F684, 0x1F685, 0x1F686, 0x1F687, // Transportation
+        0x1F300, 0x1F301, 0x1F302, 0x1F303, 0x1F304, 0x1F305, 0x1F306, 0x1F307, // Nature
+        0x1F30D, 0x1F30E, 0x1F30F, 0x1F311, 0x1F313, 0x1F314, 0x1F315, 0x1F319, // Earth/Moon
+        0x1F44D, 0x1F44E, 0x1F44F, 0x1F450, 0x1F451, 0x1F4A9, 0x1F4AA, 0x1F525, // Hands/Objects
+        0x2764,  0x2665,  0x2B50,  0x2728,  0x26A1,  0x1F525, 0x1F4A5, 0x1F31F  // Hearts/Stars
+    };
+    std::uniform_int_distribution<size_t> unicode_dist(0,
+                                                       sizeof(unicode_codepoints) / sizeof(unicode_codepoints[0]) - 1);
+
+    for(int i = 0; i < 10000; ++i) {
+        while(unicode_text.size() < 100) {
+            u32 codepoint = unicode_codepoints[unicode_dist(rng)];
+            auto encode_result = utf8_encode(codepoint);
+            if(encode_result.valid) {
+                for(u8 j = 0; j < encode_result.byte_count; ++j) {
+                    unicode_text.extend(Str8{(char*) encode_result.bytes, encode_result.byte_count, nullptr});
+                }
+            }
+        }
+        unicode_text.push_back('\n');
+    }
+
+    BENCHMARK("Iterate ASCII text") {
+        u64 result = 0;
+        for(size_t i = 0; i < ascii_text.size(); ++i) {
+            result ^= ascii_text[i];
+        }
+        REQUIRE(result);
+        return result;
+    };
+
+    BENCHMARK("Validate ASCII text") {
+        size_t result = utf8_validate(ascii_text.data, ascii_text.size());
+        REQUIRE(result);
+        return result;
+    };
+
+    BENCHMARK("Validate mixed Unicode text") {
+        size_t result = utf8_validate(unicode_text.data, unicode_text.size());
+        REQUIRE(result);
+        return result;
+    };
 }
