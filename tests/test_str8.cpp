@@ -30,7 +30,7 @@ TEST_CASE("Str8 from empty C string", "[Str8]") {
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
-    REQUIRE(s == s8_lit(""));
+    REQUIRE(s == S8_LIT(""));
 }
 
 TEST_CASE("Str8 from null pointer", "[Str8]") {
@@ -82,7 +82,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
     REQUIRE(s.size() == 6);
     REQUIRE(s.null_term);
 
-    Str8 cmp = s8_lit("Hello!");
+    Str8 cmp = S8_LIT("Hello!");
     for(int i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == cmp[i]);
     }
@@ -96,7 +96,7 @@ TEST_CASE("Str8 append C string", "[Str8]") {
 
     REQUIRE(s.len == 13);
     REQUIRE(s.null_term);
-    REQUIRE(s == s8_lit("Hello, World!"));
+    REQUIRE(s == S8_LIT("Hello, World!"));
     REQUIRE(strcmp(s.c_str(), "Hello, World!") == 0);
 }
 
@@ -107,7 +107,7 @@ TEST_CASE("Str8 append other Str8", "[Str8]") {
 
     REQUIRE(s1.len == 13);
     REQUIRE(s1.null_term);
-    REQUIRE(s1 == s8_lit("Hello, World!"));
+    REQUIRE(s1 == S8_LIT("Hello, World!"));
 }
 
 TEST_CASE("Str8 append to non-null-terminated", "[Str8]") {
@@ -124,7 +124,7 @@ TEST_CASE("Str8 append to non-null-terminated", "[Str8]") {
     for(size_t i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == expected[i]);
     }
-    REQUIRE(s == s8_lit("Hi there"));
+    REQUIRE(s == S8_LIT("Hi there"));
 }
 
 TEST_CASE("Str8 resize", "[Str8]") {
@@ -134,7 +134,7 @@ TEST_CASE("Str8 resize", "[Str8]") {
     REQUIRE(s.size() == 10);
     REQUIRE(s.null_term);
 
-    REQUIRE(s == s8_lit("HelloXXXXX"));
+    REQUIRE(s == S8_LIT("HelloXXXXX"));
 }
 
 TEST_CASE("Str8 resize shrinking", "[Str8]") {
@@ -143,7 +143,7 @@ TEST_CASE("Str8 resize shrinking", "[Str8]") {
 
     REQUIRE(s.size() == 5);
     REQUIRE(s.null_term);
-    REQUIRE(s == s8_lit("Hello"));
+    REQUIRE(s == S8_LIT("Hello"));
 }
 
 TEST_CASE("Str8 pop_back", "[Str8]") {
@@ -153,7 +153,7 @@ TEST_CASE("Str8 pop_back", "[Str8]") {
     REQUIRE(c == 'o');
     REQUIRE(s.size() == 4);
     REQUIRE(s.null_term);
-    REQUIRE(s == s8_lit("Hell"));
+    REQUIRE(s == S8_LIT("Hell"));
 }
 
 TEST_CASE("Str8 slice", "[Str8]") {
@@ -198,5 +198,111 @@ TEST_CASE("Str8 ensure_null_terminated", "[Str8]") {
     s.ensure_null_terminated();
     REQUIRE(s.null_term);
     REQUIRE(s.size() == 2);
-    REQUIRE(s == s8_lit("Hi"));
+    REQUIRE(s == S8_LIT("Hi"));
+}
+
+TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
+    Str8 s("Hello World");
+    Utf8Iterator iter(s);
+
+    // Check that we can iterate through all ASCII characters
+    REQUIRE(iter.has_next());
+
+    // Test first character
+    auto result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == 'H');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Test space character
+    iter.pos = 5; // Move to space
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == ' ');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Test last character
+    iter.pos = 10; // Move to 'd'
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == 'd');
+    REQUIRE(result.bytes_consumed == 1);
+    REQUIRE_FALSE(iter.has_next());
+
+    // Test peek functionality
+    iter.reset();
+    auto peek_result = iter.peek();
+    REQUIRE(peek_result == 'H');
+    REQUIRE(iter.pos == 0); // Position shouldn't change after peek
+
+    // Verify next() gives same result as peek
+    auto next_result = iter.next();
+    REQUIRE(next_result.codepoint == peek_result);
+    REQUIRE(iter.pos == 1); // Position should advance after next()
+}
+
+TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
+    // String with mixed ASCII and emojis: "Hi 👋 🌍!"
+    // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
+    // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
+    Str8 s("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    Utf8Iterator iter(s);
+
+    // Test ASCII 'H'
+    REQUIRE(iter.has_next());
+    auto result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == 'H');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Test ASCII 'i'
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == 'i');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Test ASCII space
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == ' ');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Test waving hand emoji 👋 (U+1F44B)
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == 0x1F44B);
+    REQUIRE(result.bytes_consumed == 4);
+
+    // Test ASCII space
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == ' ');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Test earth emoji 🌍 (U+1F30D)
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == 0x1F30D);
+    REQUIRE(result.bytes_consumed == 4);
+
+    // Test ASCII '!'
+    result = iter.next();
+    REQUIRE(result.valid);
+    REQUIRE(result.codepoint == '!');
+    REQUIRE(result.bytes_consumed == 1);
+
+    // Should be at end
+    REQUIRE_FALSE(iter.has_next());
+
+    // Test reset and peek with emoji
+    iter.reset();
+    iter.pos = 3; // Position at start of first emoji
+    auto peek_result = iter.peek();
+    REQUIRE(peek_result == 0x1F44B);
+    REQUIRE(iter.pos == 3); // Position unchanged after peek
+
+    // Verify next gives same result
+    auto next_result = iter.next();
+    REQUIRE(next_result.codepoint == peek_result);
+    REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
 }
