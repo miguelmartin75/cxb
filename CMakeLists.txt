@@ -25,4 +25,9 @@ add_executable(test_seq tests/test_seq.cpp)
 target_include_directories(test_seq PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_seq PRIVATE Catch2::Catch2WithMain cxb)
 
+add_executable(test_str8 tests/test_str8.cpp)
+target_include_directories(test_str8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_str8 PRIVATE Catch2::Catch2WithMain cxb)
+
 add_test(NAME seq_tests COMMAND test_seq)
+add_test(NAME str8_tests COMMAND test_str8)
