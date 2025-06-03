@@ -938,7 +938,6 @@ struct Utf8EncodeResult {
     bool valid;
 };
 
-// Decode a single UTF-8 sequence from bytes
 CXB_INLINE Utf8DecodeResult utf8_decode(const u8* bytes, size_t max_bytes) {
     if(max_bytes == 0 || bytes == nullptr) {
         return {0, 0, false};
@@ -1043,30 +1042,18 @@ CXB_INLINE u8 utf8_sequence_length(u8 first_byte) {
     return 0; // Invalid
 }
 
-CXB_INLINE bool utf8_validate(const char* str, size_t byte_length) {
+CXB_INLINE size_t utf8_validate(const char* str, size_t byte_length) {
     if(!str) return false;
 
+    size_t code_points = 0;
     size_t pos = 0;
     while(pos < byte_length) {
         auto result = utf8_decode(str + pos, byte_length - pos);
-        if(!result.valid) return false;
+        if(!result.valid) return 0;
+        code_points += 1;
         pos += result.bytes_consumed;
     }
-    return true;
-}
-
-CXB_INLINE size_t utf8_codepoint_count(const char* str, size_t byte_length) {
-    if(!str) return 0;
-
-    size_t count = 0;
-    size_t pos = 0;
-    while(pos < byte_length) {
-        auto result = utf8_decode(str + pos, byte_length - pos);
-        if(!result.valid) break;
-        count++;
-        pos += result.bytes_consumed;
-    }
-    return count;
+    return code_points;
 }
 
 struct Utf8Iterator {
