@@ -2,15 +2,15 @@
 # cxb: Base library for CX (Orthodox-C++)
 
 This library is my own style (Miguel's) of writing C++. This does include RAII
-by default, but it can be disabled. Please see below in the "configuration"
-section.
+by default, but it can be disabled at compile-time and run-time. Please see below
+in the "configuration" section.
 
-Inspiration:
-- Nim
+## Inspiration
 - Zig
 - Python
+- Nim
 
-# Containers
+## Containers
 * Seq<T>
 * Str8
 
@@ -82,9 +82,9 @@ extern "C" {
 
 #define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
 #define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
-#define ASSERT(x, msg)                                                                                                 \
+#define ASSERT(x, msg)    \
     if(!(x)) BREAKPOINT()
-#define REQUIRES(x)                                                                                                    \
+#define REQUIRES(x)       \
     if(!(x)) BREAKPOINT()
 #define LIKELY(x) x
 #define UNLIKELY(x) x
@@ -134,43 +134,14 @@ typedef uint64_t u64;
 typedef int64_t ll;
 typedef int32_t rune;
 
-enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
-
-namespace _cxb {
-#ifdef CXB_USE_C11_ATOMIC
-constexpr memory_order to_c11_order(MemoryOrderOption order) {
-    switch(order) {
-        case MemoryOrderOption::Relaxed:
-            return memory_order_relaxed;
-        case MemoryOrderOption::Acquire:
-            return memory_order_acquire;
-        case MemoryOrderOption::Release:
-            return memory_order_release;
-        case MemoryOrderOption::AcqRel:
-            return memory_order_acq_rel;
-        case MemoryOrderOption::SeqCst:
-            return memory_order_seq_cst;
-    }
-    return memory_order_seq_cst;
-}
+#if defined(__GNUC__)
+typedef __uint128_t u128;
+typedef __int128_t i128;
 #else
-constexpr std::memory_order to_std_order(MemoryOrderOption order) {
-    switch(order) {
-        case MemoryOrderOption::Relaxed:
-            return std::memory_order_relaxed;
-        case MemoryOrderOption::Acquire:
-            return std::memory_order_acquire;
-        case MemoryOrderOption::Release:
-            return std::memory_order_release;
-        case MemoryOrderOption::AcqRel:
-            return std::memory_order_acq_rel;
-        case MemoryOrderOption::SeqCst:
-            return std::memory_order_seq_cst;
-    }
-    return std::memory_order_seq_cst;
-}
+// TODO: support MSVC, etc.
 #endif
-} // namespace _cxb
+
+enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
 
 template <typename T>
 class Atomic {
@@ -201,25 +172,25 @@ class Atomic {
 
     CXB_INLINE void store(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        atomic_store_explicit(&value, desired, _cxb::to_c11_order(order));
+        atomic_store_explicit(&value, desired, to_c11_order(order));
 #else
-        value.store(desired, _cxb::to_std_order(order));
+        value.store(desired, to_std_order(order));
 #endif
     }
 
     CXB_INLINE T load(MemoryOrderOption order = MemoryOrderOption::SeqCst) const noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_load_explicit(&value, _cxb::to_c11_order(order));
+        return atomic_load_explicit(&value, to_c11_order(order));
 #else
-        return value.load(_cxb::to_std_order(order));
+        return value.load(to_std_order(order));
 #endif
     }
 
     CXB_INLINE T exchange(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_exchange_explicit(&value, desired, _cxb::to_c11_order(order));
+        return atomic_exchange_explicit(&value, desired, to_c11_order(order));
 #else
-        return value.exchange(desired, _cxb::to_std_order(order));
+        return value.exchange(desired, to_std_order(order));
 #endif
     }
 
@@ -229,9 +200,9 @@ class Atomic {
                                           MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_weak_explicit(
-            &value, &expected, desired, _cxb::to_c11_order(success), _cxb::to_c11_order(failure));
+            &value, &expected, desired, to_c11_order(success), to_c11_order(failure));
 #else
-        return value.compare_exchange_weak(expected, desired, _cxb::to_std_order(success), _cxb::to_std_order(failure));
+        return value.compare_exchange_weak(expected, desired, to_std_order(success), to_std_order(failure));
 #endif
     }
 
@@ -241,10 +212,9 @@ class Atomic {
                                             MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_strong_explicit(
-            &value, &expected, desired, _cxb::to_c11_order(success), _cxb::to_c11_order(failure));
+            &value, &expected, desired, to_c11_order(success), to_c11_order(failure));
 #else
-        return value.compare_exchange_strong(
-            expected, desired, _cxb::to_std_order(success), _cxb::to_std_order(failure));
+        return value.compare_exchange_strong(expected, desired, to_std_order(success), to_std_order(failure));
 #endif
     }
 
@@ -253,9 +223,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_add_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_add_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_add(arg, _cxb::to_std_order(order));
+        return value.fetch_add(arg, to_std_order(order));
 #endif
     }
 
@@ -263,9 +233,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_sub_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_sub_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_sub(arg, _cxb::to_std_order(order));
+        return value.fetch_sub(arg, to_std_order(order));
 #endif
     }
 
@@ -273,9 +243,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_and_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_and_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_and(arg, _cxb::to_std_order(order));
+        return value.fetch_and(arg, to_std_order(order));
 #endif
     }
 
@@ -283,9 +253,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_or_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_or_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_or(arg, _cxb::to_std_order(order));
+        return value.fetch_or(arg, to_std_order(order));
 #endif
     }
 
@@ -293,9 +263,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_xor_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_xor_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_xor(arg, _cxb::to_std_order(order));
+        return value.fetch_xor(arg, to_std_order(order));
 #endif
     }
 
@@ -367,14 +337,41 @@ class Atomic {
 #else
         std::atomic<T>::is_always_lock_free;
 #endif
-};
 
-#if defined(__GNUC__)
-typedef __uint128_t u128;
-typedef __int128_t i128;
+#ifdef CXB_USE_C11_ATOMIC
+    static CXB_COMPTIME_INLINE memory_order to_c11_order(MemoryOrderOption order) {
+        switch(order) {
+            case MemoryOrderOption::Relaxed:
+                return memory_order_relaxed;
+            case MemoryOrderOption::Acquire:
+                return memory_order_acquire;
+            case MemoryOrderOption::Release:
+                return memory_order_release;
+            case MemoryOrderOption::AcqRel:
+                return memory_order_acq_rel;
+            case MemoryOrderOption::SeqCst:
+                return memory_order_seq_cst;
+        }
+        return memory_order_seq_cst;
+    }
 #else
-// TODO: support MSVC, etc.
+    static CXB_COMPTIME_INLINE std::memory_order to_std_order(MemoryOrderOption order) {
+        switch(order) {
+            case MemoryOrderOption::Relaxed:
+                return std::memory_order_relaxed;
+            case MemoryOrderOption::Acquire:
+                return std::memory_order_acquire;
+            case MemoryOrderOption::Release:
+                return std::memory_order_release;
+            case MemoryOrderOption::AcqRel:
+                return std::memory_order_acq_rel;
+            case MemoryOrderOption::SeqCst:
+                return std::memory_order_seq_cst;
+        }
+        return std::memory_order_seq_cst;
+    }
 #endif
+};
 
 /* SECTION: primitive functions */
 template <class T>
@@ -498,6 +495,7 @@ struct Allocator {
         this->free_impl(this, (void*) head, sizeof(T) * count);
     }
 
+    // TODO: inconsistent
     template <class H, class T>
     CXB_INLINE void free_with_header(T* head, size_t count) {
         this->free_impl(this, (char*) (head) - sizeof(H), sizeof(T) * count + sizeof(H));
@@ -520,9 +518,9 @@ extern Mallocator default_alloc;
 /* SECTION: containers */
 template <class T> // NOTE: could use allocator as template param
 struct Seq {
-    Allocator* allocator;
     T* data;
     size_t len;
+    Allocator* allocator;
 
     Seq(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0} {
         if(allocator) {
@@ -624,7 +622,7 @@ struct Seq {
         if(capacity() < new_len) {
             reserve(new_len);
         }
-        for(int i = len; i < new_len; ++i) {
+        for(size_t i = len; i < new_len; ++i) {
             // TODO: new []
             new(data + i) T{forward<Args>(args)...};
         }
@@ -667,11 +665,8 @@ struct Seq {
     }
 };
 
-struct Str8;
 /* SECTION: UTF-8 decoder/encoder */
-
 struct Str8 {
-    Allocator* allocator;
     char* data;
     union {
         struct {
@@ -680,13 +675,14 @@ struct Str8 {
         };
         size_t metadata;
     };
+    Allocator* allocator;
 
-    Str8(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0}, null_term{false} {
+    Str8(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, null_term{false}, allocator{allocator} {
         reserve(0);
     }
 
     Str8(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
-        : allocator{allocator}, data{nullptr}, len{n}, null_term{true} {
+        : data{nullptr}, len{n}, null_term{true}, allocator{allocator} {
         if(len == SIZE_MAX) {
             len = strlen(cstr);
         }
@@ -705,14 +701,14 @@ struct Str8 {
         }
     }
 
-    Str8(const Str8& o) : allocator{nullptr}, data{o.data}, metadata{o.metadata} {}
+    Str8(const Str8& o) : data{o.data}, metadata{o.metadata}, allocator{nullptr} {}
 
-    Str8(Str8&& o) : allocator{o.allocator}, data{o.data}, metadata{o.metadata} {
+    Str8(Str8&& o) : data{o.data}, metadata{o.metadata}, allocator{o.allocator} {
         o.allocator = nullptr;
     }
 
-    CXB_INLINE Str8& operator=(Str8& o) {
-        allocator = o.allocator;
+    CXB_INLINE Str8& operator=(const Str8& o) {
+        allocator = nullptr;
         data = o.data;
         metadata = o.metadata;
         return *this;
@@ -789,11 +785,10 @@ struct Str8 {
         return *this;
     }
 
-    CXB_INLINE Str8 copy(Allocator* to_allocator = nullptr, bool ensure_zero_term = false) {
+    CXB_INLINE Str8 copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
-        bool nt = null_term || ensure_zero_term;
         Str8 result{data, len, to_allocator};
         return result;
     }
@@ -820,7 +815,7 @@ struct Str8 {
         }
     }
 
-    inline void reserve(size_t cap) {
+    CXB_INLINE void reserve(size_t cap) {
         REQUIRES(allocator != nullptr);
 
         size_t* alloc_mem = start_mem();
@@ -831,7 +826,7 @@ struct Str8 {
         _capacity() = new_count;
     }
 
-    inline void resize(size_t new_len, char fill_char = '\0') {
+    void resize(size_t new_len, char fill_char = '\0') {
         bool was_null_terminated = null_term;
         size_t reserve_size = new_len + was_null_terminated;
 
@@ -852,7 +847,7 @@ struct Str8 {
         null_term = was_null_terminated;
     }
 
-    inline void push_back(char c) {
+    void push_back(char c) {
         REQUIRES(UNLIKELY(allocator != nullptr));
         size_t needed_cap = len + null_term + 1;
         if(capacity() < needed_cap) {
@@ -918,7 +913,7 @@ struct Str8 {
 
         REQUIRES(allocator != nullptr || copy_alloc_if_not != nullptr);
         if(allocator == nullptr) {
-            *this = move(this->copy(copy_alloc_if_not, true));
+            *this = move(this->copy(copy_alloc_if_not));
         } else {
             this->push_back('\0');
             this->null_term = true;
@@ -936,14 +931,6 @@ struct Utf8EncodeResult {
     u8 bytes[4];
     u8 byte_count;
     bool valid;
-};
-
-struct Utf8BatchDecodeResult {
-    rune* codepoints;
-    size_t count;
-    size_t bytes_consumed;
-    size_t capacity;
-    bool all_valid;
 };
 
 CXB_INLINE Utf8DecodeResult utf8_decode(const u8* bytes, size_t max_bytes) {
@@ -983,11 +970,9 @@ CXB_INLINE Utf8DecodeResult utf8_decode(const u8* bytes, size_t max_bytes) {
         return {0, 0, false};
     }
 
-    // Process continuation bytes
     for(u8 i = 1; i < expected_bytes; ++i) {
         u8 byte = bytes[i];
         if((byte & 0xC0) != 0x80) {
-            // Invalid continuation byte
             return {0, i, false};
         }
         codepoint = (codepoint << 6) | (byte & 0x3F);
@@ -1007,49 +992,12 @@ CXB_INLINE Utf8DecodeResult utf8_decode(const char* str, size_t max_bytes) {
     return utf8_decode(reinterpret_cast<const u8*>(str), max_bytes);
 }
 
-CXB_INLINE Utf8BatchDecodeResult utf8_decode_batch(const u8* bytes,
-                                                   size_t max_bytes,
-                                                   rune* output_buffer,
-                                                   size_t buffer_capacity) {
-    Utf8BatchDecodeResult result = {output_buffer, 0, 0, buffer_capacity, true};
-
-    if(bytes == nullptr || output_buffer == nullptr || buffer_capacity == 0) {
-        result.all_valid = false;
-        return result;
-    }
-
-    size_t byte_pos = 0;
-    size_t codepoint_count = 0;
-
-    while(byte_pos < max_bytes && codepoint_count < buffer_capacity) {
-        auto decode_result = utf8_decode(bytes + byte_pos, max_bytes - byte_pos);
-
-        if(!decode_result.valid) {
-            result.all_valid = false;
-            // Skip invalid byte and continue
-            if(decode_result.bytes_consumed == 0) {
-                byte_pos += 1; // Skip at least one byte to avoid infinite loop
-            } else {
-                byte_pos += decode_result.bytes_consumed;
-            }
-            continue;
-        }
-
-        output_buffer[codepoint_count] = decode_result.codepoint;
-        codepoint_count++;
-        byte_pos += decode_result.bytes_consumed;
-    }
-
-    result.count = codepoint_count;
-    result.bytes_consumed = byte_pos;
-    return result;
-}
-
-CXB_INLINE Utf8BatchDecodeResult utf8_decode_batch(const char* str,
-                                                   size_t max_bytes,
-                                                   rune* output_buffer,
-                                                   size_t buffer_capacity) {
-    return utf8_decode_batch(reinterpret_cast<const u8*>(str), max_bytes, output_buffer, buffer_capacity);
+CXB_INLINE u8 utf8_sequence_length(u8 first_byte) {
+    if((first_byte & 0x80) == 0) return 1;
+    if((first_byte & 0xE0) == 0xC0) return 2;
+    if((first_byte & 0xF0) == 0xE0) return 3;
+    if((first_byte & 0xF8) == 0xF0) return 4;
+    return 0; // Invalid
 }
 
 CXB_INLINE Utf8EncodeResult utf8_encode(rune codepoint) {
@@ -1087,34 +1035,24 @@ CXB_INLINE Utf8EncodeResult utf8_encode(rune codepoint) {
     return result;
 }
 
-CXB_INLINE u8 utf8_sequence_length(u8 first_byte) {
-    if((first_byte & 0x80) == 0) return 1;
-    if((first_byte & 0xE0) == 0xC0) return 2;
-    if((first_byte & 0xF0) == 0xE0) return 3;
-    if((first_byte & 0xF8) == 0xF0) return 4;
-    return 0; // Invalid
-}
-
-CXB_INLINE size_t utf8_validate(const char* str, size_t byte_length) {
-    if(!str) return false;
-
-    size_t code_points = 0;
-    size_t pos = 0;
-    while(pos < byte_length) {
-        auto result = utf8_decode(str + pos, byte_length - pos);
-        if(!result.valid) return 0;
-        code_points += 1;
-        pos += result.bytes_consumed;
-    }
-    return code_points;
-}
-
-struct Utf8Iterator {
+// TODO: optimize with SIMD
+template <size_t BufferSize>
+struct Utf8IteratorBatched {
     Str8 s;
-    size_t pos;
+    size_t pos = 0;
+    rune buffer[BufferSize] = {};
 
-    Utf8Iterator(const Str8& str) : pos{0}, s{str} {}
+    explicit Utf8IteratorBatched(const Str8& s) : pos{0}, buffer{{}}, s{s} {}
+    Utf8IteratorBatched(const Utf8IteratorBatched&) = delete;
+    Utf8IteratorBatched(Utf8IteratorBatched&&) = delete;
 
+    CXB_INLINE void reset(const Str8& s) {
+        this->s = s;
+        pos = 0;
+    }
+    CXB_INLINE void reset() {
+        pos = 0;
+    }
     CXB_INLINE bool has_next() const {
         return pos < s.len;
     }
@@ -1137,83 +1075,12 @@ struct Utf8Iterator {
         return result.valid ? result.codepoint : 0;
     }
 
-    CXB_INLINE void reset() {
-        pos = 0;
-    }
-
-    CXB_INLINE Utf8BatchDecodeResult next_batch(rune* output_buffer, size_t buffer_capacity) {
-        if(!has_next()) {
-            return {output_buffer, 0, 0, buffer_capacity, true};
-        }
-
-        auto result = utf8_decode_batch(s.data + pos, s.len - pos, output_buffer, buffer_capacity);
-        if(result.all_valid || result.count > 0) {
-            pos += result.bytes_consumed;
-        }
-        return result;
-    }
-
     CXB_INLINE size_t remaining_bytes() const {
         return pos < s.len ? s.len - pos : 0;
     }
-
-    CXB_INLINE size_t estimate_remaining_codepoints() const {
-        // Conservative estimate: assume worst case of 1 codepoint per byte
-        // In practice, ASCII text will have 1:1 ratio, while emoji-heavy text will be closer to 1:4
-        return remaining_bytes();
-    }
 };
 
-struct Utf8BatchIterator {
-    Str8 s;
-    size_t pos;
-    size_t default_batch_size;
-
-    Utf8BatchIterator(const Str8& str, size_t batch_size = 32) : s{str}, pos{0}, default_batch_size{batch_size} {}
-
-    CXB_INLINE bool has_next() const {
-        return pos < s.len;
-    }
-
-    CXB_INLINE Utf8BatchDecodeResult next_batch(rune* output_buffer, size_t buffer_capacity) {
-        if(!has_next()) {
-            return {output_buffer, 0, 0, buffer_capacity, true};
-        }
-
-        auto result = utf8_decode_batch(s.data + pos, s.len - pos, output_buffer, buffer_capacity);
-        if(result.all_valid || result.count > 0) {
-            pos += result.bytes_consumed;
-        }
-        return result;
-    }
-
-    CXB_INLINE Utf8BatchDecodeResult next_batch(rune* output_buffer) {
-        return next_batch(output_buffer, default_batch_size);
-    }
-
-    CXB_INLINE size_t remaining_bytes() const {
-        return pos < s.len ? s.len - pos : 0;
-    }
-
-    CXB_INLINE size_t estimate_remaining_codepoints() const {
-        return remaining_bytes();
-    }
-
-    CXB_INLINE void reset() {
-        pos = 0;
-    }
-
-    CXB_INLINE void set_batch_size(size_t new_batch_size) {
-        default_batch_size = new_batch_size;
-    }
-
-    CXB_INLINE size_t get_batch_size() const {
-        return default_batch_size;
-    }
-};
-
-// Helper macro for convenient array-based batch decoding
-#define UTF8_BATCH_DECODE_ARRAY(iterator, array) (iterator).next_batch((array), sizeof(array) / sizeof((array)[0]))
+typedef Utf8IteratorBatched<512> Utf8Iterator;
 
 /* SECTION: math types */
 // TODO
