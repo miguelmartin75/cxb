@@ -2,16 +2,17 @@
 # cxb: Base library for CX (Orthodox-C++)
 
 This library is my own style (Miguel's) of writing C++. This does include RAII
-by default, but it can be disabled. Please see below in the "configuration"
-section.
+by default, but it can be disabled at compile-time and run-time. Please see below
+in the "configuration" section.
 
-Inspiration:
-- Nim
+## Inspiration
 - Zig
 - Python
+- Nim
 
-# Containers
+## Containers
 * Seq<T>
+* Str8
 
 */
 
@@ -81,9 +82,9 @@ extern "C" {
 
 #define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
 #define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
-#define ASSERT(x, msg)                                                                                                 \
+#define ASSERT(x, msg)    \
     if(!(x)) BREAKPOINT()
-#define REQUIRES(x)                                                                                                    \
+#define REQUIRES(x)       \
     if(!(x)) BREAKPOINT()
 #define LIKELY(x) x
 #define UNLIKELY(x) x
@@ -133,43 +134,14 @@ typedef uint64_t u64;
 typedef int64_t ll;
 typedef int32_t rune;
 
-enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
-
-namespace _cxb {
-#ifdef CXB_USE_C11_ATOMIC
-constexpr memory_order to_c11_order(MemoryOrderOption order) {
-    switch(order) {
-        case MemoryOrderOption::Relaxed:
-            return memory_order_relaxed;
-        case MemoryOrderOption::Acquire:
-            return memory_order_acquire;
-        case MemoryOrderOption::Release:
-            return memory_order_release;
-        case MemoryOrderOption::AcqRel:
-            return memory_order_acq_rel;
-        case MemoryOrderOption::SeqCst:
-            return memory_order_seq_cst;
-    }
-    return memory_order_seq_cst;
-}
+#if defined(__GNUC__)
+typedef __uint128_t u128;
+typedef __int128_t i128;
 #else
-constexpr std::memory_order to_std_order(MemoryOrderOption order) {
-    switch(order) {
-        case MemoryOrderOption::Relaxed:
-            return std::memory_order_relaxed;
-        case MemoryOrderOption::Acquire:
-            return std::memory_order_acquire;
-        case MemoryOrderOption::Release:
-            return std::memory_order_release;
-        case MemoryOrderOption::AcqRel:
-            return std::memory_order_acq_rel;
-        case MemoryOrderOption::SeqCst:
-            return std::memory_order_seq_cst;
-    }
-    return std::memory_order_seq_cst;
-}
+// TODO: support MSVC, etc.
 #endif
-} // namespace _cxb
+
+enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
 
 template <typename T>
 class Atomic {
@@ -200,25 +172,25 @@ class Atomic {
 
     CXB_INLINE void store(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        atomic_store_explicit(&value, desired, _cxb::to_c11_order(order));
+        atomic_store_explicit(&value, desired, to_c11_order(order));
 #else
-        value.store(desired, _cxb::to_std_order(order));
+        value.store(desired, to_std_order(order));
 #endif
     }
 
     CXB_INLINE T load(MemoryOrderOption order = MemoryOrderOption::SeqCst) const noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_load_explicit(&value, _cxb::to_c11_order(order));
+        return atomic_load_explicit(&value, to_c11_order(order));
 #else
-        return value.load(_cxb::to_std_order(order));
+        return value.load(to_std_order(order));
 #endif
     }
 
     CXB_INLINE T exchange(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_exchange_explicit(&value, desired, _cxb::to_c11_order(order));
+        return atomic_exchange_explicit(&value, desired, to_c11_order(order));
 #else
-        return value.exchange(desired, _cxb::to_std_order(order));
+        return value.exchange(desired, to_std_order(order));
 #endif
     }
 
@@ -228,9 +200,9 @@ class Atomic {
                                           MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_weak_explicit(
-            &value, &expected, desired, _cxb::to_c11_order(success), _cxb::to_c11_order(failure));
+            &value, &expected, desired, to_c11_order(success), to_c11_order(failure));
 #else
-        return value.compare_exchange_weak(expected, desired, _cxb::to_std_order(success), _cxb::to_std_order(failure));
+        return value.compare_exchange_weak(expected, desired, to_std_order(success), to_std_order(failure));
 #endif
     }
 
@@ -240,10 +212,9 @@ class Atomic {
                                             MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
         return atomic_compare_exchange_strong_explicit(
-            &value, &expected, desired, _cxb::to_c11_order(success), _cxb::to_c11_order(failure));
+            &value, &expected, desired, to_c11_order(success), to_c11_order(failure));
 #else
-        return value.compare_exchange_strong(
-            expected, desired, _cxb::to_std_order(success), _cxb::to_std_order(failure));
+        return value.compare_exchange_strong(expected, desired, to_std_order(success), to_std_order(failure));
 #endif
     }
 
@@ -252,9 +223,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_add_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_add_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_add(arg, _cxb::to_std_order(order));
+        return value.fetch_add(arg, to_std_order(order));
 #endif
     }
 
@@ -262,9 +233,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_sub_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_sub_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_sub(arg, _cxb::to_std_order(order));
+        return value.fetch_sub(arg, to_std_order(order));
 #endif
     }
 
@@ -272,9 +243,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_and_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_and_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_and(arg, _cxb::to_std_order(order));
+        return value.fetch_and(arg, to_std_order(order));
 #endif
     }
 
@@ -282,9 +253,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_or_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_or_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_or(arg, _cxb::to_std_order(order));
+        return value.fetch_or(arg, to_std_order(order));
 #endif
     }
 
@@ -292,9 +263,9 @@ class Atomic {
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
         T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
 #ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_xor_explicit(&value, arg, _cxb::to_c11_order(order));
+        return atomic_fetch_xor_explicit(&value, arg, to_c11_order(order));
 #else
-        return value.fetch_xor(arg, _cxb::to_std_order(order));
+        return value.fetch_xor(arg, to_std_order(order));
 #endif
     }
 
@@ -366,14 +337,41 @@ class Atomic {
 #else
         std::atomic<T>::is_always_lock_free;
 #endif
-};
 
-#if defined(__GNUC__)
-typedef __uint128_t u128;
-typedef __int128_t i128;
+#ifdef CXB_USE_C11_ATOMIC
+    static CXB_COMPTIME_INLINE memory_order to_c11_order(MemoryOrderOption order) {
+        switch(order) {
+            case MemoryOrderOption::Relaxed:
+                return memory_order_relaxed;
+            case MemoryOrderOption::Acquire:
+                return memory_order_acquire;
+            case MemoryOrderOption::Release:
+                return memory_order_release;
+            case MemoryOrderOption::AcqRel:
+                return memory_order_acq_rel;
+            case MemoryOrderOption::SeqCst:
+                return memory_order_seq_cst;
+        }
+        return memory_order_seq_cst;
+    }
 #else
-// TODO: support MSVC, etc.
+    static CXB_COMPTIME_INLINE std::memory_order to_std_order(MemoryOrderOption order) {
+        switch(order) {
+            case MemoryOrderOption::Relaxed:
+                return std::memory_order_relaxed;
+            case MemoryOrderOption::Acquire:
+                return std::memory_order_acquire;
+            case MemoryOrderOption::Release:
+                return std::memory_order_release;
+            case MemoryOrderOption::AcqRel:
+                return std::memory_order_acq_rel;
+            case MemoryOrderOption::SeqCst:
+                return std::memory_order_seq_cst;
+        }
+        return std::memory_order_seq_cst;
+    }
 #endif
+};
 
 /* SECTION: primitive functions */
 template <class T>
@@ -497,6 +495,7 @@ struct Allocator {
         this->free_impl(this, (void*) head, sizeof(T) * count);
     }
 
+    // TODO: inconsistent
     template <class H, class T>
     CXB_INLINE void free_with_header(T* head, size_t count) {
         this->free_impl(this, (char*) (head) - sizeof(H), sizeof(T) * count + sizeof(H));
@@ -519,42 +518,48 @@ extern Mallocator default_alloc;
 /* SECTION: containers */
 template <class T> // NOTE: could use allocator as template param
 struct Seq {
-    Allocator* allocator;
     T* data;
     size_t len;
+    Allocator* allocator;
 
     Seq(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0} {
-        reserve(0);
+        if(allocator) {
+            reserve(0);
+        }
     }
-    Seq(T* data, size_t n = 0, Allocator* allocator = &default_alloc) : allocator{allocator}, data{data}, len{n} {
-        reserve(0);
+    Seq(T* data, size_t n, Allocator* allocator = &default_alloc) : allocator{allocator}, data{data}, len{n} {
+        if(allocator) {
+            reserve(0);
+        }
     }
+    Seq(const Seq<T>& o) : allocator{nullptr}, data{o.data}, len{o.len} {}
+    Seq(Seq<T>&& o) : allocator{o.allocator}, data{o.data}, len{o.len} {
+        o.allocator = nullptr;
+    }
+
 #ifndef CXB_DISABLE_RAII
     CXB_INLINE ~Seq() {
         destroy();
     }
 #endif
 
-    // creates a slice
-    Seq(const Seq<T>& o) : allocator{nullptr}, data{o.data}, len{o.len} {}
-
     // ** SECTION: slice compatible methods
-    inline size_t size() const {
+    CXB_INLINE size_t size() const {
         return len;
     }
-    inline bool empty() const {
+    CXB_INLINE bool empty() const {
         return len == 0;
     }
-    inline T& operator[](size_t idx) {
+    CXB_INLINE T& operator[](size_t idx) {
         return data[idx];
     }
-    inline const T& operator[](size_t idx) const {
+    CXB_INLINE const T& operator[](size_t idx) const {
         return data[idx];
     }
-    inline T& back() {
+    CXB_INLINE T& back() {
         return data[len - 1];
     }
-    inline Seq<T> slice(size_t i, size_t j = 0) {
+    CXB_INLINE Seq<T> slice(size_t i, size_t j = 0) {
         Seq<T> c = *this;
         c.data = c.data + i;
         c.len = j == 0 ? c.len : j - i + 1;
@@ -562,37 +567,48 @@ struct Seq {
     }
 
     // ** SECTION: allocator-related methods
+    CXB_INLINE Seq<T>& copy_(Allocator* to_allocator = &default_alloc) {
+        *this = move(this->copy(to_allocator));
+        return *this;
+    }
+
     inline Seq<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
         Seq<T> result{nullptr, 0, to_allocator};
-        // TODO
+        result.reserve(len);
+        if(data && len > 0) {
+            memcpy(result.data, data, len * sizeof(T));
+        }
+        result.len = len;
         return result;
     }
 
-    inline size_t* start_mem() {
+    CXB_INLINE size_t* start_mem() {
         if(this->data == nullptr) return nullptr;
         return ((size_t*) this->data) - 1;
     }
 
-    inline size_t& _capacity() {
+    CXB_INLINE size_t& _capacity() {
         REQUIRES(data);
         return *start_mem();
     }
 
-    inline size_t capacity() {
+    CXB_INLINE size_t capacity() {
         if(!data) return 0;
         return *start_mem();
     }
 
-    inline void destroy() {
+    CXB_INLINE void destroy() {
         if(data && allocator) {
             allocator->free_with_header<size_t>(data, capacity());
             data = nullptr;
         }
     }
 
-    inline void reserve(size_t cap) {
+    CXB_INLINE void reserve(size_t cap) {
+        REQUIRES(allocator != nullptr);
+
         size_t* alloc_mem = start_mem();
         size_t old_count = capacity();
         size_t new_count = max(cap, allocator->min_count_sug());
@@ -606,7 +622,7 @@ struct Seq {
         if(capacity() < new_len) {
             reserve(new_len);
         }
-        for(int i = len; i < new_len; ++i) {
+        for(size_t i = len; i < new_len; ++i) {
             // TODO: new []
             new(data + i) T{forward<Args>(args)...};
         }
@@ -649,20 +665,422 @@ struct Seq {
     }
 };
 
+/* SECTION: UTF-8 decoder/encoder */
 struct Str8 {
     char* data;
-    size_t len;
+    union {
+        struct {
+            size_t len : 62;
+            bool null_term : 1;
+        };
+        size_t metadata;
+    };
+    Allocator* allocator;
 
-    inline size_t size() const {
+    Str8(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, null_term{false}, allocator{allocator} {
+        reserve(0);
+    }
+
+    Str8(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
+        : data{nullptr}, len{n}, null_term{true}, allocator{allocator} {
+        if(len == SIZE_MAX) {
+            len = strlen(cstr);
+        }
+
+        size_t actual_len = n == SIZE_MAX ? (cstr ? strlen(cstr) : 0) : n;
+        len = actual_len;
+
+        if(this->allocator == nullptr) {
+            data = const_cast<char*>(cstr);
+        } else {
+            reserve(actual_len + 1);
+            if(actual_len > 0) {
+                memcpy(data, cstr, actual_len);
+            }
+            data[actual_len] = '\0';
+        }
+    }
+
+    Str8(const Str8& o) : data{o.data}, metadata{o.metadata}, allocator{nullptr} {}
+
+    Str8(Str8&& o) : data{o.data}, metadata{o.metadata}, allocator{o.allocator} {
+        o.allocator = nullptr;
+    }
+
+    CXB_INLINE Str8& operator=(const Str8& o) {
+        allocator = nullptr;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
+
+    CXB_INLINE Str8& operator=(Str8&& o) {
+        allocator = o.allocator;
+        o.allocator = nullptr;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
+
+#ifndef CXB_DISABLE_RAII
+    CXB_INLINE ~Str8() {
+        destroy();
+    }
+#endif
+
+    // ** SECTION: slice compatible methods
+    CXB_INLINE size_t size() const {
         return len;
     }
-    inline char& operator[](size_t idx) {
+    CXB_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_INLINE char& operator[](size_t idx) {
         return data[idx];
     }
-    inline const char& operator[](size_t idx) const {
+    CXB_INLINE const char& operator[](size_t idx) const {
         return data[idx];
+    }
+    CXB_INLINE char& back() {
+        return data[len - 1];
+    }
+    CXB_INLINE Str8 slice(size_t i, size_t j = 0) {
+        Str8 c = *this;
+        c.data = c.data + i;
+        size_t new_len = j == 0 ? len - i : j - i;
+        c.len = new_len;
+        c.null_term = i + new_len == len ? this->null_term : false;
+        return c;
+    }
+    CXB_INLINE const char* c_str(Allocator* copy_alloc_if_not = nullptr) {
+        if(!null_term) {
+            ensure_null_terminated(copy_alloc_if_not);
+        }
+        return data;
+    }
+
+    CXB_INLINE bool operator==(const Str8& o) const {
+        if(size() != o.size()) return false;
+        for(size_t i = 0; i < size(); ++i) {
+            if((*this)[i] != o[i]) return false;
+        }
+        return true;
+    }
+
+    CXB_INLINE bool operator!=(const Str8& o) const {
+        return !(*this == o);
+    }
+
+    CXB_INLINE bool operator<(const Str8& o) const {
+        for(size_t i = 0; i < min(len, o.len); ++i) {
+            if((*this)[i] < o[i]) return true;
+            if((*this)[i] > o[i]) return false;
+        }
+        return len < o.len;
+    }
+
+    // ** SECTION: allocator-related methods
+    CXB_INLINE Str8& copy_(Allocator* to_allocator = &default_alloc) {
+        *this = move(this->copy(to_allocator));
+        return *this;
+    }
+
+    CXB_INLINE Str8 copy(Allocator* to_allocator = nullptr) {
+        if(to_allocator == nullptr) to_allocator = allocator;
+        REQUIRES(to_allocator != nullptr);
+
+        Str8 result{data, len, to_allocator};
+        return result;
+    }
+
+    CXB_INLINE size_t* start_mem() {
+        if(this->data == nullptr) return nullptr;
+        return ((size_t*) this->data) - 1;
+    }
+
+    CXB_INLINE size_t& _capacity() {
+        REQUIRES(allocator);
+        return *start_mem();
+    }
+
+    CXB_INLINE size_t capacity() {
+        if(!data) return 0;
+        return *start_mem();
+    }
+
+    CXB_INLINE void destroy() {
+        if(data && allocator) {
+            allocator->free_with_header<size_t>(data, capacity());
+            data = nullptr;
+        }
+    }
+
+    CXB_INLINE void reserve(size_t cap) {
+        REQUIRES(allocator != nullptr);
+
+        size_t* alloc_mem = start_mem();
+        size_t old_count = capacity();
+        size_t new_count = max(cap, allocator->min_count_sug());
+        auto mem = allocator->recalloc_with_header<size_t, char>(alloc_mem, old_count, new_count);
+        data = mem.data;
+        _capacity() = new_count;
+    }
+
+    void resize(size_t new_len, char fill_char = '\0') {
+        bool was_null_terminated = null_term;
+        size_t reserve_size = new_len + was_null_terminated;
+
+        if(capacity() < reserve_size) {
+            reserve(reserve_size);
+        }
+
+        size_t old_len = len;
+        if(new_len > old_len) {
+            memset(data + old_len, fill_char, new_len - old_len);
+        }
+
+        if(was_null_terminated) {
+            data[new_len] = '\0';
+        }
+
+        len = new_len;
+        null_term = was_null_terminated;
+    }
+
+    void push_back(char c) {
+        REQUIRES(UNLIKELY(allocator != nullptr));
+        size_t needed_cap = len + null_term + 1;
+        if(capacity() < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity());
+            if(new_cap < needed_cap) new_cap = needed_cap;
+            reserve(new_cap);
+        }
+
+        data[len] = c;
+        if(UNLIKELY(c == '\0')) {
+            null_term = true;
+        } else {
+            len += 1;
+            if(null_term) {
+                data[len + 1] = '\0';
+            }
+        }
+    }
+
+    CXB_INLINE char& push() {
+        push_back('\0');
+        return data[len - 1];
+    }
+
+    CXB_INLINE char pop_back() {
+        REQUIRES(len > 0);
+        char ret = data[len - 1];
+        if(null_term && len > 0) {
+            data[len - 1] = '\0';
+        }
+        len--;
+        return ret;
+    }
+
+    void extend(Str8 other) {
+        if(other.len == 0) return;
+        REQUIRES(allocator);
+
+        size_t needed_cap = len + other.len;
+        if(capacity() < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity());
+            if(new_cap < needed_cap) new_cap = needed_cap;
+            reserve(new_cap);
+        }
+
+        memcpy(data + len, other.data, other.len);
+        len += other.len;
+    }
+
+    CXB_INLINE void operator+=(Str8 other) {
+        this->extend(other);
+    }
+
+    CXB_INLINE void extend(const char* str, size_t n = SIZE_MAX) {
+        if(!str) {
+            return;
+        }
+        this->extend(Str8{str, n, nullptr});
+    }
+
+    CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
+        if(null_term) return;
+
+        REQUIRES(allocator != nullptr || copy_alloc_if_not != nullptr);
+        if(allocator == nullptr) {
+            *this = move(this->copy(copy_alloc_if_not));
+        } else {
+            this->push_back('\0');
+            this->null_term = true;
+        }
     }
 };
+
+struct Utf8DecodeResult {
+    rune codepoint;
+    u8 bytes_consumed;
+    bool valid;
+};
+
+struct Utf8EncodeResult {
+    u8 bytes[4];
+    u8 byte_count;
+    bool valid;
+};
+
+CXB_INLINE Utf8DecodeResult utf8_decode(const u8* bytes, size_t max_bytes) {
+    if(max_bytes == 0 || bytes == nullptr) {
+        return {0, 0, false};
+    }
+
+    u8 first = bytes[0];
+
+    // ASCII (0xxxxxxx)
+    if((first & 0x80) == 0) {
+        return {static_cast<rune>(first), 1, true};
+    }
+
+    // Multi-byte sequences
+    u8 expected_bytes;
+    rune codepoint;
+
+    if((first & 0xE0) == 0xC0) {
+        // 2-byte sequence (110xxxxx 10xxxxxx)
+        expected_bytes = 2;
+        codepoint = first & 0x1F;
+    } else if((first & 0xF0) == 0xE0) {
+        // 3-byte sequence (1110xxxx 10xxxxxx 10xxxxxx)
+        expected_bytes = 3;
+        codepoint = first & 0x0F;
+    } else if((first & 0xF8) == 0xF0) {
+        // 4-byte sequence (11110xxx 10xxxxxx 10xxxxxx 10xxxxxx)
+        expected_bytes = 4;
+        codepoint = first & 0x07;
+    } else {
+        // Invalid first byte
+        return {0, 1, false};
+    }
+
+    if(max_bytes < expected_bytes) {
+        return {0, 0, false};
+    }
+
+    for(u8 i = 1; i < expected_bytes; ++i) {
+        u8 byte = bytes[i];
+        if((byte & 0xC0) != 0x80) {
+            return {0, i, false};
+        }
+        codepoint = (codepoint << 6) | (byte & 0x3F);
+    }
+
+    // Check for overlong encodings and invalid codepoints
+    if((expected_bytes == 2 && codepoint < 0x80) || (expected_bytes == 3 && codepoint < 0x800) ||
+       (expected_bytes == 4 && codepoint < 0x10000) || (codepoint > 0x10FFFF) ||
+       (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
+        return {0, expected_bytes, false};
+    }
+
+    return {codepoint, expected_bytes, true};
+}
+
+CXB_INLINE Utf8DecodeResult utf8_decode(const char* str, size_t max_bytes) {
+    return utf8_decode(reinterpret_cast<const u8*>(str), max_bytes);
+}
+
+CXB_INLINE u8 utf8_sequence_length(u8 first_byte) {
+    if((first_byte & 0x80) == 0) return 1;
+    if((first_byte & 0xE0) == 0xC0) return 2;
+    if((first_byte & 0xF0) == 0xE0) return 3;
+    if((first_byte & 0xF8) == 0xF0) return 4;
+    return 0; // Invalid
+}
+
+CXB_INLINE Utf8EncodeResult utf8_encode(rune codepoint) {
+    Utf8EncodeResult result = {{0}, 0, false};
+
+    if(codepoint < 0 || codepoint > 0x10FFFF || (codepoint >= 0xD800 && codepoint <= 0xDFFF)) {
+        return result;
+    }
+
+    if(codepoint <= 0x7F) {
+        // 1-byte sequence
+        result.bytes[0] = static_cast<u8>(codepoint);
+        result.byte_count = 1;
+    } else if(codepoint <= 0x7FF) {
+        // 2-byte sequence
+        result.bytes[0] = 0xC0 | static_cast<u8>(codepoint >> 6);
+        result.bytes[1] = 0x80 | static_cast<u8>(codepoint & 0x3F);
+        result.byte_count = 2;
+    } else if(codepoint <= 0xFFFF) {
+        // 3-byte sequence
+        result.bytes[0] = 0xE0 | static_cast<u8>(codepoint >> 12);
+        result.bytes[1] = 0x80 | static_cast<u8>((codepoint >> 6) & 0x3F);
+        result.bytes[2] = 0x80 | static_cast<u8>(codepoint & 0x3F);
+        result.byte_count = 3;
+    } else {
+        // 4-byte sequence
+        result.bytes[0] = 0xF0 | static_cast<u8>(codepoint >> 18);
+        result.bytes[1] = 0x80 | static_cast<u8>((codepoint >> 12) & 0x3F);
+        result.bytes[2] = 0x80 | static_cast<u8>((codepoint >> 6) & 0x3F);
+        result.bytes[3] = 0x80 | static_cast<u8>(codepoint & 0x3F);
+        result.byte_count = 4;
+    }
+
+    result.valid = true;
+    return result;
+}
+
+// TODO: optimize with SIMD
+template <size_t BufferSize>
+struct Utf8IteratorBatched {
+    Str8 s;
+    size_t pos = 0;
+    rune buffer[BufferSize] = {};
+
+    explicit Utf8IteratorBatched(const Str8& s) : pos{0}, buffer{{}}, s{s} {}
+    Utf8IteratorBatched(const Utf8IteratorBatched&) = delete;
+    Utf8IteratorBatched(Utf8IteratorBatched&&) = delete;
+
+    CXB_INLINE void reset(const Str8& s) {
+        this->s = s;
+        pos = 0;
+    }
+    CXB_INLINE void reset() {
+        pos = 0;
+    }
+    CXB_INLINE bool has_next() const {
+        return pos < s.len;
+    }
+
+    CXB_INLINE Utf8DecodeResult next() {
+        if(!has_next()) {
+            return {0, 0, false};
+        }
+
+        auto result = utf8_decode(s.data + pos, s.len - pos);
+        if(result.valid) {
+            pos += result.bytes_consumed;
+        }
+        return result;
+    }
+
+    CXB_INLINE rune peek() {
+        if(!has_next()) return 0;
+        auto result = utf8_decode(s.data + pos, s.len - pos);
+        return result.valid ? result.codepoint : 0;
+    }
+
+    CXB_INLINE size_t remaining_bytes() const {
+        return pos < s.len ? s.len - pos : 0;
+    }
+};
+
+typedef Utf8IteratorBatched<512> Utf8Iterator;
 
 /* SECTION: math types */
 // TODO
@@ -741,6 +1159,7 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
-#define s8_lit(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s)})
-#define s8_str(s) (Str8{(char*) &s[0], (size_t) s.size()})
-#define s8_cstr(s) (Str8{(char*) &s[0], (size_t) strlen(s)})
+#define S8_LIT(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s), nullptr})
+#define S8_DATA(c, len) (Str8{(char*) &c[0], len, nullptr})
+#define S8_STR(s) (Str8{(char*) s.c_str(), (size_t) s.size(), nullptr})
+#define S8_CSTR(s) (Str8{(char*) s, (size_t) strlen(s), nullptr})
