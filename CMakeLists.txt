@@ -10,9 +10,14 @@ set(CXB_SRCS "cxb/cxb.cpp")
 
 # Add compiler-specific options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-ftime-trace)
+    add_compile_options(-ftime-trace -Wall -Wextra)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra)
+endif()
+
+# Add optimization flags for benchmarks
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_compile_options(-O3 -DNDEBUG)
 endif()
 
 add_library(cxb SHARED ${CXB_SRCS})
