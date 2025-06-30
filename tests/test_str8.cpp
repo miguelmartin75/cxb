@@ -2,6 +2,7 @@
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
+#include <cxb/unicode.h>
 #include <random>
 
 CXB_USE_NS;
