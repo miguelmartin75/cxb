@@ -675,58 +675,16 @@ struct Str8 {
         };
         size_t metadata;
     };
-    Allocator* allocator;
 
-    Str8(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, null_term{false}, allocator{allocator} {
-        reserve(0);
-    }
-
-    Str8(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
-        : data{nullptr}, len{n}, null_term{true}, allocator{allocator} {
-        if(len == SIZE_MAX) {
-            len = strlen(cstr);
-        }
-
-        size_t actual_len = n == SIZE_MAX ? (cstr ? strlen(cstr) : 0) : n;
-        len = actual_len;
-
-        if(this->allocator == nullptr) {
-            data = const_cast<char*>(cstr);
-        } else {
-            reserve(actual_len + 1);
-            if(actual_len > 0) {
-                memcpy(data, cstr, actual_len);
-            }
-            data[actual_len] = '\0';
-        }
-    }
-
-    Str8(const Str8& o) : data{o.data}, metadata{o.metadata}, allocator{nullptr} {}
-
-    Str8(Str8&& o) : data{o.data}, metadata{o.metadata}, allocator{o.allocator} {
-        o.allocator = nullptr;
-    }
-
-    CXB_INLINE Str8& operator=(const Str8& o) {
-        allocator = nullptr;
-        data = o.data;
-        metadata = o.metadata;
-        return *this;
-    }
-
-    CXB_INLINE Str8& operator=(Str8&& o) {
-        allocator = o.allocator;
-        o.allocator = nullptr;
-        data = o.data;
-        metadata = o.metadata;
-        return *this;
-    }
-
-#ifndef CXB_DISABLE_RAII
-    CXB_INLINE ~Str8() {
-        destroy();
-    }
-#endif
+// #ifdef __cplusplus
+    Str8(): data{nullptr}, metadata{0} {}
+    Str8(const char* data, size_t len = SIZE_MAX, bool null_term = true) : 
+        data{const_cast<char*>(data)}, 
+        len{len == SIZE_MAX ? (data ? strlen(data) : 0) : len}, 
+        null_term{null_term} {}
+    Str8(const Str8& s) = default;
+    Str8(Str8&& s) = default;
+    ~Str8() = default;
 
     // ** SECTION: slice compatible methods
     CXB_INLINE size_t size() const {
@@ -752,9 +710,9 @@ struct Str8 {
         c.null_term = i + new_len == len ? this->null_term : false;
         return c;
     }
-    CXB_INLINE const char* c_str(Allocator* copy_alloc_if_not = nullptr) {
+    CXB_INLINE const char* c_str() const {
         if(!null_term) {
-            ensure_null_terminated(copy_alloc_if_not);
+            return nullptr;
         }
         return data;
     }
@@ -778,18 +736,85 @@ struct Str8 {
         }
         return len < o.len;
     }
+// #endif
+};
+
+struct String: Str8 {
+    Allocator* allocator;
+
+    String(Allocator* allocator = &default_alloc) : Str8{}, allocator{allocator} {
+        reserve(0);
+    }
+
+    String(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
+        : Str8{nullptr, n, true}, allocator{allocator} {
+        if(len == SIZE_MAX) {
+            len = strlen(cstr);
+        }
+
+        size_t actual_len = n == SIZE_MAX ? (cstr ? strlen(cstr) : 0) : n;
+        len = actual_len;
+
+        if(this->allocator == nullptr) {
+            data = const_cast<char*>(cstr);
+        } else {
+            reserve(actual_len + 1);
+            if(actual_len > 0) {
+                memcpy(data, cstr, actual_len);
+            }
+            data[actual_len] = '\0';
+        }
+    }
+    String(const String& o) : Str8{}, allocator{nullptr} {
+        data = o.data;
+        metadata = o.metadata;
+    }
+
+    String(String&& o) : Str8{}, allocator{o.allocator} {
+        data = o.data;
+        metadata = o.metadata;
+        o.allocator = nullptr;
+    }
+
+    CXB_INLINE String& operator=(const String& o) {
+        allocator = nullptr;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
+
+    CXB_INLINE String& operator=(String&& o) {
+        allocator = o.allocator;
+        o.allocator = nullptr;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
+
+#ifndef CXB_DISABLE_RAII
+    CXB_INLINE ~String() {
+        destroy();
+    }
+#endif
+
 
     // ** SECTION: allocator-related methods
-    CXB_INLINE Str8& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
+        if(!null_term) {
+            ensure_null_terminated(copy_alloc_if_not);
+        }
+        return data;
+    }
+    CXB_INLINE String& copy_(Allocator* to_allocator = &default_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
 
-    CXB_INLINE Str8 copy(Allocator* to_allocator = nullptr) {
+    CXB_INLINE String copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
-        Str8 result{data, len, to_allocator};
+        String result{data, len, to_allocator};
         return result;
     }
 
@@ -905,7 +930,7 @@ struct Str8 {
         if(!str) {
             return;
         }
-        this->extend(Str8{str, n, nullptr});
+        this->extend(Str8{str, n});
     }
 
     CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
@@ -918,6 +943,10 @@ struct Str8 {
             this->push_back('\0');
             this->null_term = true;
         }
+    }
+
+    CXB_INLINE void release() {
+        this->allocator = nullptr;
     }
 };
 
@@ -1159,7 +1188,7 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
-#define S8_LIT(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s), nullptr})
-#define S8_DATA(c, len) (Str8{(char*) &c[0], len, nullptr})
-#define S8_STR(s) (Str8{(char*) s.c_str(), (size_t) s.size(), nullptr})
-#define S8_CSTR(s) (Str8{(char*) s, (size_t) strlen(s), nullptr})
+#define S8_LIT(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s)})
+#define S8_DATA(c, len) (Str8{(char*) &c[0], len})
+#define S8_STR(s) (Str8{(char*) s.c_str(), (size_t) s.size()})
+#define S8_CSTR(s) (Str8{(char*) s, (size_t) strlen(s)})

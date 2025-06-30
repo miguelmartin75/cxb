@@ -10,7 +10,6 @@ TEST_CASE("Str8 default constructor", "[Str8]") {
     Str8 s;
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
-    REQUIRE(s.capacity() == CXB_MALLOCATOR_MIN_CAP);
     REQUIRE_FALSE(s.null_term);
 }
 
@@ -45,10 +44,10 @@ TEST_CASE("Str8 from null pointer", "[Str8]") {
 
 TEST_CASE("Str8 from raw data", "[Str8]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    Str8 s(data, 5, nullptr);
+    Str8 s(data, 5, false);
 
     REQUIRE(s.size() == 5);
-    REQUIRE(s.null_term);
+    REQUIRE(!s.null_term);
     REQUIRE(s.data == data);
 
     for(size_t i = 0; i < 5; ++i) {
@@ -56,10 +55,10 @@ TEST_CASE("Str8 from raw data", "[Str8]") {
     }
 }
 
-TEST_CASE("Str8 push_back", "[Str8]") {
+TEST_CASE("String push_back", "[Str8]") {
     size_t allocated_bytes = 0;
     {
-        Str8 s;
+        String s;
         s.push_back('H');
         s.push_back('i');
 
@@ -75,7 +74,7 @@ TEST_CASE("Str8 push_back", "[Str8]") {
 }
 
 TEST_CASE("Str8 push_back with null termination", "[Str8]") {
-    Str8 s("Hello");
+    String s("Hello");
     REQUIRE(s.null_term);
     REQUIRE(s.allocator);
     REQUIRE(s.len == 5);
@@ -94,7 +93,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
 }
 
 TEST_CASE("Str8 append C string", "[Str8]") {
-    Str8 s("Hello");
+    String s("Hello");
     s.extend(", World!");
 
     REQUIRE(s.len == 13);
@@ -104,7 +103,7 @@ TEST_CASE("Str8 append C string", "[Str8]") {
 }
 
 TEST_CASE("Str8 append other Str8", "[Str8]") {
-    Str8 s1("Hello");
+    String s1("Hello");
     Str8 s2(", World!");
     s1.extend(s2);
 
@@ -114,7 +113,7 @@ TEST_CASE("Str8 append other Str8", "[Str8]") {
 }
 
 TEST_CASE("Str8 append to non-null-terminated", "[Str8]") {
-    Str8 s;
+    String s;
     s.push_back('H');
     s.push_back('i');
     REQUIRE_FALSE(s.null_term);
@@ -131,7 +130,7 @@ TEST_CASE("Str8 append to non-null-terminated", "[Str8]") {
 }
 
 TEST_CASE("Str8 resize", "[Str8]") {
-    Str8 s("Hello");
+    String s("Hello");
     s.resize(10, 'X');
 
     REQUIRE(s.size() == 10);
@@ -141,7 +140,7 @@ TEST_CASE("Str8 resize", "[Str8]") {
 }
 
 TEST_CASE("Str8 resize shrinking", "[Str8]") {
-    Str8 s("Hello, World!");
+    String s("Hello, World!");
     s.resize(5);
 
     REQUIRE(s.size() == 5);
@@ -150,7 +149,7 @@ TEST_CASE("Str8 resize shrinking", "[Str8]") {
 }
 
 TEST_CASE("Str8 pop_back", "[Str8]") {
-    Str8 s("Hello");
+    String s("Hello");
     char c = s.pop_back();
 
     REQUIRE(c == 'o');
@@ -160,13 +159,12 @@ TEST_CASE("Str8 pop_back", "[Str8]") {
 }
 
 TEST_CASE("Str8 slice", "[Str8]") {
-    Str8 s("Hello, World!");
+    Str8 s = S8_LIT("Hello, World!");
     Str8 slice1 = s.slice(7);    // "World!"
     Str8 slice2 = s.slice(0, 5); // "Hello"
 
     REQUIRE(slice1.size() == 6);
     REQUIRE(slice1.null_term);
-    REQUIRE(slice1.allocator == nullptr);
 
     REQUIRE(slice2.size() == 5);
     REQUIRE_FALSE(slice2.null_term);
@@ -182,8 +180,8 @@ TEST_CASE("Str8 slice", "[Str8]") {
 }
 
 TEST_CASE("Str8 copy", "[Str8]") {
-    Str8 original("Hello, World!");
-    Str8 copy = original.copy();
+    String original("Hello, World!");
+    String copy = original.copy();
 
     REQUIRE(copy.size() == original.size());
     REQUIRE(copy.null_term == original.null_term);
@@ -193,7 +191,7 @@ TEST_CASE("Str8 copy", "[Str8]") {
 }
 
 TEST_CASE("Str8 ensure_null_terminated", "[Str8]") {
-    Str8 s;
+    String s;
     s.push_back('H');
     s.push_back('i');
     REQUIRE_FALSE(s.null_term);
@@ -205,7 +203,7 @@ TEST_CASE("Str8 ensure_null_terminated", "[Str8]") {
 }
 
 TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
-    Str8 s("Hello World");
+    Str8 s = S8_LIT("Hello World");
     Utf8Iterator iter(s);
 
     // Check that we can iterate through all ASCII characters
@@ -248,7 +246,7 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     // String with mixed ASCII and emojis: "Hi 👋 🌍!"
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
-    Str8 s("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    Str8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
     Utf8Iterator iter(s);
 
     // Test ASCII 'H'
@@ -312,7 +310,7 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
 
 TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
     // Create a large ASCII string for benchmarking with varied content
-    Str8 ascii_text;
+    String ascii_text;
     std::mt19937 rng(42); // Fixed seed for reproducibility
     std::uniform_int_distribution<int> char_dist('A', 'Z');
 
@@ -353,7 +351,7 @@ TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
 }
 
 TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
-    Str8 unicode_text;
+    String unicode_text;
     const char* samples[] = {
         "Hello 🌍 World! ",   // ASCII + emoji
         "Café naïve résumé ", // ASCII + accented chars
@@ -383,8 +381,8 @@ TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
 }
 
 TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
-    Str8 ascii_text;
-    Str8 unicode_text;
+    String ascii_text;
+    String unicode_text;
 
     std::mt19937 rng(123);
     std::uniform_int_distribution<int> ascii_dist(32, 126);
