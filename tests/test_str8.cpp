@@ -8,7 +8,7 @@
 CXB_USE_NS;
 
 TEST_CASE("Str8 default constructor", "[Str8]") {
-    Str8 s = {};
+    StringSlice s = {};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.null_term);
@@ -16,7 +16,7 @@ TEST_CASE("Str8 default constructor", "[Str8]") {
 
 TEST_CASE("Str8 from C string", "[Str8]") {
     const char* test_str = "Hello, World!";
-    Str8 s{.data=const_cast<char*>(test_str), .len=13, .null_term=true};
+    StringSlice s{.data=const_cast<char*>(test_str), .len=13, .null_term=true};
 
     REQUIRE(s.size() == 13);
     REQUIRE_FALSE(s.empty());
@@ -29,7 +29,7 @@ TEST_CASE("Str8 from C string", "[Str8]") {
 }
 
 TEST_CASE("Str8 from empty C string", "[Str8]") {
-    Str8 s = S8_LIT("");
+    StringSlice s = S8_LIT("");
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
@@ -37,7 +37,7 @@ TEST_CASE("Str8 from empty C string", "[Str8]") {
 }
 
 TEST_CASE("Str8 from null pointer", "[Str8]") {
-    Str8 s{.data=nullptr, .len=0, .null_term=true};
+    StringSlice s{.data=nullptr, .len=0, .null_term=true};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
@@ -45,7 +45,7 @@ TEST_CASE("Str8 from null pointer", "[Str8]") {
 
 TEST_CASE("Str8 from raw data", "[Str8]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    Str8 s{.data=data, .len=5, .null_term=false};
+    StringSlice s{.data=data, .len=5, .null_term=false};
 
     REQUIRE(s.size() == 5);
     REQUIRE(!s.null_term);
@@ -85,7 +85,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
     REQUIRE(s.size() == 6);
     REQUIRE(s.null_term);
 
-    Str8 cmp = S8_LIT("Hello!");
+    StringSlice cmp = S8_LIT("Hello!");
     for(int i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == cmp[i]);
     }
@@ -105,7 +105,7 @@ TEST_CASE("Str8 append C string", "[String]") {
 
 TEST_CASE("Str8 append other Str8", "[String]") {
     String s1("Hello");
-    Str8 s2 = S8_LIT(", World!");
+    StringSlice s2 = S8_LIT(", World!");
     s1.extend(s2);
 
     REQUIRE(s1.len == 13);
@@ -160,9 +160,9 @@ TEST_CASE("Str8 pop_back", "[String]") {
 }
 
 TEST_CASE("Str8 slice", "[Str8]") {
-    Str8 s = S8_LIT("Hello, World!");
-    Str8 slice1 = s.slice(7);    // "World!"
-    Str8 slice2 = s.slice(0, 5); // "Hello"
+    StringSlice s = S8_LIT("Hello, World!");
+    StringSlice slice1 = s.slice(7);    // "World!"
+    StringSlice slice2 = s.slice(0, 5); // "Hello"
 
     REQUIRE(slice1.size() == 6);
     REQUIRE(slice1.null_term);
@@ -204,7 +204,7 @@ TEST_CASE("String ensure_null_terminated", "[String]") {
 }
 
 TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
-    Str8 s = S8_LIT("Hello World");
+    StringSlice s = S8_LIT("Hello World");
     Utf8Iterator iter(s);
 
     // Check that we can iterate through all ASCII characters
@@ -247,7 +247,7 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     // String with mixed ASCII and emojis: "Hi 👋 🌍!"
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
-    Str8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    StringSlice s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
     Utf8Iterator iter(s);
 
     // Test ASCII 'H'
