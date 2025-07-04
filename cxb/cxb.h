@@ -539,6 +539,9 @@ struct Str8 {
 
 #ifdef __cplusplus
     // ** SECTION: slice compatible methods
+    CXB_INLINE size_t n_bytes() const {
+        return len + null_term;
+    }
     CXB_INLINE size_t size() const {
         return len;
     }
