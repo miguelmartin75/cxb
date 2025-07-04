@@ -18,6 +18,9 @@ in the "configuration" section.
 
 #pragma once
 
+// TODO: removeme
+#include <iostream>
+
 /* SECTION: configuration */
 // #define CXB_DISABLE_RAII
 // #define CXB_ALLOC_TEMPLATE
@@ -506,8 +509,8 @@ struct Allocator {
 
     // TODO: inconsistent
     template <class H, class T>
-    CXB_INLINE void free_with_header(T* head, size_t count) {
-        this->free_impl(this, (char*) (head) - sizeof(H), sizeof(T) * count + sizeof(H));
+    CXB_INLINE void free_header_offset(T* offset_from_header, size_t count) {
+        this->free_impl(this, (char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H));
     }
 };
 
@@ -677,7 +680,7 @@ struct String: StringSlice {
 
     CXB_INLINE void destroy() {
         if(data && allocator) {
-            allocator->free_with_header<size_t>(data, capacity());
+            allocator->free_header_offset<size_t>(data, capacity());
             data = nullptr;
         }
     }
@@ -815,8 +818,6 @@ struct Seq {
     Seq(Seq<T>&& o) : allocator{o.allocator}, data{o.data}, len{o.len} {
         o.allocator = nullptr;
     }
-    Seq(const Seq<T>& o) = delete;
-    Seq<T>& operator=(const Seq<T>& o) = delete;
     Seq<T>& operator=(Seq<T>&& o) {
         allocator = o.allocator;
         o.allocator = nullptr;
@@ -825,8 +826,11 @@ struct Seq {
         return *this;
     }
 
+    Seq(const Seq<T>& o) = delete;
+    Seq<T>& operator=(const Seq<T>& o) = delete;
+
 #ifndef CXB_DISABLE_RAII
-    CXB_INLINE ~Seq() {
+    ~Seq() {
         destroy();
     }
 #endif
@@ -890,7 +894,10 @@ struct Seq {
 
     CXB_INLINE void destroy() {
         if(data && allocator) {
-            allocator->free_with_header<size_t>(data, capacity());
+            for(size_t i = 0; i < len; ++i) {
+                data[i].~T();
+            }
+            allocator->free_header_offset<size_t>(data, capacity());
             data = nullptr;
         }
     }
@@ -926,7 +933,7 @@ struct Seq {
             reserve(c);
         }
 
-        data[this->len++] = value;
+        data[this->len++] = move(value);
     }
 
     inline T& push() {
