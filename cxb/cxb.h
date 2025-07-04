@@ -775,7 +775,8 @@ struct String: Str8 {
         if(!str) {
             return;
         }
-        this->extend( Str8{const_cast<char*>(str), .len = n == SIZE_MAX ? strlen(str) : n, .null_term = true});
+        size_t len = n == SIZE_MAX ? strlen(str) : n;
+        this->extend( Str8{.data = const_cast<char*>(str), .len = len, .null_term = true});
     }
 
     CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
