@@ -31,14 +31,13 @@ in the "configuration" section.
 
 /* SECTION: includes */
 #include <new>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> // TODO: removeme
 #include <string.h>
 #include <type_traits> // 27ms
-
-#include <stdatomic.h>
 
 /* NOTE: #include <utility>  // 98ms */
 
@@ -142,10 +141,7 @@ struct Atomic {
 
     _Atomic(T) value;
 
-    CXB_COMPTIME Atomic(T desired = T{}) noexcept
-        : value(desired)
-    {
-    }
+    CXB_COMPTIME Atomic(T desired = T{}) noexcept : value(desired) {}
 
     Atomic(const Atomic&) = delete;
     Atomic& operator=(const Atomic&) = delete;
@@ -168,16 +164,14 @@ struct Atomic {
                                           T desired,
                                           memory_order success = memory_order_seq_cst,
                                           memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_weak_explicit(
-            &value, &expected, desired, success, failure);
+        return atomic_compare_exchange_weak_explicit(&value, &expected, desired, success, failure);
     }
 
     CXB_INLINE bool compare_exchange_strong(T& expected,
                                             T desired,
                                             memory_order success = memory_order_seq_cst,
                                             memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_strong_explicit(
-            &value, &expected, desired, success, failure);
+        return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
     }
 
     // Arithmetic operations (only for integral types)
@@ -565,7 +559,7 @@ struct MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
-        MString result{.data=data, .len=len, .null_term=null_term, .allocator=to_allocator};
+        MString result{.data = data, .len = len, .null_term = null_term, .allocator = to_allocator};
         return result;
     }
 
@@ -718,10 +712,14 @@ struct String : MString {
         reserve(0);
     }
 
-    String(const MString& m) : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} { }
+    String(const MString& m)
+        : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} {}
 
     String(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
-        : MString{.data = nullptr, .len = n == SIZE_MAX ? strlen(cstr) : n, .null_term = null_term, .allocator = allocator} {
+        : MString{.data = nullptr,
+                  .len = n == SIZE_MAX ? strlen(cstr) : n,
+                  .null_term = null_term,
+                  .allocator = allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
         } else {
