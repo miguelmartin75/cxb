@@ -7,14 +7,14 @@
 
 CXB_USE_NS;
 
-TEST_CASE("Str8 default constructor", "[Str8]") {
+TEST_CASE("StringSlice default constructor", "[StringSlice]") {
     StringSlice s = {};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.null_term);
 }
 
-TEST_CASE("Str8 from C string", "[Str8]") {
+TEST_CASE("StringSlice from C string", "[StringSlice]") {
     const char* test_str = "Hello, World!";
     StringSlice s{.data=const_cast<char*>(test_str), .len=13, .null_term=true};
 
@@ -28,7 +28,7 @@ TEST_CASE("Str8 from C string", "[Str8]") {
     }
 }
 
-TEST_CASE("Str8 from empty C string", "[Str8]") {
+TEST_CASE("StringSlice from empty C string", "[StringSlice]") {
     StringSlice s = S8_LIT("");
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
@@ -36,14 +36,14 @@ TEST_CASE("Str8 from empty C string", "[Str8]") {
     REQUIRE(s == S8_LIT(""));
 }
 
-TEST_CASE("Str8 from null pointer", "[Str8]") {
+TEST_CASE("StringSlice from null pointer", "[StringSlice]") {
     StringSlice s{.data=nullptr, .len=0, .null_term=true};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
 }
 
-TEST_CASE("Str8 from raw data", "[Str8]") {
+TEST_CASE("StringSlice from raw data", "[StringSlice]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
     StringSlice s{.data=data, .len=5, .null_term=false};
 
@@ -56,7 +56,7 @@ TEST_CASE("Str8 from raw data", "[Str8]") {
     }
 }
 
-TEST_CASE("String push_back", "[String]") {
+TEST_CASE("String push_back", "[StringSlice]") {
     size_t allocated_bytes = 0;
     {
         String s;
@@ -74,7 +74,7 @@ TEST_CASE("String push_back", "[String]") {
     REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
 }
 
-TEST_CASE("Str8 push_back with null termination", "[Str8]") {
+TEST_CASE("StringSlice push_back with null termination", "[StringSlice]") {
     String s("Hello");
     REQUIRE(s.null_term);
     REQUIRE(s.allocator);
@@ -93,7 +93,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
     REQUIRE(strcmp(s.c_str(), "Hello!") == 0);
 }
 
-TEST_CASE("Str8 append C string", "[String]") {
+TEST_CASE("StringSlice append C string", "[StringSlice]") {
     String s("Hello");
     s.extend(", World!");
 
@@ -103,7 +103,7 @@ TEST_CASE("Str8 append C string", "[String]") {
     REQUIRE(strcmp(s.c_str(), "Hello, World!") == 0);
 }
 
-TEST_CASE("Str8 append other Str8", "[String]") {
+TEST_CASE("StringSlice append other StringSlice", "[StringSlice]") {
     String s1("Hello");
     StringSlice s2 = S8_LIT(", World!");
     s1.extend(s2);
@@ -113,7 +113,7 @@ TEST_CASE("Str8 append other Str8", "[String]") {
     REQUIRE(s1 == S8_LIT("Hello, World!"));
 }
 
-TEST_CASE("String append to non-null-terminated", "[String]") {
+TEST_CASE("StringSlice append to non-null-terminated", "[StringSlice]") {
     String s;
     s.push_back('H');
     s.push_back('i');
@@ -130,7 +130,7 @@ TEST_CASE("String append to non-null-terminated", "[String]") {
     REQUIRE(s == S8_LIT("Hi there"));
 }
 
-TEST_CASE("Str8 resize", "[String]") {
+TEST_CASE("StringSlice resize", "[StringSlice]") {
     String s("Hello");
     s.resize(10, 'X');
 
@@ -140,7 +140,7 @@ TEST_CASE("Str8 resize", "[String]") {
     REQUIRE(s == S8_LIT("HelloXXXXX"));
 }
 
-TEST_CASE("Str8 resize shrinking", "[String]") {
+TEST_CASE("StringSlice resize shrinking", "[StringSlice]") {
     String s("Hello, World!");
     s.resize(5);
 
@@ -149,7 +149,7 @@ TEST_CASE("Str8 resize shrinking", "[String]") {
     REQUIRE(s == S8_LIT("Hello"));
 }
 
-TEST_CASE("Str8 pop_back", "[String]") {
+TEST_CASE("StringSlice pop_back", "[StringSlice]") {
     String s("Hello");
     char c = s.pop_back();
 
@@ -159,7 +159,7 @@ TEST_CASE("Str8 pop_back", "[String]") {
     REQUIRE(s == S8_LIT("Hell"));
 }
 
-TEST_CASE("Str8 slice", "[Str8]") {
+TEST_CASE("StringSlice slice", "[StringSlice]") {
     StringSlice s = S8_LIT("Hello, World!");
     StringSlice slice1 = s.slice(7);    // "World!"
     StringSlice slice2 = s.slice(0, 5); // "Hello"
@@ -180,7 +180,7 @@ TEST_CASE("Str8 slice", "[Str8]") {
     }
 }
 
-TEST_CASE("String copy", "[String]") {
+TEST_CASE("StringSlice copy", "[StringSlice]") {
     String original("Hello, World!");
     String copy = original.copy();
 
@@ -191,7 +191,7 @@ TEST_CASE("String copy", "[String]") {
     REQUIRE(original == copy);
 }
 
-TEST_CASE("String ensure_null_terminated", "[String]") {
+TEST_CASE("StringSlice ensure_null_terminated", "[StringSlice]") {
     String s;
     s.push_back('H');
     s.push_back('i');
