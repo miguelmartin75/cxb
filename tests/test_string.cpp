@@ -1,22 +1,22 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <cxb/cxb.h>
 #include <cxb/cxb-unicode.h>
+#include <cxb/cxb.h>
 #include <random>
 
 CXB_USE_NS;
 
-TEST_CASE("Str8 default constructor", "[Str8]") {
-    Str8 s;
+TEST_CASE("StringSlice default constructor", "[StringSlice]") {
+    StringSlice s = {};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.null_term);
 }
 
-TEST_CASE("Str8 from C string", "[Str8]") {
+TEST_CASE("StringSlice from C string", "[StringSlice]") {
     const char* test_str = "Hello, World!";
-    Str8 s(test_str);
+    StringSlice s{.data = const_cast<char*>(test_str), .len = 13, .null_term = true};
 
     REQUIRE(s.size() == 13);
     REQUIRE_FALSE(s.empty());
@@ -28,24 +28,24 @@ TEST_CASE("Str8 from C string", "[Str8]") {
     }
 }
 
-TEST_CASE("Str8 from empty C string", "[Str8]") {
-    Str8 s("");
+TEST_CASE("StringSlice from empty C string", "[StringSlice]") {
+    StringSlice s = S8_LIT("");
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
     REQUIRE(s == S8_LIT(""));
 }
 
-TEST_CASE("Str8 from null pointer", "[Str8]") {
-    Str8 s(static_cast<const char*>(nullptr));
+TEST_CASE("StringSlice from null pointer", "[StringSlice]") {
+    StringSlice s{.data = nullptr, .len = 0, .null_term = true};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
 }
 
-TEST_CASE("Str8 from raw data", "[Str8]") {
+TEST_CASE("StringSlice from raw data", "[StringSlice]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    Str8 s(data, 5, false);
+    StringSlice s{.data = data, .len = 5, .null_term = false};
 
     REQUIRE(s.size() == 5);
     REQUIRE(!s.null_term);
@@ -56,7 +56,7 @@ TEST_CASE("Str8 from raw data", "[Str8]") {
     }
 }
 
-TEST_CASE("String push_back", "[String]") {
+TEST_CASE("String push_back", "[StringSlice]") {
     size_t allocated_bytes = 0;
     {
         String s;
@@ -66,7 +66,7 @@ TEST_CASE("String push_back", "[String]") {
         REQUIRE(s.size() == 2);
         REQUIRE(s[0] == 'H');
         REQUIRE(s[1] == 'i');
-        REQUIRE_FALSE(s.null_term);
+        REQUIRE(s.null_term);
 
         allocated_bytes = default_alloc.n_allocated_bytes;
     }
@@ -74,7 +74,7 @@ TEST_CASE("String push_back", "[String]") {
     REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
 }
 
-TEST_CASE("Str8 push_back with null termination", "[Str8]") {
+TEST_CASE("StringSlice push_back with null termination", "[StringSlice]") {
     String s("Hello");
     REQUIRE(s.null_term);
     REQUIRE(s.allocator);
@@ -85,7 +85,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
     REQUIRE(s.size() == 6);
     REQUIRE(s.null_term);
 
-    Str8 cmp = S8_LIT("Hello!");
+    StringSlice cmp = S8_LIT("Hello!");
     for(int i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == cmp[i]);
     }
@@ -93,7 +93,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
     REQUIRE(strcmp(s.c_str(), "Hello!") == 0);
 }
 
-TEST_CASE("Str8 append C string", "[String]") {
+TEST_CASE("StringSlice append C string", "[StringSlice]") {
     String s("Hello");
     s.extend(", World!");
 
@@ -103,9 +103,9 @@ TEST_CASE("Str8 append C string", "[String]") {
     REQUIRE(strcmp(s.c_str(), "Hello, World!") == 0);
 }
 
-TEST_CASE("Str8 append other Str8", "[String]") {
+TEST_CASE("StringSlice append other StringSlice", "[StringSlice]") {
     String s1("Hello");
-    Str8 s2(", World!");
+    StringSlice s2 = S8_LIT(", World!");
     s1.extend(s2);
 
     REQUIRE(s1.len == 13);
@@ -113,15 +113,15 @@ TEST_CASE("Str8 append other Str8", "[String]") {
     REQUIRE(s1 == S8_LIT("Hello, World!"));
 }
 
-TEST_CASE("String append to non-null-terminated", "[String]") {
+TEST_CASE("StringSlice append to non-null-terminated", "[StringSlice]") {
     String s;
     s.push_back('H');
     s.push_back('i');
-    REQUIRE_FALSE(s.null_term);
+    REQUIRE(s.null_term);
 
     s.extend(" there");
     REQUIRE(s.size() == 8);
-    REQUIRE_FALSE(s.null_term);
+    REQUIRE(s.null_term);
 
     const char expected[] = "Hi there";
     for(size_t i = 0; i < s.size(); ++i) {
@@ -130,7 +130,7 @@ TEST_CASE("String append to non-null-terminated", "[String]") {
     REQUIRE(s == S8_LIT("Hi there"));
 }
 
-TEST_CASE("Str8 resize", "[String]") {
+TEST_CASE("StringSlice resize", "[StringSlice]") {
     String s("Hello");
     s.resize(10, 'X');
 
@@ -140,7 +140,7 @@ TEST_CASE("Str8 resize", "[String]") {
     REQUIRE(s == S8_LIT("HelloXXXXX"));
 }
 
-TEST_CASE("Str8 resize shrinking", "[String]") {
+TEST_CASE("StringSlice resize shrinking", "[StringSlice]") {
     String s("Hello, World!");
     s.resize(5);
 
@@ -149,7 +149,7 @@ TEST_CASE("Str8 resize shrinking", "[String]") {
     REQUIRE(s == S8_LIT("Hello"));
 }
 
-TEST_CASE("Str8 pop_back", "[String]") {
+TEST_CASE("StringSlice pop_back", "[StringSlice]") {
     String s("Hello");
     char c = s.pop_back();
 
@@ -159,10 +159,10 @@ TEST_CASE("Str8 pop_back", "[String]") {
     REQUIRE(s == S8_LIT("Hell"));
 }
 
-TEST_CASE("Str8 slice", "[Str8]") {
-    Str8 s = S8_LIT("Hello, World!");
-    Str8 slice1 = s.slice(7);    // "World!"
-    Str8 slice2 = s.slice(0, 5); // "Hello"
+TEST_CASE("StringSlice slice", "[StringSlice]") {
+    StringSlice s = S8_LIT("Hello, World!");
+    StringSlice slice1 = s.slice(7);    // "World!"
+    StringSlice slice2 = s.slice(0, 5); // "Hello"
 
     REQUIRE(slice1.size() == 6);
     REQUIRE(slice1.null_term);
@@ -180,7 +180,7 @@ TEST_CASE("Str8 slice", "[Str8]") {
     }
 }
 
-TEST_CASE("String copy", "[String]") {
+TEST_CASE("StringSlice copy", "[StringSlice]") {
     String original("Hello, World!");
     String copy = original.copy();
 
@@ -191,11 +191,11 @@ TEST_CASE("String copy", "[String]") {
     REQUIRE(original == copy);
 }
 
-TEST_CASE("String ensure_null_terminated", "[String]") {
+TEST_CASE("StringSlice ensure_null_terminated", "[StringSlice]") {
     String s;
     s.push_back('H');
     s.push_back('i');
-    REQUIRE_FALSE(s.null_term);
+    REQUIRE(s.null_term);
 
     s.ensure_null_terminated();
     REQUIRE(s.null_term);
@@ -204,7 +204,7 @@ TEST_CASE("String ensure_null_terminated", "[String]") {
 }
 
 TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
-    Str8 s = S8_LIT("Hello World");
+    StringSlice s = S8_LIT("Hello World");
     Utf8Iterator iter(s);
 
     // Check that we can iterate through all ASCII characters
@@ -247,7 +247,7 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     // String with mixed ASCII and emojis: "Hi 👋 🌍!"
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
-    Str8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    StringSlice s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
     Utf8Iterator iter(s);
 
     // Test ASCII 'H'
@@ -427,4 +427,78 @@ TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
         REQUIRE(result);
         return result;
     };
+}
+
+TEST_CASE("Seq<String> memory management", "[Seq][String]") {
+    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    {
+        Seq<String> strings;
+        REQUIRE(strings.len == 0);
+        REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
+
+        // Add various strings to the sequence
+        for(int i = 0; i < 10; ++i) {
+            String s;
+            s.extend("String #");
+            // Convert i to string manually
+            if(i == 0)
+                s.extend("0");
+            else {
+                int temp = i;
+                String num_str;
+                while(temp > 0) {
+                    num_str.push_back('0' + (temp % 10));
+                    temp /= 10;
+                }
+                // Reverse the digits
+                for(int j = num_str.len - 1; j >= 0; --j) {
+                    s.push_back(num_str[j]);
+                }
+            }
+            s.extend(" - Content");
+            strings.push_back(move(s));
+        }
+
+        REQUIRE(strings.len == 10);
+
+        // Verify the content of each string
+        for(int i = 0; i < strings.len; ++i) {
+            REQUIRE(strings[i].len > 0);
+            REQUIRE(strings[i].null_term);
+            REQUIRE(strings[i].allocator);
+
+            // Check that it starts with "String #"
+            StringSlice prefix = strings[i].slice(0, 8);
+            REQUIRE(prefix == S8_LIT("String #"));
+
+            // Check that it ends with " - Content"
+            StringSlice suffix = strings[i].slice(strings[i].len - 10);
+            REQUIRE(suffix == S8_LIT(" - Content"));
+        }
+
+        // Modify one of the strings
+        strings[5].extend(" (modified)");
+        REQUIRE(strings[5].len > strings[4].len);
+
+        // Add a new string with emoji
+        String emoji_str("Hello 🌍!");
+        strings.push_back(move(emoji_str));
+
+        REQUIRE(strings.len == 11);
+        REQUIRE(strings[10] == S8_LIT("Hello 🌍!"));
+
+        // Add an empty string
+        String empty_str;
+        strings.push_back(move(empty_str));
+
+        REQUIRE(strings.len == 12);
+        REQUIRE(strings[11].len == 0);
+        REQUIRE(strings[11].empty());
+
+        // Verify memory is actively being used
+        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+    }
+
+    // Verify all memory has been deallocated
+    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
