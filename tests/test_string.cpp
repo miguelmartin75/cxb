@@ -443,6 +443,21 @@ TEST_CASE("MString manual cleanup", "[MString]") {
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
+TEST_CASE("MString -> String", "[MString]") {
+    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    {
+        MString m{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
+        m.extend("Hello, World!");
+        String s = m;
+
+        REQUIRE(s.len == 13);
+        REQUIRE(s.allocator == &default_alloc);
+        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+    }
+    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+}
+
 TEST_CASE("String -> MString release + leak", "[MString]") {
     size_t allocated_bytes_before = default_alloc.n_active_bytes;
     {

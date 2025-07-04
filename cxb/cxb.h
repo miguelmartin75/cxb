@@ -718,6 +718,8 @@ struct String : MString {
         reserve(0);
     }
 
+    String(const MString& m) : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} { }
+
     String(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
         : MString{.data = nullptr, .len = n == SIZE_MAX ? strlen(cstr) : n, .null_term = null_term, .allocator = allocator} {
         if(this->allocator == nullptr) {
