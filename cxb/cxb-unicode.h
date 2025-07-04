@@ -162,4 +162,3 @@ struct Utf8IteratorBatched {
 };
 
 typedef Utf8IteratorBatched<512> Utf8Iterator;
-

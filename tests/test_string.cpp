@@ -1,8 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <cxb/cxb.h>
 #include <cxb/cxb-unicode.h>
+#include <cxb/cxb.h>
 #include <random>
 
 CXB_USE_NS;
@@ -16,7 +16,7 @@ TEST_CASE("StringSlice default constructor", "[StringSlice]") {
 
 TEST_CASE("StringSlice from C string", "[StringSlice]") {
     const char* test_str = "Hello, World!";
-    StringSlice s{.data=const_cast<char*>(test_str), .len=13, .null_term=true};
+    StringSlice s{.data = const_cast<char*>(test_str), .len = 13, .null_term = true};
 
     REQUIRE(s.size() == 13);
     REQUIRE_FALSE(s.empty());
@@ -37,7 +37,7 @@ TEST_CASE("StringSlice from empty C string", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice from null pointer", "[StringSlice]") {
-    StringSlice s{.data=nullptr, .len=0, .null_term=true};
+    StringSlice s{.data = nullptr, .len = 0, .null_term = true};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
@@ -45,7 +45,7 @@ TEST_CASE("StringSlice from null pointer", "[StringSlice]") {
 
 TEST_CASE("StringSlice from raw data", "[StringSlice]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    StringSlice s{.data=data, .len=5, .null_term=false};
+    StringSlice s{.data = data, .len = 5, .null_term = false};
 
     REQUIRE(s.size() == 5);
     REQUIRE(!s.null_term);
@@ -427,4 +427,78 @@ TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
         REQUIRE(result);
         return result;
     };
+}
+
+TEST_CASE("Seq<String> memory management", "[Seq][String]") {
+    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    {
+        Seq<String> strings;
+        REQUIRE(strings.len == 0);
+        REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
+
+        // Add various strings to the sequence
+        for(int i = 0; i < 10; ++i) {
+            String s;
+            s.extend("String #");
+            // Convert i to string manually
+            if(i == 0)
+                s.extend("0");
+            else {
+                int temp = i;
+                String num_str;
+                while(temp > 0) {
+                    num_str.push_back('0' + (temp % 10));
+                    temp /= 10;
+                }
+                // Reverse the digits
+                for(int j = num_str.len - 1; j >= 0; --j) {
+                    s.push_back(num_str[j]);
+                }
+            }
+            s.extend(" - Content");
+            strings.push_back(move(s));
+        }
+
+        REQUIRE(strings.len == 10);
+
+        // Verify the content of each string
+        for(int i = 0; i < strings.len; ++i) {
+            REQUIRE(strings[i].len > 0);
+            REQUIRE(strings[i].null_term);
+            REQUIRE(strings[i].allocator);
+
+            // Check that it starts with "String #"
+            StringSlice prefix = strings[i].slice(0, 8);
+            REQUIRE(prefix == S8_LIT("String #"));
+
+            // Check that it ends with " - Content"
+            StringSlice suffix = strings[i].slice(strings[i].len - 10);
+            REQUIRE(suffix == S8_LIT(" - Content"));
+        }
+
+        // Modify one of the strings
+        strings[5].extend(" (modified)");
+        REQUIRE(strings[5].len > strings[4].len);
+
+        // Add a new string with emoji
+        String emoji_str("Hello 🌍!");
+        strings.push_back(move(emoji_str));
+
+        REQUIRE(strings.len == 11);
+        REQUIRE(strings[10] == S8_LIT("Hello 🌍!"));
+
+        // Add an empty string
+        String empty_str;
+        strings.push_back(move(empty_str));
+
+        REQUIRE(strings.len == 12);
+        REQUIRE(strings[11].len == 0);
+        REQUIRE(strings[11].empty());
+
+        // Verify memory is actively being used
+        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+    }
+
+    // Verify all memory has been deallocated
+    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }

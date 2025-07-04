@@ -61,7 +61,7 @@ TEST_CASE("nested_seq", "[Seq]") {
         }
 
         REQUIRE(nested.len == 10);
-        
+
         for(int i = 0; i < nested.len; ++i) {
             REQUIRE(nested[i].len == i + 1);
             for(int j = 0; j < nested[i].len; ++j) {
@@ -78,7 +78,7 @@ TEST_CASE("nested_seq", "[Seq]") {
             new_inner.push_back(k * 100);
         }
         nested.push_back(move(new_inner));
-        
+
         REQUIRE(nested.len == 11);
         REQUIRE(nested[10].len == 5);
         REQUIRE(nested[10][0] == 0);
@@ -86,6 +86,6 @@ TEST_CASE("nested_seq", "[Seq]") {
 
         REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
     }
-    
+
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
