@@ -596,10 +596,11 @@ struct StringSlice {
 #endif
 };
 
-struct String: StringSlice {
+struct String : StringSlice {
     Allocator* allocator;
 
-    String(Allocator* allocator = &default_alloc) : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{allocator} {
+    String(Allocator* allocator = &default_alloc)
+        : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{allocator} {
         reserve(0);
     }
 
@@ -640,7 +641,6 @@ struct String: StringSlice {
         destroy();
     }
 #endif
-
 
     // ** SECTION: allocator-related methods
     CXB_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
@@ -776,7 +776,7 @@ struct String: StringSlice {
             return;
         }
         size_t len = n == SIZE_MAX ? strlen(str) : n;
-        this->extend( StringSlice{.data = const_cast<char*>(str), .len = len, .null_term = true});
+        this->extend(StringSlice{.data = const_cast<char*>(str), .len = len, .null_term = true});
     }
 
     CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
@@ -795,7 +795,6 @@ struct String: StringSlice {
         this->allocator = nullptr;
     }
 };
-
 
 #ifdef __cplusplus
 
@@ -852,11 +851,7 @@ struct Seq {
         return data[len - 1];
     }
     CXB_INLINE Seq<T> slice(size_t i = 0, size_t j = SIZE_MAX) {
-        return Seq<T>{
-            data + i,
-            j == SIZE_MAX ? len : j - i + 1,
-            nullptr
-        };
+        return Seq<T>{data + i, j == SIZE_MAX ? len : j - i + 1, nullptr};
     }
 
     // ** SECTION: allocator-related methods
