@@ -98,7 +98,7 @@ memory, "M" stands for "manual"
 #define CXB_EXPORT
 #define CXB_INTERNAL static
 
-#ifdef CXB_NAMESPACE
+#if defined(CXB_NAMESPACE) && defined(__cplusplus)
 #define CXB_NS_BEGIN namespace cxb {
 #define CXB_NS_END }
 #define CXB_USE_NS using namespace cxb
