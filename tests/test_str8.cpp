@@ -8,7 +8,7 @@
 CXB_USE_NS;
 
 TEST_CASE("Str8 default constructor", "[Str8]") {
-    Str8 s;
+    Str8 s = {};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.null_term);
@@ -29,7 +29,7 @@ TEST_CASE("Str8 from C string", "[Str8]") {
 }
 
 TEST_CASE("Str8 from empty C string", "[Str8]") {
-    Str8 s("");
+    Str8 s = S8_LIT("");
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
@@ -66,7 +66,7 @@ TEST_CASE("String push_back", "[String]") {
         REQUIRE(s.size() == 2);
         REQUIRE(s[0] == 'H');
         REQUIRE(s[1] == 'i');
-        REQUIRE_FALSE(s.null_term);
+        REQUIRE(s.null_term);
 
         allocated_bytes = default_alloc.n_allocated_bytes;
     }
@@ -117,11 +117,11 @@ TEST_CASE("String append to non-null-terminated", "[String]") {
     String s;
     s.push_back('H');
     s.push_back('i');
-    REQUIRE_FALSE(s.null_term);
+    REQUIRE(s.null_term);
 
     s.extend(" there");
     REQUIRE(s.size() == 8);
-    REQUIRE_FALSE(s.null_term);
+    REQUIRE(s.null_term);
 
     const char expected[] = "Hi there";
     for(size_t i = 0; i < s.size(); ++i) {
@@ -195,7 +195,7 @@ TEST_CASE("String ensure_null_terminated", "[String]") {
     String s;
     s.push_back('H');
     s.push_back('i');
-    REQUIRE_FALSE(s.null_term);
+    REQUIRE(s.null_term);
 
     s.ensure_null_terminated();
     REQUIRE(s.null_term);

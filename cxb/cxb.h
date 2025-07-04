@@ -593,35 +593,28 @@ struct Str8 {
 struct String: Str8 {
     Allocator* allocator;
 
-    String(Allocator* allocator = &default_alloc) : Str8{}, allocator{allocator} {
+    String(Allocator* allocator = &default_alloc) : Str8{.data = nullptr, .len = 0, .null_term = true}, allocator{allocator} {
         reserve(0);
     }
 
     String(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
-        : Str8{nullptr, n, true}, allocator{allocator} {
-        if(len == SIZE_MAX) {
-            len = strlen(cstr);
-        }
-
-        size_t actual_len = n == SIZE_MAX ? (cstr ? strlen(cstr) : 0) : n;
-        len = actual_len;
-
+        : Str8{nullptr, n == SIZE_MAX ? strlen(cstr) : n, true}, allocator{allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
         } else {
-            reserve(actual_len + 1);
-            if(actual_len > 0) {
-                memcpy(data, cstr, actual_len);
+            reserve(len + 1);
+            if(len > 0) {
+                memcpy(data, cstr, len);
             }
-            data[actual_len] = '\0';
+            data[len] = '\0';
         }
     }
-    String(const String& o) : Str8{}, allocator{nullptr} {
+    String(const String& o) : Str8{.data = nullptr, .len = 0, .null_term = true}, allocator{nullptr} {
         data = o.data;
         metadata = o.metadata;
     }
 
-    String(String&& o) : Str8{}, allocator{o.allocator} {
+    String(String&& o) : Str8{.data = nullptr, .len = 0, .null_term = true}, allocator{o.allocator} {
         data = o.data;
         metadata = o.metadata;
         o.allocator = nullptr;
@@ -782,7 +775,7 @@ struct String: Str8 {
         if(!str) {
             return;
         }
-        this->extend(Str8{const_cast<char*>(str), n});
+        this->extend( Str8{const_cast<char*>(str), .len = n == SIZE_MAX ? strlen(str) : n, .null_term = true});
     }
 
     CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
@@ -1045,7 +1038,7 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
-#define S8_LIT(s) (Str8{(char*) &s[0], LENGTHOF_LIT(s)})
-#define S8_DATA(c, len) (Str8{(char*) &c[0], len})
-#define S8_STR(s) (Str8{(char*) s.c_str(), (size_t) s.size()})
-#define S8_CSTR(s) (Str8{(char*) s, (size_t) strlen(s)})
+#define S8_LIT(s) (Str8{.data = (char*) &s[0], .len = LENGTHOF_LIT(s), .null_term = true})
+#define S8_DATA(c, l) (Str8{.data = (char*) &c[0], .len = (l), .null_term = false})
+#define S8_STR(s) (Str8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
+#define S8_CSTR(s) (Str8{.data = (char*) s, .len = (size_t) strlen(s), .null_term = true})
