@@ -82,15 +82,11 @@ memory, "M" stands for "manual"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h> // TODO: removeme
 #include <string.h>
 
 #ifdef __cplusplus
 #include <new>
 #include <type_traits> // 27ms
-// Utility functions needed throughout the header must be available before first use.
-// Define them here with simple inline implementations that don't rely on later macros.
 
 template <class T>
 static inline const T& min(const T& a, const T& b) {
@@ -102,6 +98,7 @@ static inline const T& max(const T& a, const T& b) {
     return a > b ? a : b;
 }
 
+/* NOTE: #include <utility>  // 98ms */
 template <typename T>
 static inline typename std::remove_reference<T>::type&& move(T&& v) noexcept {
     return static_cast<typename std::remove_reference<T>::type&&>(v);
@@ -117,8 +114,6 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
     return static_cast<T&&>(v);
 }
 #endif
-
-/* NOTE: #include <utility>  // 98ms */
 
 /* SECTION: macros */
 // NOTE some macros are copied/modified from Blend2D, see:
