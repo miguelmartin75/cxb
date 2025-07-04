@@ -15,11 +15,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra)
 endif()
 
-# Add optimization flags for benchmarks
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_options(-O3 -DNDEBUG)
-endif()
-
 add_library(cxb SHARED ${CXB_SRCS})
 
 find_package(Catch2 3 REQUIRED)
@@ -30,9 +25,9 @@ add_executable(test_seq tests/test_seq.cpp)
 target_include_directories(test_seq PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_seq PRIVATE Catch2::Catch2WithMain cxb)
 
-add_executable(test_str8 tests/test_str8.cpp)
-target_include_directories(test_str8 PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(test_str8 PRIVATE Catch2::Catch2WithMain cxb)
+add_executable(test_string tests/test_string.cpp)
+target_include_directories(test_string PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_string PRIVATE Catch2::Catch2WithMain cxb)
 
 add_test(NAME seq_tests COMMAND test_seq)
-add_test(NAME str8_tests COMMAND test_str8)
+add_test(NAME string_tests COMMAND test_string)
