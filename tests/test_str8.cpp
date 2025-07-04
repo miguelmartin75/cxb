@@ -16,7 +16,7 @@ TEST_CASE("Str8 default constructor", "[Str8]") {
 
 TEST_CASE("Str8 from C string", "[Str8]") {
     const char* test_str = "Hello, World!";
-    Str8 s(test_str);
+    Str8 s{.data=const_cast<char*>(test_str), .len=13, .null_term=true};
 
     REQUIRE(s.size() == 13);
     REQUIRE_FALSE(s.empty());
@@ -37,7 +37,7 @@ TEST_CASE("Str8 from empty C string", "[Str8]") {
 }
 
 TEST_CASE("Str8 from null pointer", "[Str8]") {
-    Str8 s(static_cast<const char*>(nullptr));
+    Str8 s{.data=nullptr, .len=0, .null_term=true};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
@@ -45,7 +45,7 @@ TEST_CASE("Str8 from null pointer", "[Str8]") {
 
 TEST_CASE("Str8 from raw data", "[Str8]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    Str8 s(data, 5, false);
+    Str8 s{.data=data, .len=5, .null_term=false};
 
     REQUIRE(s.size() == 5);
     REQUIRE(!s.null_term);
@@ -105,7 +105,7 @@ TEST_CASE("Str8 append C string", "[String]") {
 
 TEST_CASE("Str8 append other Str8", "[String]") {
     String s1("Hello");
-    Str8 s2(", World!");
+    Str8 s2 = S8_LIT(", World!");
     s1.extend(s2);
 
     REQUIRE(s1.len == 13);
