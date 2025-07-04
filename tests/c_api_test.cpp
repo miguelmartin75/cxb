@@ -25,4 +25,4 @@ CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc
     result.null_term = true;
 
     return result;
-} 
+}

@@ -1,4 +1,5 @@
 #include "c_api_test.h"
+
 #include <string.h>
 
 int main(void) {
@@ -12,4 +13,4 @@ int main(void) {
     int ret = (strcmp(result.data, "foo/bar") == 0) ? 0 : 1;
     REQUIRES(ret == 0);
     return ret;
-} 
+}
