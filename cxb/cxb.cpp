@@ -1,5 +1,7 @@
 #include "cxb.h"
 
+#include <stdlib.h> // for malloc, free, realloc, calloc
+
 CXB_NS_BEGIN
 
 Mallocator default_alloc = {};

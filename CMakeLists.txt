@@ -35,15 +35,15 @@ add_test(NAME string_tests COMMAND test_string)
 
 # C API tests
 
-# C++ test that uses Catch2
-add_executable(test_c_api_cpp tests/test_c_api_cpp.cpp tests/c_api_test.cpp)
-target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain cxb)
-
 # Pure C test
 add_executable(test_c_api_c tests/test_c_api_c.c tests/c_api_test.cpp)
 target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(test_c_api_c PRIVATE cxb)
 
-add_test(NAME c_api_cpp_tests COMMAND test_c_api_cpp)
+# C++ test that uses Catch2
+add_executable(test_c_api_cpp tests/test_c_api_cpp.cpp tests/c_api_test.cpp)
+target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain cxb)
+
 add_test(NAME c_api_c_tests COMMAND test_c_api_c)
+add_test(NAME c_api_cpp_tests COMMAND test_c_api_cpp)
