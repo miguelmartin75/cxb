@@ -24,8 +24,10 @@ This library is my own style (Miguel's) of writing C++
 
 ## Containers
 * C & C++ compatible: use these types when defining a C API
-    * `StringSlice`: a pointer to char* (`data`), a length (`len`), and a flag (`null_term`) to indicate if the string is null-terminated
-        - `StringSlice` is a POD type, it does not own the memory it points to, it is only a view into a contiguous block of memory
+    * `StringSlice`: a pointer to char* (`data`), a length (`len`), and a flag (`null_term`) to indicate if the string
+is null-terminated
+        - `StringSlice` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
+block of memory
         - In C-land: free functions are provided, such as `cxb_str_slice`,
           `cxb_str_slice_c_str`, `cxb_str_slice_empty`, `cxb_str_slice_n_bytes`, etc.
         - In C++-land: there are methods the same operations the C free functions
@@ -46,7 +48,8 @@ This library is my own style (Miguel's) of writing C++
         - Moves are supported
         - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
     * `ArraySlice<T>`: similar to StringSlice but for any type
-    * `MSeq<T>`: a manually memory managed expandable sequence of elements where elements are stored contiguously in memory, "M" stands for "manual"
+    * `MSeq<T>`: a manually memory managed expandable sequence of elements where elements are stored contiguously in
+memory, "M" stands for "manual"
         - Provides an interface similar to `MString`, but for any type; "null terminated" is not supported
         - This type is a `std::vector<T>` alternative, but requires manual memory management
         - This type is compatible with `ArraySlice<T>`
@@ -75,12 +78,12 @@ This library is my own style (Miguel's) of writing C++
 #endif
 
 /* SECTION: includes */
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> // TODO: removeme
 #include <string.h>
-#include <stdatomic.h>
 
 #ifdef __cplusplus
 #include <new>
@@ -441,7 +444,7 @@ struct MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
-        MString result{.data=data, .len=len, .null_term=null_term, .allocator=to_allocator};
+        MString result{.data = data, .len = len, .null_term = null_term, .allocator = to_allocator};
         return result;
     }
 
@@ -630,8 +633,6 @@ CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
 // TODO: placement new?
 // inline void *operator new(size_t, void *p) noexcept { return p; }
 
-
-
 template <typename T>
 struct Atomic {
     static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
@@ -639,15 +640,9 @@ struct Atomic {
 
     _Atomic(T) value;
 
-    CXB_COMPTIME Atomic(T desired = T{}) noexcept
-        : value(desired)
-    {
-    }
+    CXB_COMPTIME Atomic(T desired = T{}) noexcept : value(desired) {}
 
-    CXB_COMPTIME Atomic(_Atomic(T) desired) noexcept
-        : value(desired)
-    {
-    }
+    CXB_COMPTIME Atomic(_Atomic(T) desired) noexcept : value(desired) {}
 
     Atomic(const Atomic&) = delete;
     Atomic& operator=(const Atomic&) = delete;
@@ -670,16 +665,14 @@ struct Atomic {
                                           T desired,
                                           memory_order success = memory_order_seq_cst,
                                           memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_weak_explicit(
-            &value, &expected, desired, success, failure);
+        return atomic_compare_exchange_weak_explicit(&value, &expected, desired, success, failure);
     }
 
     CXB_INLINE bool compare_exchange_strong(T& expected,
                                             T desired,
                                             memory_order success = memory_order_seq_cst,
                                             memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_strong_explicit(
-            &value, &expected, desired, success, failure);
+        return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
     }
 
     // Arithmetic operations (only for integral types)
@@ -780,10 +773,14 @@ struct String : MString {
         reserve(0);
     }
 
-    String(const MString& m) : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} { }
+    String(const MString& m)
+        : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} {}
 
     String(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
-        : MString{.data = nullptr, .len = n == SIZE_MAX ? strlen(cstr) : n, .null_term = null_term, .allocator = allocator} {
+        : MString{.data = nullptr,
+                  .len = n == SIZE_MAX ? strlen(cstr) : n,
+                  .null_term = null_term,
+                  .allocator = allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
         } else {
