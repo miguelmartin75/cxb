@@ -33,7 +33,7 @@ TEST_CASE("copy", "[Seq]") {
         REQUIRE(xs[i] == 2);
     }
 
-    Seq<int> view = xs;
+    Seq<int> view = xs.slice();
     REQUIRE(view.allocator == nullptr);
 
     Seq<int> real_copy = xs.copy();

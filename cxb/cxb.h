@@ -527,7 +527,7 @@ extern Mallocator default_alloc;
 /* SECTION: containers */
 
 /* SUB-SECTION: strings */
-struct Str8 {
+struct StringSlice {
     char* data;
     union {
         struct {
@@ -557,8 +557,8 @@ struct Str8 {
     CXB_INLINE char& back() {
         return data[len - 1];
     }
-    CXB_INLINE Str8 slice(size_t i, size_t j = 0) {
-        Str8 c = *this;
+    CXB_INLINE StringSlice slice(size_t i, size_t j = 0) {
+        StringSlice c = *this;
         c.data = c.data + i;
         size_t new_len = j == 0 ? len - i : j - i;
         c.len = new_len;
@@ -572,7 +572,7 @@ struct Str8 {
         return data;
     }
 
-    CXB_INLINE bool operator==(const Str8& o) const {
+    CXB_INLINE bool operator==(const StringSlice& o) const {
         if(size() != o.size()) return false;
         for(size_t i = 0; i < size(); ++i) {
             if((*this)[i] != o[i]) return false;
@@ -580,11 +580,11 @@ struct Str8 {
         return true;
     }
 
-    CXB_INLINE bool operator!=(const Str8& o) const {
+    CXB_INLINE bool operator!=(const StringSlice& o) const {
         return !(*this == o);
     }
 
-    CXB_INLINE bool operator<(const Str8& o) const {
+    CXB_INLINE bool operator<(const StringSlice& o) const {
         for(size_t i = 0; i < min(len, o.len); ++i) {
             if((*this)[i] >= o[i]) return false;
         }
@@ -593,15 +593,15 @@ struct Str8 {
 #endif
 };
 
-struct String: Str8 {
+struct String: StringSlice {
     Allocator* allocator;
 
-    String(Allocator* allocator = &default_alloc) : Str8{.data = nullptr, .len = 0, .null_term = true}, allocator{allocator} {
+    String(Allocator* allocator = &default_alloc) : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{allocator} {
         reserve(0);
     }
 
     String(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
-        : Str8{nullptr, n == SIZE_MAX ? strlen(cstr) : n, true}, allocator{allocator} {
+        : StringSlice{nullptr, n == SIZE_MAX ? strlen(cstr) : n, true}, allocator{allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
         } else {
@@ -612,24 +612,18 @@ struct String: Str8 {
             data[len] = '\0';
         }
     }
-    String(const String& o) : Str8{.data = nullptr, .len = 0, .null_term = true}, allocator{nullptr} {
+    String(const String& o) : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{nullptr} {
         data = o.data;
         metadata = o.metadata;
     }
 
-    String(String&& o) : Str8{.data = nullptr, .len = 0, .null_term = true}, allocator{o.allocator} {
+    String(String&& o) : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{o.allocator} {
         data = o.data;
         metadata = o.metadata;
         o.allocator = nullptr;
     }
 
-    CXB_INLINE String& operator=(const String& o) {
-        allocator = nullptr;
-        data = o.data;
-        metadata = o.metadata;
-        return *this;
-    }
-
+    String& operator=(const String& o) = delete;
     CXB_INLINE String& operator=(String&& o) {
         allocator = o.allocator;
         o.allocator = nullptr;
@@ -755,7 +749,7 @@ struct String: Str8 {
         return ret;
     }
 
-    void extend(Str8 other) {
+    void extend(StringSlice other) {
         if(other.len == 0) return;
         REQUIRES(allocator);
 
@@ -770,7 +764,7 @@ struct String: Str8 {
         len += other.len;
     }
 
-    CXB_INLINE void operator+=(Str8 other) {
+    CXB_INLINE void operator+=(StringSlice other) {
         this->extend(other);
     }
 
@@ -779,7 +773,7 @@ struct String: Str8 {
             return;
         }
         size_t len = n == SIZE_MAX ? strlen(str) : n;
-        this->extend( Str8{.data = const_cast<char*>(str), .len = len, .null_term = true});
+        this->extend( StringSlice{.data = const_cast<char*>(str), .len = len, .null_term = true});
     }
 
     CXB_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
@@ -818,16 +812,11 @@ struct Seq {
             reserve(0);
         }
     }
-    Seq(const Seq<T>& o) : allocator{nullptr}, data{o.data}, len{o.len} {}
     Seq(Seq<T>&& o) : allocator{o.allocator}, data{o.data}, len{o.len} {
         o.allocator = nullptr;
     }
-    Seq<T>& operator=(const Seq<T>& o) {
-        allocator = nullptr;
-        data = o.data;
-        len = o.len;
-        return *this;
-    }
+    Seq(const Seq<T>& o) = delete;
+    Seq<T>& operator=(const Seq<T>& o) = delete;
     Seq<T>& operator=(Seq<T>&& o) {
         allocator = o.allocator;
         o.allocator = nullptr;
@@ -858,11 +847,12 @@ struct Seq {
     CXB_INLINE T& back() {
         return data[len - 1];
     }
-    CXB_INLINE Seq<T> slice(size_t i, size_t j = 0) {
-        Seq<T> c = *this;
-        c.data = c.data + i;
-        c.len = j == 0 ? c.len : j - i + 1;
-        return c;
+    CXB_INLINE Seq<T> slice(size_t i = 0, size_t j = SIZE_MAX) {
+        return Seq<T>{
+            data + i,
+            j == SIZE_MAX ? len : j - i + 1,
+            nullptr
+        };
     }
 
     // ** SECTION: allocator-related methods
@@ -1042,7 +1032,7 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
-#define S8_LIT(s) (Str8{.data = (char*) &s[0], .len = LENGTHOF_LIT(s), .null_term = true})
-#define S8_DATA(c, l) (Str8{.data = (char*) &c[0], .len = (l), .null_term = false})
-#define S8_STR(s) (Str8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
-#define S8_CSTR(s) (Str8{.data = (char*) s, .len = (size_t) strlen(s), .null_term = true})
+#define S8_LIT(s) (StringSlice{.data = (char*) &s[0], .len = LENGTHOF_LIT(s), .null_term = true})
+#define S8_DATA(c, l) (StringSlice{.data = (char*) &c[0], .len = (l), .null_term = false})
+#define S8_STR(s) (StringSlice{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
+#define S8_CSTR(s) (StringSlice{.data = (char*) s, .len = (size_t) strlen(s), .null_term = true})
