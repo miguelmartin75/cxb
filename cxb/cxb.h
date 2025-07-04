@@ -84,10 +84,38 @@ memory, "M" stands for "manual"
 #include <stdio.h>
 #include <stdlib.h> // TODO: removeme
 #include <string.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 #include <new>
 #include <type_traits> // 27ms
+// Utility functions needed throughout the header must be available before first use.
+// Define them here with simple inline implementations that don't rely on later macros.
+
+template <class T>
+static inline const T& min(const T& a, const T& b) {
+    return a < b ? a : b;
+}
+
+template <class T>
+static inline const T& max(const T& a, const T& b) {
+    return a > b ? a : b;
+}
+
+template <typename T>
+static inline typename std::remove_reference<T>::type&& move(T&& v) noexcept {
+    return static_cast<typename std::remove_reference<T>::type&&>(v);
+}
+
+template <typename T>
+static inline T&& forward(typename std::remove_reference<T>::type& v) noexcept {
+    return static_cast<T&&>(v);
+}
+
+template <typename T>
+static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept {
+    return static_cast<T&&>(v);
+}
 #endif
 
 /* NOTE: #include <utility>  // 98ms */
@@ -182,21 +210,27 @@ typedef int32_t rune;
 typedef __uint128_t u128;
 typedef __int128_t i128;
 // TODO: support MSVC
-#else
+#endif
 
 typedef _Atomic(i32) atomic_i32;
 typedef _Atomic(i64) atomic_i64;
 typedef _Atomic(u32) atomic_u32;
 typedef _Atomic(u64) atomic_u64;
+#if defined(__GNUC__)
 typedef _Atomic(i128) atomic_i128;
 typedef _Atomic(u128) atomic_u128;
 #endif
 
 struct Allocator {
-    size_t (*growth_sug_impl)(const Allocator* a, size_t count);
+    size_t (*growth_sug_impl)(const struct Allocator* a, size_t count);
     void* (*alloc_impl)(
-        Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
-    void (*free_impl)(Allocator* a, void* head, size_t n_bytes);
+        struct Allocator* a,
+        bool fill_zeros,
+        void* head,
+        size_t n_bytes,
+        size_t alignment,
+        size_t old_n_bytes);
+    void (*free_impl)(struct Allocator* a, void* head, size_t n_bytes);
 
 #ifdef __cplusplus
     template <class T, class H>
@@ -282,12 +316,20 @@ struct Allocator {
 #endif
 };
 
+#ifndef __cplusplus
+typedef struct Allocator Allocator;
+#endif
+
+#ifdef __cplusplus
 struct Mallocator : Allocator {
     Mallocator();
-    Atomic<i64> n_active_bytes;
-    Atomic<i64> n_allocated_bytes;
-    Atomic<i64> n_freed_bytes;
+    atomic_i64 n_active_bytes;
+    atomic_i64 n_allocated_bytes;
+    atomic_i64 n_freed_bytes;
 };
+#else
+typedef struct Allocator Mallocator;
+#endif
 
 // TODO: implement arena allocator
 // struct Arena : Allocator {
@@ -364,6 +406,10 @@ struct StringSlice {
     }
 #endif
 };
+
+#ifndef __cplusplus
+typedef struct StringSlice StringSlice;
+#endif
 
 struct MString {
     char* data;
@@ -474,6 +520,15 @@ struct MString {
         if(data && allocator) {
             allocator->free_header_offset<size_t>(data, capacity());
             data = nullptr;
+        }
+    }
+
+    CXB_INLINE void ensure_capacity(size_t new_capacity = 0) {
+        if(new_capacity == 0) {
+            new_capacity = len + null_term;
+        }
+        if(capacity() < new_capacity) {
+            reserve(new_capacity);
         }
     }
 
@@ -589,38 +644,18 @@ struct MString {
 #endif
 };
 
+#ifndef __cplusplus
+typedef struct MString MString;
+#endif
+
 /* SECTION: C++-only API */
 #ifdef __cplusplus
 
 /* SECTION: primitive functions */
 template <class T>
-CXB_PURE const T& min(const T& a, const T& b) {
-    return a < b ? a : b;
-}
-template <class T>
-CXB_PURE const T& max(const T& a, const T& b) {
-    return a > b ? a : b;
-}
-template <class T>
 CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
     REQUIRES(a < b);
     return max(min(b, x), a);
-}
-
-// NOTE: move/forward/swap are copied from Blend2D
-template <typename T>
-CXB_PURE typename std::remove_reference<T>::type&& move(T&& v) noexcept {
-    return static_cast<typename std::remove_reference<T>::type&&>(v);
-}
-
-template <typename T>
-CXB_PURE T&& forward(typename std::remove_reference<T>::type& v) noexcept {
-    return static_cast<T&&>(v);
-}
-
-template <typename T>
-CXB_PURE T&& forward(typename std::remove_reference<T>::type&& v) noexcept {
-    return static_cast<T&&>(v);
 }
 
 template <typename T>
@@ -985,6 +1020,7 @@ struct Seq {
         return data[idx];
     }
 };
+
 #endif
 
 /* SECTION: math types */
@@ -1031,10 +1067,19 @@ struct Mat33f {
     f32 arr[9];
 };
 
+#ifndef __cplusplus
+typedef struct Mat33f Mat33f;
+#endif
+
 struct Mat44f {
     f32 arr[16];
 };
 
+#ifndef __cplusplus
+typedef struct Mat44f Mat44f;
+#endif
+
+#ifdef __cplusplus
 static const Mat44f identity4x4 = {.arr = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
 static const Mat33f identity3x3 = {.arr = {
                                        1,
@@ -1047,16 +1092,17 @@ static const Mat33f identity3x3 = {.arr = {
                                        0,
                                        1,
                                    }};
+#endif
 
 /* SECTION: variant types */
 
-// TODO: eval if wanted
+#ifdef __cplusplus
 template <class T>
 struct Optional {
-    // static constexpr const Optional<T> None = Optional<T>{T{}, false};
     T value;
     bool exists;
 };
+#endif
 
 CXB_NS_END
 
