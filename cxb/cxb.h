@@ -79,12 +79,12 @@ memory, "M" stands for "manual"
 
 /* SECTION: includes */
 #include <stdatomic.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> // TODO: removeme
 #include <string.h>
-#include <stdbool.h>
 
 #ifdef __cplusplus
 #include <new>
@@ -224,12 +224,7 @@ typedef _Atomic(u128) atomic_u128;
 struct Allocator {
     size_t (*growth_sug_impl)(const struct Allocator* a, size_t count);
     void* (*alloc_impl)(
-        struct Allocator* a,
-        bool fill_zeros,
-        void* head,
-        size_t n_bytes,
-        size_t alignment,
-        size_t old_n_bytes);
+        struct Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
     void (*free_impl)(struct Allocator* a, void* head, size_t n_bytes);
 
 #ifdef __cplusplus
