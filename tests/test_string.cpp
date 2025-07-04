@@ -429,6 +429,48 @@ TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
     };
 }
 
+TEST_CASE("MString manual cleanup", "[MString]") {
+    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    {
+        MString s{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
+        s.extend("Hello, World!");
+        REQUIRE(s.len == 13);
+        REQUIRE(s.allocator == &default_alloc);
+        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+        s.destroy();
+    }
+    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+}
+
+TEST_CASE("String -> MString release + leak", "[MString]") {
+    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    {
+        String s;
+        s.extend("Hello, World!");
+        MString m = s;
+        s.release();
+
+        REQUIRE(m.len == 13);
+        REQUIRE(m.allocator == &default_alloc);
+        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+    }
+    REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+}
+TEST_CASE("MString leaks", "[MString]") {
+    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    {
+        MString s{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
+        s.extend("Hello, World!");
+        REQUIRE(s.len == 13);
+        REQUIRE(s.allocator == &default_alloc);
+        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+    }
+    REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+}
+
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     size_t allocated_bytes_before = default_alloc.n_active_bytes;
     {

@@ -18,14 +18,10 @@ in the "configuration" section.
 
 #pragma once
 
-// TODO: removeme
-#include <iostream>
-
 /* SECTION: configuration */
 // #define CXB_DISABLE_RAII
 // #define CXB_ALLOC_TEMPLATE
 // #define CXB_NAMESPACE
-// #define CXB_USE_C11_ATOMIC /* note: C11 stdatomic.h takes less time to compile */
 #define CXB_MALLOCATOR_MIN_CAP 32
 #define CXB_MALLOCATOR_GROW_FN(x) (x) + (x) / 2 /* 3/2 without overflow */
 
@@ -42,21 +38,7 @@ in the "configuration" section.
 #include <string.h>
 #include <type_traits> // 27ms
 
-#ifdef CXB_USE_C11_ATOMIC
-// NOTE: GCC doesn't support _Atomic in C++
-#if defined(__STDC_NO_ATOMICS__) || (defined(__GNUC__) && !defined(__clang__))
-#warning "Using std::atomic as C11 _Atomic is not available"
-#undef CXB_USE_C11_ATOMIC
-#endif
-#endif
-
-#ifdef CXB_USE_C11_ATOMIC
-extern "C" {
 #include <stdatomic.h>
-}
-#else
-#include <atomic> // 114-128ms
-#endif
 
 /* NOTE: #include <utility>  // 98ms */
 
@@ -153,27 +135,15 @@ typedef __int128_t i128;
 // TODO: support MSVC, etc.
 #endif
 
-enum class MemoryOrderOption { Relaxed, Acquire, Release, AcqRel, SeqCst };
-
 template <typename T>
-class Atomic {
+struct Atomic {
     static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
                   "AtomicWrapper only supports integral and pointer types");
 
-  private:
-#ifdef CXB_USE_C11_ATOMIC
-    _Atomic T value;
-#else
-    std::atomic<T> value;
-#endif
+    _Atomic(T) value;
 
-  public:
     CXB_COMPTIME Atomic(T desired = T{}) noexcept
-#ifdef CXB_USE_C11_ATOMIC
         : value(desired)
-#else
-        : value(desired)
-#endif
     {
     }
 
@@ -182,103 +152,63 @@ class Atomic {
     Atomic(Atomic&&) = delete;
     Atomic& operator=(Atomic&&) = delete;
 
-    CXB_INLINE void store(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        atomic_store_explicit(&value, desired, to_c11_order(order));
-#else
-        value.store(desired, to_std_order(order));
-#endif
+    CXB_INLINE void store(T desired, memory_order order = memory_order_seq_cst) noexcept {
+        atomic_store_explicit(&value, desired, order);
     }
 
-    CXB_INLINE T load(MemoryOrderOption order = MemoryOrderOption::SeqCst) const noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_load_explicit(&value, to_c11_order(order));
-#else
-        return value.load(to_std_order(order));
-#endif
+    CXB_INLINE T load(memory_order order = memory_order_seq_cst) const noexcept {
+        return atomic_load_explicit(&value, order);
     }
 
-    CXB_INLINE T exchange(T desired, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_exchange_explicit(&value, desired, to_c11_order(order));
-#else
-        return value.exchange(desired, to_std_order(order));
-#endif
+    CXB_INLINE T exchange(T desired, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_exchange_explicit(&value, desired, order);
     }
 
     CXB_INLINE bool compare_exchange_weak(T& expected,
                                           T desired,
-                                          MemoryOrderOption success = MemoryOrderOption::SeqCst,
-                                          MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
+                                          memory_order success = memory_order_seq_cst,
+                                          memory_order failure = memory_order_seq_cst) noexcept {
         return atomic_compare_exchange_weak_explicit(
-            &value, &expected, desired, to_c11_order(success), to_c11_order(failure));
-#else
-        return value.compare_exchange_weak(expected, desired, to_std_order(success), to_std_order(failure));
-#endif
+            &value, &expected, desired, success, failure);
     }
 
     CXB_INLINE bool compare_exchange_strong(T& expected,
                                             T desired,
-                                            MemoryOrderOption success = MemoryOrderOption::SeqCst,
-                                            MemoryOrderOption failure = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
+                                            memory_order success = memory_order_seq_cst,
+                                            memory_order failure = memory_order_seq_cst) noexcept {
         return atomic_compare_exchange_strong_explicit(
-            &value, &expected, desired, to_c11_order(success), to_c11_order(failure));
-#else
-        return value.compare_exchange_strong(expected, desired, to_std_order(success), to_std_order(failure));
-#endif
+            &value, &expected, desired, success, failure);
     }
 
     // Arithmetic operations (only for integral types)
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
-        T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_add_explicit(&value, arg, to_c11_order(order));
-#else
-        return value.fetch_add(arg, to_std_order(order));
-#endif
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_add_explicit(&value, arg, order);
     }
 
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
-        T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_sub_explicit(&value, arg, to_c11_order(order));
-#else
-        return value.fetch_sub(arg, to_std_order(order));
-#endif
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_sub_explicit(&value, arg, order);
     }
 
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
-        T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_and_explicit(&value, arg, to_c11_order(order));
-#else
-        return value.fetch_and(arg, to_std_order(order));
-#endif
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_and_explicit(&value, arg, order);
     }
 
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
-        T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_or_explicit(&value, arg, to_c11_order(order));
-#else
-        return value.fetch_or(arg, to_std_order(order));
-#endif
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_or_explicit(&value, arg, order);
     }
 
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
-        T arg, MemoryOrderOption order = MemoryOrderOption::SeqCst) noexcept {
-#ifdef CXB_USE_C11_ATOMIC
-        return atomic_fetch_xor_explicit(&value, arg, to_c11_order(order));
-#else
-        return value.fetch_xor(arg, to_std_order(order));
-#endif
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_xor_explicit(&value, arg, order);
     }
 
     CXB_INLINE operator T() const noexcept {
@@ -336,53 +266,10 @@ class Atomic {
     }
 
     bool is_lock_free() const noexcept {
-#ifdef CXB_USE_C11_ATOMIC
         return atomic_is_lock_free(&value);
-#else
-        return value.is_lock_free();
-#endif
     }
 
-    static constexpr bool is_always_lock_free =
-#ifdef CXB_USE_C11_ATOMIC
-        true; // C11 doesn't have a compile-time check
-#else
-        std::atomic<T>::is_always_lock_free;
-#endif
-
-#ifdef CXB_USE_C11_ATOMIC
-    static CXB_COMPTIME_INLINE memory_order to_c11_order(MemoryOrderOption order) {
-        switch(order) {
-            case MemoryOrderOption::Relaxed:
-                return memory_order_relaxed;
-            case MemoryOrderOption::Acquire:
-                return memory_order_acquire;
-            case MemoryOrderOption::Release:
-                return memory_order_release;
-            case MemoryOrderOption::AcqRel:
-                return memory_order_acq_rel;
-            case MemoryOrderOption::SeqCst:
-                return memory_order_seq_cst;
-        }
-        return memory_order_seq_cst;
-    }
-#else
-    static CXB_COMPTIME_INLINE std::memory_order to_std_order(MemoryOrderOption order) {
-        switch(order) {
-            case MemoryOrderOption::Relaxed:
-                return std::memory_order_relaxed;
-            case MemoryOrderOption::Acquire:
-                return std::memory_order_acquire;
-            case MemoryOrderOption::Release:
-                return std::memory_order_release;
-            case MemoryOrderOption::AcqRel:
-                return std::memory_order_acq_rel;
-            case MemoryOrderOption::SeqCst:
-                return std::memory_order_seq_cst;
-        }
-        return std::memory_order_seq_cst;
-    }
-#endif
+    static constexpr bool is_always_lock_free = true;
 };
 
 /* SECTION: primitive functions */
@@ -432,6 +319,7 @@ struct Allocator {
         Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
     void (*free_impl)(Allocator* a, void* head, size_t n_bytes);
 
+#ifdef __cplusplus
     template <class T, class H>
     struct AllocationWithHeader {
         T* data;
@@ -512,6 +400,7 @@ struct Allocator {
     CXB_INLINE void free_header_offset(T* offset_from_header, size_t count) {
         this->free_impl(this, (char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H));
     }
+#endif
 };
 
 struct Mallocator : Allocator {
@@ -521,9 +410,10 @@ struct Mallocator : Allocator {
     Atomic<i64> n_freed_bytes;
 };
 
-struct Arena : Allocator {
-    Arena();
-};
+// TODO: implement arena allocator
+// struct Arena : Allocator {
+//     Arena();
+// };
 
 extern Mallocator default_alloc;
 
@@ -596,71 +486,94 @@ struct StringSlice {
 #endif
 };
 
-struct String : StringSlice {
+struct MString {
+    char* data;
+    union {
+        struct {
+            size_t len : 62;
+            bool null_term : 1;
+        };
+        size_t metadata;
+    };
     Allocator* allocator;
 
-    String(Allocator* allocator = &default_alloc)
-        : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{allocator} {
-        reserve(0);
+#ifdef __cplusplus
+    // ** SECTION: slice compatible methods
+    CXB_INLINE size_t n_bytes() const {
+        return len + null_term;
+    }
+    CXB_INLINE size_t size() const {
+        return len;
+    }
+    CXB_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_INLINE char& operator[](size_t idx) {
+        return data[idx];
+    }
+    CXB_INLINE const char& operator[](size_t idx) const {
+        return data[idx];
+    }
+    CXB_INLINE char& back() {
+        return data[len - 1];
+    }
+    CXB_INLINE operator StringSlice() const {
+        return StringSlice{data, len, null_term};
     }
 
-    String(const char* cstr, size_t n = SIZE_MAX, Allocator* allocator = &default_alloc)
-        : StringSlice{nullptr, n == SIZE_MAX ? strlen(cstr) : n, true}, allocator{allocator} {
-        if(this->allocator == nullptr) {
-            data = const_cast<char*>(cstr);
-        } else {
-            reserve(len + 1);
-            if(len > 0) {
-                memcpy(data, cstr, len);
-            }
-            data[len] = '\0';
+    CXB_INLINE StringSlice slice(size_t i, size_t j = 0) {
+        StringSlice c = *this;
+        c.data = c.data + i;
+        size_t new_len = j == 0 ? len - i : j - i;
+        c.len = new_len;
+        c.null_term = i + new_len == len ? this->null_term : false;
+        return c;
+    }
+    CXB_INLINE const char* c_str() const {
+        if(!null_term) {
+            return nullptr;
         }
-    }
-    String(const String& o) : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{nullptr} {
-        data = o.data;
-        metadata = o.metadata;
+        return data;
     }
 
-    String(String&& o) : StringSlice{.data = nullptr, .len = 0, .null_term = true}, allocator{o.allocator} {
-        data = o.data;
-        metadata = o.metadata;
-        o.allocator = nullptr;
+    CXB_INLINE bool operator==(const StringSlice& o) const {
+        if(size() != o.size()) return false;
+        for(size_t i = 0; i < size(); ++i) {
+            if((*this)[i] != o[i]) return false;
+        }
+        return true;
     }
 
-    String& operator=(const String& o) = delete;
-    CXB_INLINE String& operator=(String&& o) {
-        allocator = o.allocator;
-        o.allocator = nullptr;
-        data = o.data;
-        metadata = o.metadata;
+    CXB_INLINE bool operator!=(const StringSlice& o) const {
+        return !(*this == o);
+    }
+
+    CXB_INLINE bool operator<(const StringSlice& o) const {
+        for(size_t i = 0; i < min(len, o.len); ++i) {
+            if((*this)[i] >= o[i]) return false;
+        }
+        return len < o.len;
+    }
+
+    // ** SECTION: allocator-related methods
+    CXB_INLINE MString& copy_(Allocator* to_allocator = &default_alloc) {
+        *this = move(this->copy(to_allocator));
         return *this;
     }
 
-#ifndef CXB_DISABLE_RAII
-    CXB_INLINE ~String() {
-        destroy();
-    }
-#endif
+    CXB_INLINE MString copy(Allocator* to_allocator = nullptr) {
+        if(to_allocator == nullptr) to_allocator = allocator;
+        REQUIRES(to_allocator != nullptr);
 
-    // ** SECTION: allocator-related methods
+        MString result{.data=data, .len=len, .null_term=null_term, .allocator=to_allocator};
+        return result;
+    }
+
     CXB_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
         if(!null_term) {
             ensure_null_terminated(copy_alloc_if_not);
         }
         return data;
-    }
-
-    CXB_INLINE String& copy_(Allocator* to_allocator = &default_alloc) {
-        *this = move(this->copy(to_allocator));
-        return *this;
-    }
-
-    CXB_INLINE String copy(Allocator* to_allocator = nullptr) {
-        if(to_allocator == nullptr) to_allocator = allocator;
-        REQUIRES(to_allocator != nullptr);
-
-        String result{data, len, to_allocator};
-        return result;
     }
 
     CXB_INLINE size_t* start_mem() {
@@ -794,9 +707,67 @@ struct String : StringSlice {
     CXB_INLINE void release() {
         this->allocator = nullptr;
     }
+#endif
 };
 
 #ifdef __cplusplus
+
+struct String : MString {
+    String(Allocator* allocator = &default_alloc)
+        : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = allocator} {
+        reserve(0);
+    }
+
+    String(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
+        : MString{.data = nullptr, .len = n == SIZE_MAX ? strlen(cstr) : n, .null_term = null_term, .allocator = allocator} {
+        if(this->allocator == nullptr) {
+            data = const_cast<char*>(cstr);
+        } else {
+            reserve(len + 1);
+            if(len > 0) {
+                memcpy(data, cstr, len);
+            }
+            data[len] = '\0';
+        }
+    }
+
+    String(const String& o) : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = nullptr} {
+        data = o.data;
+        metadata = o.metadata;
+    }
+
+    String(String&& o) : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = o.allocator} {
+        data = o.data;
+        metadata = o.metadata;
+        o.allocator = nullptr;
+    }
+
+    String& operator=(const String& o) = delete;
+    CXB_INLINE String& operator=(String&& o) {
+        allocator = o.allocator;
+        o.allocator = nullptr;
+        data = o.data;
+        metadata = o.metadata;
+        return *this;
+    }
+
+    CXB_INLINE ~String() {
+        destroy();
+    }
+
+    CXB_INLINE String& copy_(Allocator* to_allocator = &default_alloc) {
+        *this = move(this->copy(to_allocator));
+        return *this;
+    }
+
+    CXB_INLINE String copy(Allocator* to_allocator = nullptr) {
+        if(to_allocator == nullptr) to_allocator = allocator;
+        REQUIRES(to_allocator != nullptr);
+
+        String result{data, len, null_term, to_allocator};
+        return result;
+    }
+};
 
 template <class T> // NOTE: could use allocator as template param
 struct Seq {

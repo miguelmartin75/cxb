@@ -62,6 +62,6 @@ void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes) {
 }
 
 // TODO
-Arena::Arena() {}
+// Arena::Arena() {}
 
 CXB_NS_END
