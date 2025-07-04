@@ -2,7 +2,7 @@
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
-#include <cxb/unicode.h>
+#include <cxb/cxb-unicode.h>
 #include <random>
 
 CXB_USE_NS;
@@ -56,7 +56,7 @@ TEST_CASE("Str8 from raw data", "[Str8]") {
     }
 }
 
-TEST_CASE("String push_back", "[Str8]") {
+TEST_CASE("String push_back", "[String]") {
     size_t allocated_bytes = 0;
     {
         String s;
@@ -93,7 +93,7 @@ TEST_CASE("Str8 push_back with null termination", "[Str8]") {
     REQUIRE(strcmp(s.c_str(), "Hello!") == 0);
 }
 
-TEST_CASE("Str8 append C string", "[Str8]") {
+TEST_CASE("Str8 append C string", "[String]") {
     String s("Hello");
     s.extend(", World!");
 
@@ -103,7 +103,7 @@ TEST_CASE("Str8 append C string", "[Str8]") {
     REQUIRE(strcmp(s.c_str(), "Hello, World!") == 0);
 }
 
-TEST_CASE("Str8 append other Str8", "[Str8]") {
+TEST_CASE("Str8 append other Str8", "[String]") {
     String s1("Hello");
     Str8 s2(", World!");
     s1.extend(s2);
@@ -113,7 +113,7 @@ TEST_CASE("Str8 append other Str8", "[Str8]") {
     REQUIRE(s1 == S8_LIT("Hello, World!"));
 }
 
-TEST_CASE("Str8 append to non-null-terminated", "[Str8]") {
+TEST_CASE("String append to non-null-terminated", "[String]") {
     String s;
     s.push_back('H');
     s.push_back('i');
@@ -130,7 +130,7 @@ TEST_CASE("Str8 append to non-null-terminated", "[Str8]") {
     REQUIRE(s == S8_LIT("Hi there"));
 }
 
-TEST_CASE("Str8 resize", "[Str8]") {
+TEST_CASE("Str8 resize", "[String]") {
     String s("Hello");
     s.resize(10, 'X');
 
@@ -140,7 +140,7 @@ TEST_CASE("Str8 resize", "[Str8]") {
     REQUIRE(s == S8_LIT("HelloXXXXX"));
 }
 
-TEST_CASE("Str8 resize shrinking", "[Str8]") {
+TEST_CASE("Str8 resize shrinking", "[String]") {
     String s("Hello, World!");
     s.resize(5);
 
@@ -149,7 +149,7 @@ TEST_CASE("Str8 resize shrinking", "[Str8]") {
     REQUIRE(s == S8_LIT("Hello"));
 }
 
-TEST_CASE("Str8 pop_back", "[Str8]") {
+TEST_CASE("Str8 pop_back", "[String]") {
     String s("Hello");
     char c = s.pop_back();
 
@@ -180,7 +180,7 @@ TEST_CASE("Str8 slice", "[Str8]") {
     }
 }
 
-TEST_CASE("Str8 copy", "[Str8]") {
+TEST_CASE("String copy", "[String]") {
     String original("Hello, World!");
     String copy = original.copy();
 
@@ -191,7 +191,7 @@ TEST_CASE("Str8 copy", "[Str8]") {
     REQUIRE(original == copy);
 }
 
-TEST_CASE("Str8 ensure_null_terminated", "[Str8]") {
+TEST_CASE("String ensure_null_terminated", "[String]") {
     String s;
     s.push_back('H');
     s.push_back('i');

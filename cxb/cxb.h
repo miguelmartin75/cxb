@@ -37,6 +37,7 @@ in the "configuration" section.
 #include <stdlib.h> // TODO: removeme
 #include <string.h>
 #include <type_traits> // 27ms
+#include <new>
 
 #ifdef CXB_USE_C11_ATOMIC
 // NOTE: GCC doesn't support _Atomic in C++
@@ -677,7 +678,7 @@ struct Str8 {
     };
 
 // #ifdef __cplusplus
-    Str8(): data{nullptr}, metadata{0} {}
+    Str8(): data{nullptr}, len{0}, null_term{true} {}
     Str8(const char* data, size_t len = SIZE_MAX, bool null_term = true) : 
         data{const_cast<char*>(data)}, 
         len{len == SIZE_MAX ? (data ? strlen(data) : 0) : len}, 
@@ -731,8 +732,7 @@ struct Str8 {
 
     CXB_INLINE bool operator<(const Str8& o) const {
         for(size_t i = 0; i < min(len, o.len); ++i) {
-            if((*this)[i] < o[i]) return true;
-            if((*this)[i] > o[i]) return false;
+            if((*this)[i] >= o[i]) return false;
         }
         return len < o.len;
     }
@@ -805,6 +805,7 @@ struct String: Str8 {
         }
         return data;
     }
+
     CXB_INLINE String& copy_(Allocator* to_allocator = &default_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
