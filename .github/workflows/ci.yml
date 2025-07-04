@@ -65,7 +65,7 @@ jobs:
             export CC=gcc
             export CXX=g++
           fi
-          cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX
+          cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DBUILD_C_API_TESTS=ON
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
