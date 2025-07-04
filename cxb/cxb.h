@@ -34,13 +34,13 @@ in the "configuration" section.
 #endif
 
 /* SECTION: includes */
+#include <new>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h> // TODO: removeme
 #include <string.h>
 #include <type_traits> // 27ms
-#include <new>
 
 #ifdef CXB_USE_C11_ATOMIC
 // NOTE: GCC doesn't support _Atomic in C++
