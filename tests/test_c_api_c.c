@@ -12,5 +12,18 @@ int main(void) {
     REQUIRES(result.null_term == 1);
     int ret = (strcmp(result.data, "foo/bar") == 0) ? 0 : 1;
     REQUIRES(ret == 0);
+
+    StringSlice res_slice = {.data = result.data, .len = result.len, .null_term = result.null_term};
+
+    StringSlice slice_foo = cxb_ss_slice(res_slice, 0, 2);
+    REQUIRES(cxb_ss_size(slice_foo) == 3);
+    REQUIRES(!cxb_ss_empty(slice_foo));
+
+    StringSlice slice_bar = cxb_ss_slice(res_slice, 3, SIZE_MAX);
+    REQUIRES(cxb_ss_n_bytes(slice_bar) == 4 + 1); // includes null term
+
+    cxb_mstring_destroy(&result);
+
+    REQUIRES(result.data == NULL);
     return ret;
 }

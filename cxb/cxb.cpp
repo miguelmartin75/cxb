@@ -67,3 +67,15 @@ void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes) {
 // Arena::Arena() {}
 
 CXB_NS_END
+
+CXB_C_EXPORT void cxb_mstring_destroy(MString* s) {
+    if(s->data && s->allocator) {
+        size_t* header = ((size_t*) s->data) - 1;
+        size_t cap = *header;
+        s->allocator->free_impl(s->allocator, (void*) header, cap + sizeof(size_t));
+    }
+    s->allocator = nullptr;
+    s->data = nullptr;
+    s->len = 0;
+    s->null_term = false;
+}

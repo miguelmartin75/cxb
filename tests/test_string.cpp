@@ -559,3 +559,28 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     // Verify all memory has been deallocated
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
+
+TEST_CASE("StringSlice free functions (C API)", "[StringSlice][CAPI]") {
+    StringSlice s = S8_LIT("Hello");
+    REQUIRE(cxb_ss_size(s) == 5);
+    REQUIRE_FALSE(cxb_ss_empty(s));
+    REQUIRE(cxb_ss_n_bytes(s) == 6); // includes null terminator
+    REQUIRE(strcmp(cxb_ss_c_str(s), "Hello") == 0);
+
+    StringSlice slice = cxb_ss_slice(s, 1, 4); // "ell"
+    REQUIRE(cxb_ss_size(slice) == 3);
+    REQUIRE(!cxb_ss_empty(slice));
+    REQUIRE(cxb_ss_c_str(slice) == nullptr); // not null-terminated
+}
+
+TEST_CASE("MString free function destroy (C API)", "[MString][CAPI]") {
+    size_t mem_before = default_alloc.n_active_bytes;
+    {
+        MString ms{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
+        ms.extend("Hello, World!");
+        REQUIRE(cxb_mstring_size(ms) == 13);
+        cxb_mstring_destroy(&ms);
+        REQUIRE(ms.data == nullptr);
+    }
+    REQUIRE(default_alloc.n_active_bytes == mem_before);
+}
