@@ -402,34 +402,6 @@ struct StringSlice {
 #endif
 };
 
-#ifndef __cplusplus
-typedef struct StringSlice StringSlice;
-#endif
-
-CXB_C_EXPORT CXB_INLINE size_t cxb_ss_size(StringSlice s) {
-    return s.len;
-}
-CXB_C_EXPORT CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) {
-    return s.len + (size_t) s.null_term;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_ss_empty(StringSlice s) {
-    return s.len == 0;
-}
-CXB_C_EXPORT CXB_INLINE const char* cxb_ss_c_str(StringSlice s) {
-    return s.null_term ? s.data : NULL;
-}
-CXB_C_EXPORT CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
-    REQUIRES(j >= i);
-    REQUIRES(i < cxb_ss_n_bytes(s));
-
-    size_t new_len = j == SIZE_MAX ? s.len - i : j - i;
-
-    StringSlice result = {.data = s.data ? s.data + i : NULL,
-                          .len = new_len,
-                          .null_term = (bool) ((i + new_len == s.len) && s.null_term)};
-    return result;
-}
-
 struct MString {
     char* data;
     union {
@@ -662,24 +634,6 @@ struct MString {
     }
 #endif
 };
-
-#ifndef __cplusplus
-typedef struct MString MString;
-#endif
-
-CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_size(MString s) {
-    return s.len;
-}
-CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_n_bytes(MString s) {
-    return s.len + (size_t) s.null_term;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_mstring_empty(MString s) {
-    return s.len == 0;
-}
-CXB_C_EXPORT CXB_INLINE const char* cxb_mstring_c_str(MString s) {
-    return s.null_term ? s.data : NULL;
-}
-CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
 
 /* SECTION: C++-only API */
 #ifdef __cplusplus
@@ -1147,3 +1101,103 @@ CXB_NS_END
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &c[0], .len = (l), .null_term = false})
 #define S8_STR(s) (StringSlice{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
 #define S8_CSTR(s) (StringSlice{.data = (char*) s, .len = (size_t) strlen(s), .null_term = true})
+
+/* SECTION: C API */
+// NOTE: declared here to avoid declaring these functions in CXB_NS_BEGIN/END
+#ifndef __cplusplus
+typedef struct StringSlice StringSlice;
+#endif
+
+CXB_C_EXPORT CXB_INLINE size_t cxb_ss_size(StringSlice s) {
+    return s.len;
+}
+CXB_C_EXPORT CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) {
+    return s.len + (size_t) s.null_term;
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_ss_empty(StringSlice s) {
+    return s.len == 0;
+}
+CXB_C_EXPORT CXB_INLINE const char* cxb_ss_c_str(StringSlice s) {
+    return s.null_term ? s.data : NULL;
+}
+CXB_C_EXPORT CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
+    REQUIRES(j >= i);
+    REQUIRES(i < cxb_ss_n_bytes(s));
+
+    size_t new_len = j == SIZE_MAX ? s.len - i : j - i;
+
+    StringSlice result = {.data = s.data ? s.data + i : NULL,
+                          .len = new_len,
+                          .null_term = (bool) ((i + new_len == s.len) && s.null_term)};
+    return result;
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_ss_eq(StringSlice a, StringSlice b) {
+    if(a.len != b.len) return false;
+    if(a.len == 0) return true;
+    return memcmp(a.data, b.data, a.len) == 0;
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_ss_neq(StringSlice a, StringSlice b) {
+    return !cxb_ss_eq(a, b);
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_ss_lt(StringSlice a, StringSlice b) {
+    size_t n = a.len < b.len ? a.len : b.len;
+    for(size_t i = 0; i < n; ++i) {
+        if(a.data[i] < b.data[i]) return true;
+        if(a.data[i] > b.data[i]) return false;
+    }
+    return a.len < b.len;
+}
+CXB_C_EXPORT CXB_INLINE char cxb_ss_back(StringSlice s) {
+    REQUIRES(s.len > 0);
+    return s.data[s.len - 1];
+}
+
+#ifndef __cplusplus
+typedef struct MString MString;
+#endif
+
+CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_size(MString s) {
+    return s.len;
+}
+CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_n_bytes(MString s) {
+    return s.len + (size_t) s.null_term;
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_mstring_empty(MString s) {
+    return s.len == 0;
+}
+CXB_C_EXPORT CXB_INLINE const char* cxb_mstring_c_str(MString s) {
+    return s.null_term ? s.data : NULL;
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_mstring_eq(MString a, MString b) {
+    if(a.len != b.len) return false;
+    if(a.len == 0) return true;
+    return memcmp(a.data, b.data, a.len) == 0;
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_mstring_neq(MString a, MString b) {
+    return !cxb_mstring_eq(a, b);
+}
+CXB_C_EXPORT CXB_INLINE bool cxb_mstring_lt(MString a, MString b) {
+    size_t n = a.len < b.len ? a.len : b.len;
+    for(size_t i = 0; i < n; ++i) {
+        if(a.data[i] < b.data[i]) return true;
+        if(a.data[i] > b.data[i]) return false;
+    }
+    return a.len < b.len;
+}
+CXB_C_EXPORT CXB_INLINE char cxb_mstring_back(MString s) {
+    REQUIRES(s.len > 0);
+    return s.data[s.len - 1];
+}
+CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_capacity(MString s) {
+    return s.data ? *(((size_t*) s.data) - 1) : 0;
+}
+
+CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
+CXB_C_EXPORT void cxb_mstring_ensure_capacity(MString* s, size_t cap);
+CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size);
+CXB_C_EXPORT void cxb_mstring_extend(MString* s, StringSlice slice);
+CXB_C_EXPORT void cxb_mstring_push_back(MString* s, char val);
+CXB_C_EXPORT char* cxb_mstring_push(MString* s);
+CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap);
+CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s);
+CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator);
