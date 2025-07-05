@@ -82,10 +82,9 @@ struct ExampleClass {
 
 ## Atomic Operations
 
-- Wrap platform atomics in consistent interface
-- Provide both C11 `_Atomic` and C++ `std::atomic` backends
-- Use explicit memory ordering: `MemoryOrderOption` enum
-- Support common atomic operations: `fetch_add`, `compare_exchange_weak`, etc.
+- For C compatiable: use the typedef's defined in cxb.h
+- In C++ lang: use the Atomic<T> wrapper
+- Use explicit memory ordering: C11 `memory_order` constants directly
 
 ## String Handling
 

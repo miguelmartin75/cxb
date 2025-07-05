@@ -1,5 +1,7 @@
 #include "cxb.h"
 
+#include <stdlib.h> // for malloc, free, realloc, calloc
+
 CXB_NS_BEGIN
 
 Mallocator default_alloc = {};
@@ -62,6 +64,49 @@ void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes) {
 }
 
 // TODO
-Arena::Arena() {}
+// Arena::Arena() {}
 
 CXB_NS_END
+
+CXB_C_EXPORT void cxb_mstring_destroy(MString* s) {
+    s->destroy();
+}
+
+CXB_C_EXPORT void cxb_mstring_ensure_capacity(MString* s, size_t cap) {
+    if(!s) return;
+    s->ensure_capacity(cap);
+}
+
+CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size) {
+    if(!s) return;
+    s->resize(size);
+}
+
+CXB_C_EXPORT void cxb_mstring_extend(MString* s, StringSlice slice) {
+    if(!s) return;
+    s->extend(slice);
+}
+
+CXB_C_EXPORT void cxb_mstring_push_back(MString* s, char val) {
+    if(!s) return;
+    s->push_back(val);
+}
+
+CXB_C_EXPORT char* cxb_mstring_push(MString* s) {
+    if(!s) return nullptr;
+    return &s->push();
+}
+
+CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap) {
+    if(!s) return;
+    s->reserve(cap);
+}
+
+CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s) {
+    if(!s) return;
+    s->ensure_null_terminated();
+}
+
+CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator) {
+    return s.copy(to_allocator);
+}
