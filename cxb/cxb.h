@@ -398,6 +398,10 @@ struct StringSlice {
         if(cmp > 0) return false;
         return len < o.len;
     }
+
+    CXB_INLINE bool operator>(const StringSlice& o) const {
+        return o < *this;
+    }
 #endif
 };
 
@@ -467,6 +471,10 @@ struct MString {
         if(cmp < 0) return true;
         if(cmp > 0) return false;
         return len < o.len;
+    }
+
+    CXB_INLINE bool operator>(const StringSlice& o) const {
+        return o < *this;
     }
 
     // ** SECTION: allocator-related methods

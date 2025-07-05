@@ -649,4 +649,36 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     // Test mixed String and StringSlice comparison
     REQUIRE(str1 < s2);         // String("apple") < StringSlice("banana")
     REQUIRE(s3 < str1);         // StringSlice("app") < String("apple")
+    
+    // Test operator> for StringSlice
+    REQUIRE(s2 > s1);           // "banana" > "apple"
+    REQUIRE(!(s1 > s2));        // "apple" not > "banana"
+    REQUIRE(s1 > s3);           // "apple" > "app"
+    REQUIRE(!(s3 > s1));        // "app" not > "apple"
+    REQUIRE(s5 > s1);           // "application" > "apple"
+    REQUIRE(!(s1 > s5));        // "apple" not > "application"
+    REQUIRE(non_empty > empty1);// "a" > ""
+    REQUIRE(!(empty1 > non_empty)); // "" not > "a"
+    REQUIRE(lower > upper);     // "apple" > "APPLE" (ASCII values)
+    REQUIRE(!(upper > lower));  // "APPLE" not > "apple"
+    REQUIRE(alpha > numeric);   // "abc" > "123" (ASCII values)
+    REQUIRE(numeric > special); // "123" > "!@#" (ASCII values)
+    
+    // Test operator> for String
+    REQUIRE(str2 > str1);       // "banana" > "apple"
+    REQUIRE(!(str1 > str2));    // "apple" not > "banana"
+    REQUIRE(str1 > str3);       // "apple" > "app"
+    REQUIRE(!(str3 > str1));    // "app" not > "apple"
+    
+    // Test mixed String and StringSlice operator> comparison
+    REQUIRE(s2 > str1);         // StringSlice("banana") > String("apple")
+    REQUIRE(str1 > s3);         // String("apple") > StringSlice("app")
+    
+    // Test that equal strings are not greater than each other
+    REQUIRE(!(s1 > s4));        // "apple" not > "apple"
+    REQUIRE(!(s4 > s1));        // "apple" not > "apple"
+    REQUIRE(!(str1 > str4));    // "apple" not > "apple"
+    REQUIRE(!(str4 > str1));    // "apple" not > "apple"
+    REQUIRE(!(empty1 > empty2));// "" not > ""
+    REQUIRE(!(empty2 > empty1));// "" not > ""
 }
