@@ -28,8 +28,8 @@ This library is my own style (Miguel's) of writing C++
 is null-terminated
         - `StringSlice` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
 block of memory
-        - In C-land: free functions are provided, such as `cxb_str_slice`,
-          `cxb_str_slice_c_str`, `cxb_str_slice_empty`, `cxb_str_slice_n_bytes`, etc.
+        - In C-land: free functions are provided, such as `cxb_ss_destroy`,
+          `cxb_ss_c_str`, `cxb_ss_empty`, `cxb_ss_n_bytes`, etc.
         - In C++-land: there are methods the same operations the C free functions
           support plus operator overloads for convenience, e.g. `operator[]`,
           `slice`, `c_str`, `empty`, `size`, `n_bytes`, etc.
@@ -37,6 +37,10 @@ block of memory
         - This type is a `std::string` alternative, but requires manual memory management
         - Think of this type as a `StringSlice` that is optionally attached to an allocator
         - Compatible with `StringSlice`
+        - In C-land: free functions are provided, such as `cxb_mstring_destroy`,
+          `cxb_mstring_c_str`, `cxb_mstring_empty`, `cxb_mstring_n_bytes`, etc.
+        - In C++-land: there are methods the same operations the C free functions
+          support plus operator overloads for convenience, e.g. `operator[]`, `c_str`, `empty`, `size`, `n_bytes`, etc.
         - Call `.destroy()` (in C++) or `cxb_mstring_destroy` (in C) to free the memory
         - Destructor does not call `.destroy()`, see `String` for this functionality
 * C++ only types: use these types when when defining C++ APIs or in implementation files
@@ -401,6 +405,25 @@ struct StringSlice {
 typedef struct StringSlice StringSlice;
 #endif
 
+CXB_INLINE size_t cxb_ss_size(StringSlice s) { return s.len; }
+CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) { return s.len + (size_t) s.null_term; }
+CXB_INLINE bool cxb_ss_empty(StringSlice s) { return s.len == 0; }
+CXB_INLINE const char* cxb_ss_c_str(StringSlice s) { return s.null_term ? s.data : NULL; }
+CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
+    REQUIRES(j >= i);
+    REQUIRES(i < cxb_ss_n_bytes(s));
+
+    size_t new_len = j == SIZE_MAX ? s.len - i : j - i + 1;
+
+    StringSlice result = {
+        .data = s.data ? s.data + i : NULL,
+        .len = new_len,
+        .null_term = (bool) ((i + new_len == s.len) && s.null_term)
+    };
+    return result;
+}
+
+
 struct MString {
     char* data;
     union {
@@ -637,6 +660,13 @@ struct MString {
 #ifndef __cplusplus
 typedef struct MString MString;
 #endif
+
+CXB_INLINE size_t cxb_mstring_size(MString s) { return s.len; }
+CXB_INLINE size_t cxb_mstring_n_bytes(MString s) { return s.len + (size_t) s.null_term; }
+CXB_INLINE bool cxb_mstring_empty(MString s) { return s.len == 0; }
+CXB_INLINE const char* cxb_mstring_c_str(MString s) { return s.null_term ? s.data : NULL; }
+CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
+
 
 /* SECTION: C++-only API */
 #ifdef __cplusplus
