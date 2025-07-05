@@ -383,10 +383,8 @@ struct StringSlice {
 
     CXB_INLINE bool operator==(const StringSlice& o) const {
         if(size() != o.size()) return false;
-        for(size_t i = 0; i < size(); ++i) {
-            if((*this)[i] != o[i]) return false;
-        }
-        return true;
+        if(size() == 0) return true;
+        return memcmp(data, o.data, size()) == 0;
     }
 
     CXB_INLINE bool operator!=(const StringSlice& o) const {
@@ -394,9 +392,10 @@ struct StringSlice {
     }
 
     CXB_INLINE bool operator<(const StringSlice& o) const {
-        for(size_t i = 0; i < min(len, o.len); ++i) {
-            if((*this)[i] >= o[i]) return false;
-        }
+        size_t n = len < o.len ? len : o.len;
+        int cmp = memcmp(data, o.data, n);
+        if(cmp < 0) return true;
+        if(cmp > 0) return false;
         return len < o.len;
     }
 #endif
@@ -454,10 +453,8 @@ struct MString {
 
     CXB_INLINE bool operator==(const StringSlice& o) const {
         if(size() != o.size()) return false;
-        for(size_t i = 0; i < size(); ++i) {
-            if((*this)[i] != o[i]) return false;
-        }
-        return true;
+        if(size() == 0) return true;
+        return memcmp(data, o.data, size()) == 0;
     }
 
     CXB_INLINE bool operator!=(const StringSlice& o) const {
@@ -465,9 +462,10 @@ struct MString {
     }
 
     CXB_INLINE bool operator<(const StringSlice& o) const {
-        for(size_t i = 0; i < min(len, o.len); ++i) {
-            if((*this)[i] >= o[i]) return false;
-        }
+        size_t n = len < o.len ? len : o.len;
+        int cmp = memcmp(data, o.data, n);
+        if(cmp < 0) return true;
+        if(cmp > 0) return false;
         return len < o.len;
     }
 
@@ -1178,10 +1176,9 @@ CXB_C_EXPORT CXB_INLINE bool cxb_mstring_neq(MString a, MString b) {
 }
 CXB_C_EXPORT CXB_INLINE bool cxb_mstring_lt(MString a, MString b) {
     size_t n = a.len < b.len ? a.len : b.len;
-    for(size_t i = 0; i < n; ++i) {
-        if(a.data[i] < b.data[i]) return true;
-        if(a.data[i] > b.data[i]) return false;
-    }
+    int cmp = memcmp(a.data, b.data, n);
+    if(cmp < 0) return true;
+    if(cmp > 0) return false;
     return a.len < b.len;
 }
 CXB_C_EXPORT CXB_INLINE char cxb_mstring_back(MString s) {
@@ -1189,6 +1186,7 @@ CXB_C_EXPORT CXB_INLINE char cxb_mstring_back(MString s) {
     return s.data[s.len - 1];
 }
 CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_capacity(MString s) {
+    REQUIRES(s.allocator);
     return s.data ? *(((size_t*) s.data) - 1) : 0;
 }
 
