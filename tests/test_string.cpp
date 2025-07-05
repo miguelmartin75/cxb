@@ -493,11 +493,9 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
         REQUIRE(strings.len == 0);
         REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
-        // Add various strings to the sequence
         for(int i = 0; i < 10; ++i) {
             String s;
             s.extend("String #");
-            // Convert i to string manually
             if(i == 0)
                 s.extend("0");
             else {
@@ -518,22 +516,18 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
 
         REQUIRE(strings.len == 10);
 
-        // Verify the content of each string
         for(int i = 0; i < strings.len; ++i) {
             REQUIRE(strings[i].len > 0);
             REQUIRE(strings[i].null_term);
             REQUIRE(strings[i].allocator);
 
-            // Check that it starts with "String #"
             StringSlice prefix = strings[i].slice(0, 8);
             REQUIRE(prefix == S8_LIT("String #"));
 
-            // Check that it ends with " - Content"
             StringSlice suffix = strings[i].slice(strings[i].len - 10);
             REQUIRE(suffix == S8_LIT(" - Content"));
         }
 
-        // Modify one of the strings
         strings[5].extend(" (modified)");
         REQUIRE(strings[5].len > strings[4].len);
 
@@ -556,7 +550,6 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
         REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
     }
 
-    // Verify all memory has been deallocated
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
@@ -592,93 +585,195 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     StringSlice s3 = S8_LIT("app");
     StringSlice s4 = S8_LIT("apple");
     StringSlice s5 = S8_LIT("application");
-    
+
     // Basic lexicographic comparison
-    REQUIRE(s1 < s2);       // "apple" < "banana"
-    REQUIRE(!(s2 < s1));    // "banana" not < "apple"
-    
+    REQUIRE(s1 < s2);    // "apple" < "banana"
+    REQUIRE(!(s2 < s1)); // "banana" not < "apple"
+
     // Prefix comparison
-    REQUIRE(s3 < s1);       // "app" < "apple"
-    REQUIRE(!(s1 < s3));    // "apple" not < "app"
-    
+    REQUIRE(s3 < s1);    // "app" < "apple"
+    REQUIRE(!(s1 < s3)); // "apple" not < "app"
+
     // Equal strings
-    REQUIRE(!(s1 < s4));    // "apple" not < "apple"
-    REQUIRE(!(s4 < s1));    // "apple" not < "apple"
-    
+    REQUIRE(!(s1 < s4)); // "apple" not < "apple"
+    REQUIRE(!(s4 < s1)); // "apple" not < "apple"
+
     // Longer vs shorter with same prefix
-    REQUIRE(s1 < s5);       // "apple" < "application"
-    REQUIRE(!(s5 < s1));    // "application" not < "apple"
-    
+    REQUIRE(s1 < s5);    // "apple" < "application"
+    REQUIRE(!(s5 < s1)); // "application" not < "apple"
+
     // Test with empty strings
     StringSlice empty1 = S8_LIT("");
     StringSlice empty2 = S8_LIT("");
     StringSlice non_empty = S8_LIT("a");
-    
+
     REQUIRE(!(empty1 < empty2));    // empty not < empty
     REQUIRE(empty1 < non_empty);    // empty < non-empty
     REQUIRE(!(non_empty < empty1)); // non-empty not < empty
-    
+
     // Test case sensitivity
     StringSlice lower = S8_LIT("apple");
     StringSlice upper = S8_LIT("APPLE");
-    
-    REQUIRE(upper < lower);  // "APPLE" < "apple" (ASCII values)
+
+    REQUIRE(upper < lower); // "APPLE" < "apple" (ASCII values)
     REQUIRE(!(lower < upper));
-    
+
     // Test with special characters
     StringSlice alpha = S8_LIT("abc");
     StringSlice numeric = S8_LIT("123");
     StringSlice special = S8_LIT("!@#");
-    
-    REQUIRE(special < numeric);  // "!@#" < "123" (ASCII values)
-    REQUIRE(numeric < alpha);    // "123" < "abc" (ASCII values)
-    
+
+    REQUIRE(special < numeric); // "!@#" < "123" (ASCII values)
+    REQUIRE(numeric < alpha);   // "123" < "abc" (ASCII values)
+
     // Test String operator< (should behave the same as StringSlice)
     String str1("apple");
     String str2("banana");
     String str3("app");
     String str4("apple");
-    
-    REQUIRE(str1 < str2);       // "apple" < "banana"
-    REQUIRE(!(str2 < str1));    // "banana" not < "apple"
-    REQUIRE(str3 < str1);       // "app" < "apple"
-    REQUIRE(!(str1 < str3));    // "apple" not < "app"
-    REQUIRE(!(str1 < str4));    // "apple" not < "apple"
-    REQUIRE(!(str4 < str1));    // "apple" not < "apple"
-    
+
+    REQUIRE(str1 < str2);    // "apple" < "banana"
+    REQUIRE(!(str2 < str1)); // "banana" not < "apple"
+    REQUIRE(str3 < str1);    // "app" < "apple"
+    REQUIRE(!(str1 < str3)); // "apple" not < "app"
+    REQUIRE(!(str1 < str4)); // "apple" not < "apple"
+    REQUIRE(!(str4 < str1)); // "apple" not < "apple"
+
     // Test mixed String and StringSlice comparison
-    REQUIRE(str1 < s2);         // String("apple") < StringSlice("banana")
-    REQUIRE(s3 < str1);         // StringSlice("app") < String("apple")
-    
+    REQUIRE(str1 < s2); // String("apple") < StringSlice("banana")
+    REQUIRE(s3 < str1); // StringSlice("app") < String("apple")
+
     // Test operator> for StringSlice
-    REQUIRE(s2 > s1);           // "banana" > "apple"
-    REQUIRE(!(s1 > s2));        // "apple" not > "banana"
-    REQUIRE(s1 > s3);           // "apple" > "app"
-    REQUIRE(!(s3 > s1));        // "app" not > "apple"
-    REQUIRE(s5 > s1);           // "application" > "apple"
-    REQUIRE(!(s1 > s5));        // "apple" not > "application"
-    REQUIRE(non_empty > empty1);// "a" > ""
+    REQUIRE(s2 > s1);               // "banana" > "apple"
+    REQUIRE(!(s1 > s2));            // "apple" not > "banana"
+    REQUIRE(s1 > s3);               // "apple" > "app"
+    REQUIRE(!(s3 > s1));            // "app" not > "apple"
+    REQUIRE(s5 > s1);               // "application" > "apple"
+    REQUIRE(!(s1 > s5));            // "apple" not > "application"
+    REQUIRE(non_empty > empty1);    // "a" > ""
     REQUIRE(!(empty1 > non_empty)); // "" not > "a"
-    REQUIRE(lower > upper);     // "apple" > "APPLE" (ASCII values)
-    REQUIRE(!(upper > lower));  // "APPLE" not > "apple"
-    REQUIRE(alpha > numeric);   // "abc" > "123" (ASCII values)
-    REQUIRE(numeric > special); // "123" > "!@#" (ASCII values)
-    
+    REQUIRE(lower > upper);         // "apple" > "APPLE" (ASCII values)
+    REQUIRE(!(upper > lower));      // "APPLE" not > "apple"
+    REQUIRE(alpha > numeric);       // "abc" > "123" (ASCII values)
+    REQUIRE(numeric > special);     // "123" > "!@#" (ASCII values)
+
     // Test operator> for String
-    REQUIRE(str2 > str1);       // "banana" > "apple"
-    REQUIRE(!(str1 > str2));    // "apple" not > "banana"
-    REQUIRE(str1 > str3);       // "apple" > "app"
-    REQUIRE(!(str3 > str1));    // "app" not > "apple"
-    
+    REQUIRE(str2 > str1);    // "banana" > "apple"
+    REQUIRE(!(str1 > str2)); // "apple" not > "banana"
+    REQUIRE(str1 > str3);    // "apple" > "app"
+    REQUIRE(!(str3 > str1)); // "app" not > "apple"
+
     // Test mixed String and StringSlice operator> comparison
-    REQUIRE(s2 > str1);         // StringSlice("banana") > String("apple")
-    REQUIRE(str1 > s3);         // String("apple") > StringSlice("app")
-    
+    REQUIRE(s2 > str1); // StringSlice("banana") > String("apple")
+    REQUIRE(str1 > s3); // String("apple") > StringSlice("app")
+
     // Test that equal strings are not greater than each other
-    REQUIRE(!(s1 > s4));        // "apple" not > "apple"
-    REQUIRE(!(s4 > s1));        // "apple" not > "apple"
-    REQUIRE(!(str1 > str4));    // "apple" not > "apple"
-    REQUIRE(!(str4 > str1));    // "apple" not > "apple"
-    REQUIRE(!(empty1 > empty2));// "" not > ""
-    REQUIRE(!(empty2 > empty1));// "" not > ""
+    REQUIRE(!(s1 > s4));         // "apple" not > "apple"
+    REQUIRE(!(s4 > s1));         // "apple" not > "apple"
+    REQUIRE(!(str1 > str4));     // "apple" not > "apple"
+    REQUIRE(!(str4 > str1));     // "apple" not > "apple"
+    REQUIRE(!(empty1 > empty2)); // "" not > ""
+    REQUIRE(!(empty2 > empty1)); // "" not > ""
+}
+
+CXB_INLINE bool string_less_than_forloop(const StringSlice& a, const StringSlice& b) {
+    size_t n = a.len < b.len ? a.len : b.len;
+    for(size_t i = 0; i < n; ++i) {
+        if(a.data[i] < b.data[i]) return true;
+        if(a.data[i] > b.data[i]) return false;
+    }
+    return a.len < b.len;
+}
+
+TEST_CASE("String operator< benchmark", "[.benchmark][String]") {
+    String small_str1;
+    String small_str2;
+    for(int i = 0; i < 200; ++i) {
+        small_str1.push_back('a' + (i % 26));
+        small_str2.push_back('a' + ((i + 1) % 26));
+    }
+
+    String medium_str1;
+    String medium_str2;
+    std::mt19937 rng(42); // Fixed seed for reproducibility
+    std::uniform_int_distribution<int> char_dist('a', 'z');
+
+    for(int i = 0; i < 100000; ++i) {
+        char c1 = static_cast<char>(char_dist(rng));
+        char c2 = static_cast<char>(char_dist(rng));
+        medium_str1.push_back(c1);
+        medium_str2.push_back(c2);
+    }
+
+    String large_str1;
+    String large_str2;
+
+    for(int i = 0; i < 1000000; ++i) {
+        char c1 = static_cast<char>(char_dist(rng));
+        char c2 = static_cast<char>(char_dist(rng));
+        large_str1.push_back(c1);
+        large_str2.push_back(c2);
+    }
+
+    // Create pairs with different comparison outcomes
+    // Make the second string slightly different to avoid early termination
+    small_str2[50] = small_str2[50] + 1;
+    medium_str2[50000] = medium_str2[50000] + 1;
+    large_str2[500000] = large_str2[500000] + 1;
+
+    // Small string benchmarks
+    BENCHMARK("String operator< (memcmp) - Small strings") {
+        return small_str1 < small_str2;
+    };
+
+    BENCHMARK("String operator< (for loop) - Small strings") {
+        return string_less_than_forloop(small_str1, small_str2);
+    };
+
+    // Medium string benchmarks
+    BENCHMARK("String operator< (memcmp) - Medium strings") {
+        return medium_str1 < medium_str2;
+    };
+
+    BENCHMARK("String operator< (for loop) - Medium strings") {
+        return string_less_than_forloop(medium_str1, medium_str2);
+    };
+
+    // Large string benchmarks
+    BENCHMARK("String operator< (memcmp) - Large strings") {
+        return large_str1 < large_str2;
+    };
+
+    BENCHMARK("String operator< (for loop) - Large strings") {
+        return string_less_than_forloop(large_str1, large_str2);
+    };
+
+    // Additional benchmarks with equal strings (worst case for for loop)
+    String equal_small = small_str1.copy();
+    String equal_medium = medium_str1.copy();
+    String equal_large = large_str1.copy();
+
+    BENCHMARK("String operator< (memcmp) - Equal small strings") {
+        return small_str1 < equal_small;
+    };
+
+    BENCHMARK("String operator< (for loop) - Equal small strings") {
+        return string_less_than_forloop(small_str1, equal_small);
+    };
+
+    BENCHMARK("String operator< (memcmp) - Equal medium strings") {
+        return medium_str1 < equal_medium;
+    };
+
+    BENCHMARK("String operator< (for loop) - Equal medium strings") {
+        return string_less_than_forloop(medium_str1, equal_medium);
+    };
+
+    BENCHMARK("String operator< (memcmp) - Equal large strings") {
+        return large_str1 < equal_large;
+    };
+
+    BENCHMARK("String operator< (for loop) - Equal large strings") {
+        return string_less_than_forloop(large_str1, equal_large);
+    };
 }
