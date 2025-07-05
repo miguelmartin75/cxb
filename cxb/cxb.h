@@ -163,6 +163,7 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 // #define WARN(msg)
 // #define FATAL(msg)
 
+#define CXB_MAYBE_INLINE inline
 #if defined(__GNUC__)
 #define CXB_INLINE inline __attribute__((__always_inline__))
 #elif defined(_MSC_VER)
@@ -365,10 +366,10 @@ struct StringSlice {
     CXB_INLINE char& back() {
         return data[len - 1];
     }
-    CXB_INLINE StringSlice slice(size_t i, size_t j = 0) {
+    CXB_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
         StringSlice c = *this;
         c.data = c.data + i;
-        size_t new_len = j == 0 ? len - i : j - i;
+        size_t new_len = j == SIZE_MAX ? len - i : j - i;
         c.len = new_len;
         c.null_term = i + new_len == len ? this->null_term : false;
         return c;
@@ -405,24 +406,29 @@ struct StringSlice {
 typedef struct StringSlice StringSlice;
 #endif
 
-CXB_INLINE size_t cxb_ss_size(StringSlice s) { return s.len; }
-CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) { return s.len + (size_t) s.null_term; }
-CXB_INLINE bool cxb_ss_empty(StringSlice s) { return s.len == 0; }
-CXB_INLINE const char* cxb_ss_c_str(StringSlice s) { return s.null_term ? s.data : NULL; }
+CXB_INLINE size_t cxb_ss_size(StringSlice s) {
+    return s.len;
+}
+CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) {
+    return s.len + (size_t) s.null_term;
+}
+CXB_INLINE bool cxb_ss_empty(StringSlice s) {
+    return s.len == 0;
+}
+CXB_INLINE const char* cxb_ss_c_str(StringSlice s) {
+    return s.null_term ? s.data : NULL;
+}
 CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
     REQUIRES(j >= i);
     REQUIRES(i < cxb_ss_n_bytes(s));
 
-    size_t new_len = j == SIZE_MAX ? s.len - i : j - i + 1;
+    size_t new_len = j == SIZE_MAX ? s.len - i : j - i;
 
-    StringSlice result = {
-        .data = s.data ? s.data + i : NULL,
-        .len = new_len,
-        .null_term = (bool) ((i + new_len == s.len) && s.null_term)
-    };
+    StringSlice result = {.data = s.data ? s.data + i : NULL,
+                          .len = new_len,
+                          .null_term = (bool) ((i + new_len == s.len) && s.null_term)};
     return result;
 }
-
 
 struct MString {
     char* data;
@@ -459,10 +465,10 @@ struct MString {
         return StringSlice{data, len, null_term};
     }
 
-    CXB_INLINE StringSlice slice(size_t i, size_t j = 0) {
+    CXB_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
         StringSlice c = *this;
         c.data = c.data + i;
-        size_t new_len = j == 0 ? len - i : j - i;
+        size_t new_len = j == SIZE_MAX ? len - i : j - i;
         c.len = new_len;
         c.null_term = i + new_len == len ? this->null_term : false;
         return c;
@@ -556,7 +562,7 @@ struct MString {
         _capacity() = new_count;
     }
 
-    void resize(size_t new_len, char fill_char = '\0') {
+    CXB_MAYBE_INLINE void resize(size_t new_len, char fill_char = '\0') {
         bool was_null_terminated = null_term;
         size_t reserve_size = new_len + was_null_terminated;
 
@@ -577,7 +583,7 @@ struct MString {
         null_term = was_null_terminated;
     }
 
-    void push_back(char c) {
+    CXB_MAYBE_INLINE void push_back(char c) {
         REQUIRES(UNLIKELY(allocator != nullptr));
         size_t needed_cap = len + null_term + 1;
         if(capacity() < needed_cap) {
@@ -612,7 +618,7 @@ struct MString {
         return ret;
     }
 
-    void extend(StringSlice other) {
+    CXB_MAYBE_INLINE void extend(StringSlice other) {
         if(other.len == 0) return;
         REQUIRES(allocator);
 
@@ -661,12 +667,19 @@ struct MString {
 typedef struct MString MString;
 #endif
 
-CXB_INLINE size_t cxb_mstring_size(MString s) { return s.len; }
-CXB_INLINE size_t cxb_mstring_n_bytes(MString s) { return s.len + (size_t) s.null_term; }
-CXB_INLINE bool cxb_mstring_empty(MString s) { return s.len == 0; }
-CXB_INLINE const char* cxb_mstring_c_str(MString s) { return s.null_term ? s.data : NULL; }
+CXB_INLINE size_t cxb_mstring_size(MString s) {
+    return s.len;
+}
+CXB_INLINE size_t cxb_mstring_n_bytes(MString s) {
+    return s.len + (size_t) s.null_term;
+}
+CXB_INLINE bool cxb_mstring_empty(MString s) {
+    return s.len == 0;
+}
+CXB_INLINE const char* cxb_mstring_c_str(MString s) {
+    return s.null_term ? s.data : NULL;
+}
 CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
-
 
 /* SECTION: C++-only API */
 #ifdef __cplusplus
@@ -936,7 +949,7 @@ struct Seq {
         return data[len - 1];
     }
     CXB_INLINE Seq<T> slice(size_t i = 0, size_t j = SIZE_MAX) {
-        return Seq<T>{data + i, j == SIZE_MAX ? len : j - i + 1, nullptr};
+        return Seq<T>{data + i, j == SIZE_MAX ? len : j - i, nullptr};
     }
 
     // ** SECTION: allocator-related methods
@@ -945,7 +958,7 @@ struct Seq {
         return *this;
     }
 
-    inline Seq<T> copy(Allocator* to_allocator = nullptr) {
+    CXB_MAYBE_INLINE Seq<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
         Seq<T> result{nullptr, 0, to_allocator};
@@ -994,7 +1007,7 @@ struct Seq {
     }
 
     template <class... Args>
-    inline void resize(size_t new_len, Args&&... args) {
+    CXB_MAYBE_INLINE void resize(size_t new_len, Args&&... args) {
         if(capacity() < new_len) {
             reserve(new_len);
         }
@@ -1005,7 +1018,7 @@ struct Seq {
         len = new_len;
     }
 
-    inline void push_back(T value) {
+    CXB_MAYBE_INLINE void push_back(T value) {
         REQUIRES(UNLIKELY(allocator != nullptr));
         size_t c = capacity();
         if(this->len >= c) {
@@ -1016,7 +1029,7 @@ struct Seq {
         data[this->len++] = move(value);
     }
 
-    inline T& push() {
+    CXB_MAYBE_INLINE T& push() {
         size_t c = capacity();
         if(this->len >= c) {
             c = allocator->growth_sug(c);
@@ -1027,13 +1040,13 @@ struct Seq {
         return data[this->len - 1];
     }
 
-    inline T pop_back() {
+    CXB_MAYBE_INLINE T pop_back() {
         T ret = data[len - 1];
         len--;
         return ret;
     }
 
-    inline T& get_or_add_until(size_t idx) {
+    CXB_MAYBE_INLINE T& get_or_add_until(size_t idx) {
         if(idx >= len) {
             resize(idx + 1);
         }
