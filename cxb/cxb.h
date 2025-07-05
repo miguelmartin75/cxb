@@ -406,19 +406,19 @@ struct StringSlice {
 typedef struct StringSlice StringSlice;
 #endif
 
-CXB_INLINE size_t cxb_ss_size(StringSlice s) {
+CXB_C_EXPORT CXB_INLINE size_t cxb_ss_size(StringSlice s) {
     return s.len;
 }
-CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) {
+CXB_C_EXPORT CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) {
     return s.len + (size_t) s.null_term;
 }
-CXB_INLINE bool cxb_ss_empty(StringSlice s) {
+CXB_C_EXPORT CXB_INLINE bool cxb_ss_empty(StringSlice s) {
     return s.len == 0;
 }
-CXB_INLINE const char* cxb_ss_c_str(StringSlice s) {
+CXB_C_EXPORT CXB_INLINE const char* cxb_ss_c_str(StringSlice s) {
     return s.null_term ? s.data : NULL;
 }
-CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
+CXB_C_EXPORT CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
     REQUIRES(j >= i);
     REQUIRES(i < cxb_ss_n_bytes(s));
 
@@ -667,16 +667,16 @@ struct MString {
 typedef struct MString MString;
 #endif
 
-CXB_INLINE size_t cxb_mstring_size(MString s) {
+CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_size(MString s) {
     return s.len;
 }
-CXB_INLINE size_t cxb_mstring_n_bytes(MString s) {
+CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_n_bytes(MString s) {
     return s.len + (size_t) s.null_term;
 }
-CXB_INLINE bool cxb_mstring_empty(MString s) {
+CXB_C_EXPORT CXB_INLINE bool cxb_mstring_empty(MString s) {
     return s.len == 0;
 }
-CXB_INLINE const char* cxb_mstring_c_str(MString s) {
+CXB_C_EXPORT CXB_INLINE const char* cxb_mstring_c_str(MString s) {
     return s.null_term ? s.data : NULL;
 }
 CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
