@@ -904,6 +904,31 @@ struct Seq {
         return Seq<T>{data + i, j == SIZE_MAX ? len : j - i, nullptr};
     }
 
+    CXB_INLINE bool operator<(const Seq<T>& o) const {
+        size_t n = len < o.len ? len : o.len;
+        for(size_t i = 0; i < n; ++i) {
+            if(data[i] < o.data[i]) return true;
+            if(o.data[i] < data[i]) return false;
+        }
+        return len < o.len;
+    }
+
+    CXB_INLINE bool operator==(const Seq<T>& o) const {
+        if(len != o.len) return false;
+        for(size_t i = 0; i < len; ++i) {
+            if(!(data[i] == o.data[i])) return false;
+        }
+        return true;
+    }
+
+    CXB_INLINE bool operator!=(const Seq<T>& o) const {
+        return !(*this == o);
+    }
+
+    CXB_INLINE bool operator>(const Seq<T>& o) const {
+        return o < *this;
+    }
+
     // ** SECTION: allocator-related methods
     CXB_INLINE Seq<T>& copy_(Allocator* to_allocator = &default_alloc) {
         *this = move(this->copy(to_allocator));
@@ -993,7 +1018,9 @@ struct Seq {
     }
 
     CXB_MAYBE_INLINE T pop_back() {
-        T ret = data[len - 1];
+        REQUIRES(len > 0);
+        T ret = move(data[len - 1]);
+        data[len - 1].~T();
         len--;
         return ret;
     }

@@ -584,3 +584,69 @@ TEST_CASE("MString free function destroy (C API)", "[MString][CAPI]") {
     }
     REQUIRE(default_alloc.n_active_bytes == mem_before);
 }
+
+TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
+    // Test StringSlice operator<
+    StringSlice s1 = S8_LIT("apple");
+    StringSlice s2 = S8_LIT("banana");
+    StringSlice s3 = S8_LIT("app");
+    StringSlice s4 = S8_LIT("apple");
+    StringSlice s5 = S8_LIT("application");
+    
+    // Basic lexicographic comparison
+    REQUIRE(s1 < s2);       // "apple" < "banana"
+    REQUIRE(!(s2 < s1));    // "banana" not < "apple"
+    
+    // Prefix comparison
+    REQUIRE(s3 < s1);       // "app" < "apple"
+    REQUIRE(!(s1 < s3));    // "apple" not < "app"
+    
+    // Equal strings
+    REQUIRE(!(s1 < s4));    // "apple" not < "apple"
+    REQUIRE(!(s4 < s1));    // "apple" not < "apple"
+    
+    // Longer vs shorter with same prefix
+    REQUIRE(s1 < s5);       // "apple" < "application"
+    REQUIRE(!(s5 < s1));    // "application" not < "apple"
+    
+    // Test with empty strings
+    StringSlice empty1 = S8_LIT("");
+    StringSlice empty2 = S8_LIT("");
+    StringSlice non_empty = S8_LIT("a");
+    
+    REQUIRE(!(empty1 < empty2));    // empty not < empty
+    REQUIRE(empty1 < non_empty);    // empty < non-empty
+    REQUIRE(!(non_empty < empty1)); // non-empty not < empty
+    
+    // Test case sensitivity
+    StringSlice lower = S8_LIT("apple");
+    StringSlice upper = S8_LIT("APPLE");
+    
+    REQUIRE(upper < lower);  // "APPLE" < "apple" (ASCII values)
+    REQUIRE(!(lower < upper));
+    
+    // Test with special characters
+    StringSlice alpha = S8_LIT("abc");
+    StringSlice numeric = S8_LIT("123");
+    StringSlice special = S8_LIT("!@#");
+    
+    REQUIRE(special < numeric);  // "!@#" < "123" (ASCII values)
+    REQUIRE(numeric < alpha);    // "123" < "abc" (ASCII values)
+    
+    // Test String operator< (should behave the same as StringSlice)
+    String str1("apple");
+    String str2("banana");
+    String str3("app");
+    String str4("apple");
+    
+    REQUIRE(str1 < str2);       // "apple" < "banana"
+    REQUIRE(!(str2 < str1));    // "banana" not < "apple"
+    REQUIRE(str3 < str1);       // "app" < "apple"
+    REQUIRE(!(str1 < str3));    // "apple" not < "app"
+    REQUIRE(!(str1 < str4));    // "apple" not < "apple"
+    REQUIRE(!(str4 < str1));    // "apple" not < "apple"
+    
+    // Test mixed String and StringSlice comparison
+    REQUIRE(str1 < s2);         // String("apple") < StringSlice("banana")
+    REQUIRE(s3 < str1);         // StringSlice("app") < String("apple")
+}
