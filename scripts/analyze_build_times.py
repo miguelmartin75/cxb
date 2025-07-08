@@ -95,39 +95,52 @@ def parse_trace_file(trace_file: Path) -> Dict[str, float]:
 
     header_times: Dict[str, float] = {}
 
-    # Handle single-event (\'X\') entries first.
+    # Recognise both uppercase (spec) and lowercase (observed in some clang
+    # builds) phase markers.
+    PH_BEGIN = {"B", "b"}
+    PH_END = {"E", "e"}
+
+    PARSE_EVENT_NAMES = {
+        "ParseFile",
+        "ParseClass",
+        "ParseTemplate",
+        "InstantiateFunction",
+        "InstantiateClass",
+    }
+
+    # First pass: single-event duration (ph == 'X')
     for ev in data.get("traceEvents", []):
         if ev.get("ph") != "X":
             continue
-        if ev.get("name") != "Source":  # We only want header parse events.
+        ev_name = ev.get("name", "")
+        if ev_name != "Source" and ev_name not in PARSE_EVENT_NAMES:
             continue
         args = ev.get("args", {})
         header_path = args.get("file") or args.get("detail")
         if not header_path:
             continue
-        dur_ms = ev.get("dur", 0) / 1000.0  # microseconds → ms
-        header_times[header_path] = dur_ms
+        dur_ms = ev.get("dur", 0) / 1000.0
+        header_times[header_path] = max(header_times.get(header_path, 0.0), dur_ms)
 
-    # Handle begin/end pair events. Use a stack per thread (tid) because nested
-    # Source events occur frequently when headers include other headers.
-    open_events: Dict[int, List[Tuple[str, int]]] = defaultdict(list)  # tid → stack[(header, start_ts)]
+    # Second pass: begin/end paired events (ph in B/E or b/e)
+    open_events: Dict[int, List[Tuple[str, int]]] = defaultdict(list)
     for ev in data.get("traceEvents", []):
-        name = ev.get("name")
         ph = ev.get("ph")
-        if name != "Source" or ph not in {"B", "E"}:
+        if ph not in PH_BEGIN.union(PH_END):
             continue
-        tid = ev.get("tid", 0)  # Thread id, guarantees correct pairing.
-        if ph == "B":
+        name = ev.get("name", "")
+        if name != "Source":
+            continue
+        tid = ev.get("tid", 0)
+        if ph in PH_BEGIN:
             args = ev.get("args", {})
             header_path = args.get("file") or args.get("detail")
             if not header_path:
                 continue
             open_events[tid].append((header_path, ev.get("ts", 0)))
-        elif ph == "E" and open_events[tid]:
+        elif ph in PH_END and open_events[tid]:
             header_path, start_ts = open_events[tid].pop()
             dur_ms = (ev.get("ts", 0) - start_ts) / 1000.0
-            # Prefer the longer duration if we already have an entry from the
-            # single-event pass – this helps deduplicate nested parse records.
             header_times[header_path] = max(header_times.get(header_path, 0.0), dur_ms)
 
     return header_times
