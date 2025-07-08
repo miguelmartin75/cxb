@@ -331,7 +331,16 @@ def update_parse_times_md(md_path: Path, metrics: Dict[str, Dict[str, float]], h
         "|--------|---------|-------------|--------|-----|",
     ]
 
-    for header in headers:
+    # Sort headers by descending avg_time (missing metrics get -1 and go last)
+    def avg_time_of(h: str) -> float:
+        for hdr in metrics:
+            if hdr == h or hdr.endswith(f"/{h}") or hdr.endswith(f"\\{h}"):
+                return metrics[hdr]["avg_time"]
+        return -1.0
+
+    headers_sorted = sorted(headers, key=avg_time_of, reverse=True)
+
+    for header in headers_sorted:
         metric_key = None
         for hdr in metrics:
             if hdr.endswith(f"/{header}") or hdr.endswith(f"\\{header}") or hdr == header:
