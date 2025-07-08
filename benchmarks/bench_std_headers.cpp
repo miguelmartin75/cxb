@@ -173,4 +173,107 @@ TEST_CASE("stdlib low header features", "[benchmark]") {
     std::type_index idx(typeid(int));
     REQUIRE(idx == std::type_index(typeid(int)));
     REQUIRE(std::is_same_v<int, int>);
+
+    // atomic
+    std::atomic<int> at{0};
+    at.fetch_add(1);
+    REQUIRE(at.load() == 1);
+
+    // bitset
+    std::bitset<4> bs("1010");
+    REQUIRE(bs.count() == 2);
+
+    // chrono & condition_variable
+    std::condition_variable cv;
+    bool ready = false;
+    std::mutex cv_mx;
+    std::thread waiter([&]() {
+        std::unique_lock<std::mutex> lk(cv_mx);
+        cv.wait_for(lk, std::chrono::milliseconds(10), [&] { return ready; });
+    });
+    {
+        std::lock_guard<std::mutex> lk(cv_mx);
+        ready = true;
+    }
+    cv.notify_one();
+    waiter.join();
+
+    // filesystem
+    std::filesystem::path cur = std::filesystem::current_path();
+    REQUIRE(cur.empty() == false);
+
+    // functional / algorithm
+    auto plus_fn = std::plus<int>{};
+    REQUIRE(plus_fn(2, 3) == 5);
+    std::vector<int> algo_vec = {5, 1, 4};
+    std::sort(algo_vec.begin(), algo_vec.end());
+    REQUIRE(algo_vec.front() == 1);
+
+    // future / promise
+    std::promise<int> prom;
+    std::future<int> fut = prom.get_future();
+    prom.set_value(55);
+    REQUIRE(fut.get() == 55);
+
+    // ios goodbit (ios / iosfwd)
+    REQUIRE(std::ios::goodbit == 0);
+
+    // iterator back_inserter
+    std::vector<int> it_vec;
+    std::copy(local_arr.begin(), local_arr.end(), std::back_inserter(it_vec));
+    REQUIRE(it_vec.size() == local_arr.size());
+
+    // memory unique_ptr
+    std::unique_ptr<int> uptr = std::make_unique<int>(99);
+    REQUIRE(*uptr == 99);
+
+    // new/delete
+    int* raw_ptr = new int(123);
+    REQUIRE(*raw_ptr == 123);
+    delete raw_ptr;
+
+    // ostream (use cout to stream to stringstream via rdbuf)
+    std::ostringstream oss;
+    std::ostream& os_ref = oss;
+    os_ref << "hello";
+    REQUIRE(oss.str() == "hello");
+
+    // random
+    std::mt19937 rng{std::random_device{}()};
+    std::uniform_int_distribution<int> dist(0, 10);
+    int rnd_val = dist(rng);
+    REQUIRE(rnd_val >= 0);
+    REQUIRE(rnd_val <= 10);
+
+    // regex
+    std::regex re("h.*o");
+    REQUIRE(std::regex_match("hello", re));
+
+    // streambuf
+    std::stringbuf sbuf;
+    sbuf.sputn("abc", 3);
+    REQUIRE(sbuf.str() == "abc");
+
+    // string_view
+    std::string_view sv("abc");
+    REQUIRE(sv.size() == 3);
+
+    // valarray
+    std::valarray<int> va = {1, 2, 3};
+    REQUIRE(va.sum() == 6);
+
+    // utility std::forward
+    auto identity = [](auto&& x) -> decltype(auto) {
+        return std::forward<decltype(x)>(x);
+    };
+    int id_val = identity(5);
+    REQUIRE(id_val == 5);
+
+    // iostream / istream explicit usage
+    auto* cout_ptr = &std::cout;
+    REQUIRE(cout_ptr != nullptr);
+    std::istringstream iss("15 30");
+    int a, b;
+    iss >> a >> b;
+    REQUIRE(a + b == 45);
 } 
