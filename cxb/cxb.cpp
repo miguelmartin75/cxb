@@ -38,11 +38,11 @@ void* mallocator_alloc_impl(
                 memset((char*) (data) + old_n_bytes, 0, n_bytes - old_n_bytes);
             }
 
-        } else {
-            if(!data) {
-                data = malloc(n_bytes);
-                memcpy(data, head, old_n_bytes);
-            }
+        } else if (!data) {
+            data = malloc(n_bytes);
+            memcpy(data, head, old_n_bytes);
+            ma->n_freed_bytes += old_n_bytes;
+            free(head);
         }
 
         return data;

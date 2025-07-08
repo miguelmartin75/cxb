@@ -70,6 +70,24 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}
 
+      - name: Analyze build times and update README
+        if: matrix.compiler == 'clang' && matrix.build_type == 'Debug'
+        run: |
+          python3 scripts/analyze_build_times.py --clean
+          
+      - name: Commit README updates
+        if: matrix.compiler == 'clang' && matrix.build_type == 'Debug' && github.event_name == 'push'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add README.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update header compile time metrics [skip ci]"
+            git push
+          fi
+
       - name: Run tests
         working-directory: build
         run: |
