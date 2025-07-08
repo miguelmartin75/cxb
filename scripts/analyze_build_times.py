@@ -214,12 +214,16 @@ def get_cpu_info() -> str:
         return "Unknown CPU"
 
 
-def update_readme(readme_path: Path, metrics: Dict[str, Dict[str, float]]) -> None:
-    """Update the README with the latest metrics.
+def update_readme(readme_path: Path, metrics: Dict[str, Dict[str, float]], headers: List[str]) -> None:
+    """Update README.md with compile-time information for each header in *headers*.
 
-    Expects *metrics* in the nested format returned by ``analyze_parse_times``.
-    Only the header ``cxb.h`` is currently written to the README, but the
-    function can be extended easily for additional headers.
+    The README is expected to have bullet lines like::
+
+        * `header`: <number>±<std_dev>ms (<count> parses) on <CPU>
+
+    For every header supplied we either replace an existing line (matched via
+    a regex) or insert a new one right after the "Current Header Compile
+    Times:" section.
     """
     if not readme_path.exists():
         print(f"README.md not found at {readme_path}")
@@ -229,41 +233,66 @@ def update_readme(readme_path: Path, metrics: Dict[str, Dict[str, float]]) -> No
         print("No metrics to update")
         return
 
-    target_header = None
-    for hdr in metrics:
-        if hdr == "cxb.h" or hdr.endswith("/cxb.h") or hdr.endswith("\\cxb.h"):
-            target_header = hdr
-            break
-
     with open(readme_path, "r") as f:
         content = f.read()
 
     cpu_info = get_cpu_info()
 
-    if target_header is not None:
-        stats = metrics[target_header]
-        avg_time = stats["avg_time"]
-        std_dev = stats["std_dev"]
-        parse_count = stats["parse_count"]
-        new_line = (
-            f"* `cxb.h`: {avg_time:.0f}±{std_dev:.0f}ms "
-            f"({parse_count} parses) on {cpu_info}"
-        )
-    else:
-        new_line = f"* `cxb.h`: Unable to measure on {cpu_info}"
+    # Track modifications for user feedback.
+    lines_to_append: List[str] = []  # newly inserted lines
+    lines_updated: List[str] = []    # existing lines that were replaced
 
-    pattern = r"\* `cxb\.h`: .*"
-    if re.search(pattern, content):
-        content = re.sub(pattern, new_line, content)
-    else:
-        header_pattern = r"(Current Header Compile Times:)\n.*TODO.*"
-        if re.search(header_pattern, content):
-            content = re.sub(header_pattern, f"\\1\n{new_line}", content)
+    for header in headers:
+        # Try to locate the metric entry matching this header (by suffix).
+        metric_key = None
+        for hdr in metrics:
+            if hdr == header or hdr.endswith(f"/{header}") or hdr.endswith(f"\\{header}"):
+                metric_key = hdr
+                break
+
+        header_display = f"`{header}`"
+        if metric_key:
+            stats = metrics[metric_key]
+            new_line = (
+                f"* {header_display}: {stats['avg_time']:.0f}±{stats['std_dev']:.0f}ms "
+                f"({stats['parse_count']} parses) on {cpu_info}"
+            )
+        else:
+            new_line = f"* {header_display}: Unable to measure on {cpu_info}"
+
+        pattern = rf"\* {re.escape(header_display)}: .*"
+        if re.search(pattern, content):
+            # Only log as updated if the replacement actually changes the line.
+            original_line_match = re.search(pattern, content)
+            original_line = original_line_match.group(0) if original_line_match else ""
+            content = re.sub(pattern, new_line, content)
+            lines_updated.append(new_line)
+        else:
+            lines_to_append.append(new_line)
+
+    # If we have new lines to append, insert them after the dedicated section.
+    if lines_to_append:
+        header_section_pattern = r"(Current Header Compile Times:)"
+        if re.search(header_section_pattern, content):
+            # Insert after the section header.
+            replacement = "\\1\n" + "\n".join(lines_to_append)
+            content = re.sub(header_section_pattern, replacement, content, count=1)
+        else:
+            # If section not found, append at end of file.
+            content += "\n" + "\n".join(lines_to_append) + "\n"
 
     with open(readme_path, "w") as f:
         f.write(content)
 
-    print(f"Updated README.md with metrics: {new_line}")
+    if lines_updated:
+        print("Updated lines:")
+        for line in lines_updated:
+            print(f"  {line}")
+
+    if lines_to_append:
+        print("Added lines:")
+        for line in lines_to_append:
+            print(f"  {line}")
 
 
 def main():
@@ -327,7 +356,7 @@ def main():
             )
 
         print("Updating README.md...")
-        update_readme(readme_path, metrics)
+        update_readme(readme_path, metrics, args.headers)
     else:
         print("No metrics found. This might happen if:")
         print("- No trace files were generated")
