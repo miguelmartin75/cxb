@@ -17,6 +17,26 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
 
+# --------------------------------------------------------------------------------------
+# Constants
+# --------------------------------------------------------------------------------------
+
+# Sub-set of C++23 standard library headers. Extend as desired.
+STD_HEADERS: List[str] = [
+    "algorithm", "array", "atomic", "bitset", "chrono", "condition_variable",
+    "deque", "exception", "filesystem", "forward_list", "functional", "future",
+    "iomanip", "ios", "iosfwd", "iostream", "istream", "iterator", "limits",
+    "list", "map", "memory", "mutex", "new", "numeric", "optional", "ostream",
+    "queue", "random", "ratio", "regex", "scoped_allocator", "set", "shared_mutex",
+    "sstream", "stack", "stdexcept", "streambuf", "string", "string_view",
+    "system_error", "thread", "tuple", "type_traits", "typeindex", "typeinfo",
+    "unordered_map", "unordered_set", "utility", "valarray", "variant", "vector",
+]
+
+# Relative path of the markdown file storing parse-time benchmarks for std headers.
+PARSE_TIMES_MD = Path(__file__).parent.parent / "benchmarks" / "PARSE_TIMES.md"
+
+
 def run_command(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
     try:
         result = subprocess.run(
@@ -295,6 +315,46 @@ def update_readme(readme_path: Path, metrics: Dict[str, Dict[str, float]], heade
             print(f"  {line}")
 
 
+def update_parse_times_md(md_path: Path, metrics: Dict[str, Dict[str, float]], headers: List[str]) -> None:
+    """Write a markdown table with parse-time stats for *headers*.
+
+    The table format:
+
+    | Header | Avg (ms) | StdDev (ms) | Parses | CPU |
+    |-------|---------|-------------|--------|-----|
+    """
+
+    cpu_info = get_cpu_info()
+
+    rows: List[str] = [
+        "| Header | Avg (ms) | StdDev (ms) | Parses | CPU |",
+        "|--------|---------|-------------|--------|-----|",
+    ]
+
+    for header in headers:
+        metric_key = None
+        for hdr in metrics:
+            if hdr.endswith(f"/{header}") or hdr.endswith(f"\\{header}") or hdr == header:
+                metric_key = hdr
+                break
+
+        if metric_key:
+            stats = metrics[metric_key]
+            row = (
+                f"| `{header}` | {stats['avg_time']:.0f} | {stats['std_dev']:.0f} | "
+                f"{stats['parse_count']} | {cpu_info} |")
+        else:
+            row = f"| `{header}` | - | - | - | {cpu_info} |"
+
+        rows.append(row)
+
+    md_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(md_path, "w") as f:
+        f.write("\n".join(rows) + "\n")
+
+    print(f"Wrote parse times table to {md_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Analyze build times using Clang's -ftime-trace feature"
@@ -343,9 +403,13 @@ def main():
     print("Building project...")
     if not build_project(build_dir):
         return 4
-    
+
+    # Combine user-specified headers with the standard-library set to gather all
+    # relevant metrics in one pass.
+    headers_to_scan = list(set(args.headers + STD_HEADERS))
+
     print("Analyzing build times...")
-    metrics = analyze_parse_times(build_dir, args.headers)
+    metrics = analyze_parse_times(build_dir, headers_to_scan)
     
     if metrics:
         print("Metrics found:")
@@ -357,6 +421,9 @@ def main():
 
         print("Updating README.md...")
         update_readme(readme_path, metrics, args.headers)
+
+        print("Updating parse times markdown...")
+        update_parse_times_md(PARSE_TIMES_MD, metrics, STD_HEADERS)
     else:
         print("No metrics found. This might happen if:")
         print("- No trace files were generated")
