@@ -56,70 +56,70 @@
 
 TEST_CASE("stdlib headers usage", "[benchmark]") {
     // vector
-    std::vector<int> vec{1, 2, 3};
+    std::vector<std::pair<int, std::string>> vec{{1, "one"}, {2, "two"}, {3, "three"}};
     REQUIRE(vec.size() == 3);
 
     // map
-    std::map<int, int> m{{1, 10}, {2, 20}};
-    REQUIRE(m.at(2) == 20);
+    std::map<std::string, std::pair<std::string, std::string>> m{{"a", {"x", "y"}}, {"b", {"y", "z"}}};
+    REQUIRE(m.at("b").second == "z");
 
     // unordered_map with string key
-    std::unordered_map<std::string, int> um{{"a", 1}, {"b", 2}};
-    REQUIRE(um["b"] == 2);
+    std::unordered_map<std::string, std::vector<int>> um{{"a", {1, 2}}, {"b", {3, 4}}};
+    REQUIRE(um["b"][1] == 4);
 
     // optional
-    std::optional<int> opt = 5;
+    std::optional<std::pair<int, std::string>> opt = std::make_pair(5, "five");
     REQUIRE(opt.has_value());
 
     // variant
-    std::variant<int, double> var = 3.14;
-    REQUIRE(std::holds_alternative<double>(var));
+    std::variant<int, double, std::string> var = std::string("hello");
+    REQUIRE(std::holds_alternative<std::string>(var));
 
     // array
-    std::array<int, 4> arr{{0, 1, 2, 3}};
-    REQUIRE(arr[2] == 2);
+    std::array<std::pair<int, std::string>, 4> arr{{{0, "zero"}, {1, "one"}, {2, "two"}, {3, "three"}}};
+    REQUIRE(arr[2].second == "two");
 
     // tuple
-    auto tup = std::make_tuple(1, 'a', 3.5);
-    REQUIRE(std::get<0>(tup) == 1);
+    auto tup = std::make_tuple(std::string("id"), std::vector<int>{1, 2, 3}, 3.5);
+    REQUIRE(std::get<1>(tup).size() == 3);
 
     // stack
-    std::stack<int> stk;
-    stk.push(42);
-    REQUIRE(stk.top() == 42);
+    std::stack<std::vector<int>> stk;
+    stk.push({1, 2});
+    REQUIRE(stk.top().at(1) == 2);
 
     // queue
-    std::queue<int> q;
-    q.push(7);
-    REQUIRE(q.front() == 7);
+    std::queue<std::pair<std::string, int>> q;
+    q.push({"x", 7});
+    REQUIRE(q.front().second == 7);
 }
 
 TEST_CASE("stdlib low header features", "[benchmark]") {
     // utility – move, swap, pair
-    std::pair<int, int> p1{1, 2};
-    std::pair<int, int> p2 = std::move(p1);
+    std::pair<std::string, std::vector<int>> p1{"first", {1, 2}};
+    std::pair<std::string, std::vector<int>> p2 = std::move(p1);
     std::swap(p1, p2);
-    REQUIRE(p2.first == 1);
+    REQUIRE(p2.second.size() == 2);
 
     // deque
-    std::deque<int> dq;
-    dq.push_back(42);
-    REQUIRE(dq.front() == 42);
+    std::deque<std::pair<int, int>> dq;
+    dq.emplace_back(1, 42);
+    REQUIRE(dq.front().second == 42);
 
     // forward_list
-    std::forward_list<int> fl{1, 2, 3};
-    REQUIRE(*fl.begin() == 1);
+    std::forward_list<std::pair<int, int>> fl{{1, 10}, {2, 20}, {3, 30}};
+    REQUIRE(fl.begin()->first == 1);
 
     // list
-    std::list<int> li{4, 5};
-    li.push_back(6);
-    REQUIRE(li.back() == 6);
+    std::list<std::pair<int, int>> li{{4, 5}};
+    li.emplace_back(6, 7);
+    REQUIRE(li.back().first == 6);
 
     // set and unordered_set
-    std::set<int> st{3, 1, 2};
-    REQUIRE(*st.begin() == 1);
-    std::unordered_set<int> uset{7, 8, 9};
-    REQUIRE(uset.count(8) == 1);
+    std::set<std::pair<int, int>> st{{3, 0}, {1, 0}, {2, 0}};
+    REQUIRE(st.begin()->first == 1);
+    std::unordered_set<std::string> uset{"seven", "eight", "nine"};
+    REQUIRE(uset.count("eight") == 1);
 
     // mutex and shared_mutex
     std::mutex mx;
