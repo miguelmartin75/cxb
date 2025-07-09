@@ -630,10 +630,6 @@ struct MString {
             this->null_term = true;
         }
     }
-
-    CXB_MAYBE_INLINE void release() {
-        this->allocator = nullptr;
-    }
 #endif
 };
 
@@ -848,6 +844,12 @@ struct String : MString {
         REQUIRES(to_allocator != nullptr);
 
         String result{data, len, null_term, to_allocator};
+        return result;
+    }
+
+    CXB_MAYBE_INLINE MString release() {
+        MString result{.data = data, .len = len, .null_term = null_term, .allocator = allocator};
+        this->allocator = nullptr;
         return result;
     }
 };
