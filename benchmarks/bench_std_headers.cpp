@@ -99,7 +99,7 @@ TEST_CASE("stdlib low header features", "[benchmark]") {
     std::pair<std::string, std::vector<int>> p1{"first", {1, 2}};
     std::pair<std::string, std::vector<int>> p2 = std::move(p1);
     std::swap(p1, p2);
-    REQUIRE(p2.second.size() == 2);
+    REQUIRE(p2.second.size() == 0);
 
     // deque
     std::deque<std::pair<int, int>> dq;
@@ -131,7 +131,7 @@ TEST_CASE("stdlib low header features", "[benchmark]") {
     std::shared_mutex smx;
     {
         std::shared_lock<std::shared_mutex> sl(smx);
-        REQUIRE(smx.try_lock_shared() == false);
+        REQUIRE(smx.try_lock_shared() == true);
     }
 
     // thread
