@@ -13,7 +13,12 @@ else
   compilers=(gcc clang)
 fi
 
-build_types=(Debug Release)
+# Allow CI to override build type via the BUILD_TYPE env variable (e.g. Debug or Release)
+if [[ -n "${BUILD_TYPE:-}" ]]; then
+  build_types=("$BUILD_TYPE")
+else
+  build_types=(Debug Release)
+fi
 
 for compiler in "${compilers[@]}"; do
   for build_type in "${build_types[@]}"; do

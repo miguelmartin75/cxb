@@ -13,6 +13,7 @@ jobs:
     strategy:
       matrix:
         compiler: [gcc, clang]
+        build_type: [Debug, Release]
     steps:
       - uses: actions/checkout@v4
 
@@ -25,8 +26,9 @@ jobs:
         run: |
           nix develop ./ci --command bash -c "./scripts/format.sh --check"
 
-      - name: Build & Test (${{ matrix.compiler }})
+      - name: Build & Test (${{ matrix.compiler }} ${{ matrix.build_type }})
         env:
           COMPILER: ${{ matrix.compiler }}
+          BUILD_TYPE: ${{ matrix.build_type }}
         run: |
           nix develop ./ci --command bash ./ci/ci.sh
