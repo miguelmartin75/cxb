@@ -69,16 +69,14 @@ memory, "M" stands for "manual"
         - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
 */
 
-#pragma once
+#ifndef CXB_H
+#define CXB_H
+
 #ifndef __cplusplus
 #error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb.h> is C++-only."
 #endif
 
-#define CXB_SKIP_C_TYPES
-#define CXB_SKIP_C_PROCS
 #include "cxb-c.h"
-#undef CXB_SKIP_C_TYPES
-#undef CXB_SKIP_C_PROCS
 
 /* SECTION: configuration */
 // #define CXB_ALLOC_TEMPLATE
@@ -92,11 +90,6 @@ memory, "M" stands for "manual"
 
 /* SECTION: includes */
 #include <new>
-#include <stdatomic.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 #include <type_traits> // 27ms
 
 /* SECTION: macros */
@@ -1093,4 +1086,6 @@ CXB_NS_END
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
+#endif
+
 #endif
