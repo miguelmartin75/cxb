@@ -55,7 +55,7 @@ TEST_CASE("StringSlice from raw data", "[StringSlice]") {
 }
 
 TEST_CASE("String push_back", "[String]") {
-    u64 allocated_bytes = 0;
+    i64 allocated_bytes = 0;
     {
         String s;
         s.push_back('H');
@@ -308,7 +308,7 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
 }
 
 TEST_CASE("MString manual cleanup", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         MString s{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         s.extend("Hello, World!");
@@ -322,7 +322,7 @@ TEST_CASE("MString manual cleanup", "[MString]") {
 }
 
 TEST_CASE("MString -> String", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         MString m{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         m.extend("Hello, World!");
@@ -337,7 +337,7 @@ TEST_CASE("MString -> String", "[MString]") {
 }
 
 TEST_CASE("String -> MString", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         String s;
         s.extend("Hello, World!");
@@ -353,7 +353,7 @@ TEST_CASE("String -> MString", "[MString]") {
 }
 
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<String> strings;
         REQUIRE(strings.len == 0);
@@ -433,7 +433,7 @@ TEST_CASE("StringSlice free functions (C API)", "[StringSlice][CAPI]") {
 }
 
 TEST_CASE("MString free function destroy (C API)", "[MString][CAPI]") {
-    size_t mem_before = default_alloc.n_active_bytes;
+    i64 mem_before = default_alloc.n_active_bytes;
     {
         MString ms{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         ms.extend("Hello, World!");

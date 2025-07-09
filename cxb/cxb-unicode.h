@@ -123,7 +123,7 @@ struct Utf8IteratorBatched {
     size_t pos = 0;
     rune buffer[BufferSize] = {};
 
-    explicit Utf8IteratorBatched(const StringSlice& s) : pos{0}, buffer{{}}, s{s} {}
+    explicit Utf8IteratorBatched(const StringSlice& s) : s{s}, pos{0}, buffer{{}} {}
     Utf8IteratorBatched(const Utf8IteratorBatched&) = delete;
     Utf8IteratorBatched(Utf8IteratorBatched&&) = delete;
 

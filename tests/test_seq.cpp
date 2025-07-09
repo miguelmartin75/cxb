@@ -4,7 +4,7 @@
 CXB_USE_NS;
 
 TEST_CASE("push_back", "[Seq]") {
-    size_t allocated_bytes = 0;
+    i64 allocated_bytes = 0;
     {
         Seq<int> xs;
         REQUIRE(xs.len == 0);
@@ -13,7 +13,7 @@ TEST_CASE("push_back", "[Seq]") {
         for(int i = 0; i < 256; ++i) {
             xs.push_back(i);
         }
-        size_t active_bytes = default_alloc.n_active_bytes;
+        i64 active_bytes = default_alloc.n_active_bytes;
         allocated_bytes = default_alloc.n_allocated_bytes;
         REQUIRE(active_bytes == allocated_bytes);
 
@@ -27,11 +27,11 @@ TEST_CASE("push_back", "[Seq]") {
 }
 
 TEST_CASE("copy", "[Seq]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<int> xs;
         xs.resize(64, 2);
-        for(int i = 0; i < xs.len; ++i) {
+        for(u64 i = 0; i < xs.len; ++i) {
             REQUIRE(xs[i] == 2);
         }
 
@@ -46,7 +46,7 @@ TEST_CASE("copy", "[Seq]") {
 }
 
 TEST_CASE("nested_seq", "[Seq]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<Seq<int>> nested;
         REQUIRE(nested.len == 0);
@@ -62,10 +62,10 @@ TEST_CASE("nested_seq", "[Seq]") {
 
         REQUIRE(nested.len == 10);
 
-        for(int i = 0; i < nested.len; ++i) {
+        for(u64 i = 0; i < nested.len; ++i) {
             REQUIRE(nested[i].len == i + 1);
-            for(int j = 0; j < nested[i].len; ++j) {
-                REQUIRE(nested[i][j] == i * 10 + j);
+            for(u64 j = 0; j < nested[i].len; ++j) {
+                REQUIRE(nested[i][j] == static_cast<int>(i * 10 + j));
             }
         }
 
@@ -91,7 +91,7 @@ TEST_CASE("nested_seq", "[Seq]") {
 }
 
 TEST_CASE("Seq operator<", "[Seq]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<int> seq1;
         Seq<int> seq2;
@@ -157,7 +157,7 @@ TEST_CASE("Seq operator<", "[Seq]") {
 }
 
 TEST_CASE("Seq operator==", "[Seq]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<int> seq1;
         Seq<int> seq2;
@@ -220,7 +220,7 @@ TEST_CASE("Seq operator==", "[Seq]") {
 }
 
 TEST_CASE("Seq operator> and operator!=", "[Seq]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<int> seq1;
         Seq<int> seq2;
