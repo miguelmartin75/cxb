@@ -225,4 +225,3 @@ TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
         return checksum;
     };
 }
-

@@ -143,7 +143,7 @@ TEST_CASE("stdlib low header features", "[benchmark]") {
     // exception & system_error
     try {
         throw std::runtime_error("error");
-    } catch (const std::exception &e) {
+    } catch(const std::exception& e) {
         REQUIRE(std::string(e.what()).find("error") != std::string::npos);
     }
     std::error_code ec; // system_error header
@@ -263,9 +263,7 @@ TEST_CASE("stdlib low header features", "[benchmark]") {
     REQUIRE(va.sum() == 6);
 
     // utility std::forward
-    auto identity = [](auto&& x) -> decltype(auto) {
-        return std::forward<decltype(x)>(x);
-    };
+    auto identity = [](auto&& x) -> decltype(auto) { return std::forward<decltype(x)>(x); };
     int id_val = identity(5);
     REQUIRE(id_val == 5);
 
@@ -276,4 +274,4 @@ TEST_CASE("stdlib low header features", "[benchmark]") {
     int a, b;
     iss >> a >> b;
     REQUIRE(a + b == 45);
-} 
+}
