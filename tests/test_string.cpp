@@ -336,32 +336,20 @@ TEST_CASE("MString -> String", "[MString]") {
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("String -> MString release + leak", "[MString]") {
+TEST_CASE("String -> MString", "[MString]") {
     size_t allocated_bytes_before = default_alloc.n_active_bytes;
     {
         String s;
         s.extend("Hello, World!");
-        MString m = s;
-        s.release();
+        MString m = s.release();
 
         REQUIRE(m.len == 13);
         REQUIRE(m.allocator == &default_alloc);
         REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
         REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+        m.destroy();
     }
-    REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-}
-TEST_CASE("MString leaks", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
-    {
-        MString s{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
-        s.extend("Hello, World!");
-        REQUIRE(s.len == 13);
-        REQUIRE(s.allocator == &default_alloc);
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
-    }
-    REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
