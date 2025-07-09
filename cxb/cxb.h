@@ -687,54 +687,56 @@ struct MString {
 
     // ** SECTION: slice compatible methods - delegate to UString
     CXB_MAYBE_INLINE size_t n_bytes() const {
-        return reinterpret_cast<const UString*>(this)->n_bytes();
+        return reinterpret_cast<const StringSlice*>(this)->n_bytes();
     }
     CXB_MAYBE_INLINE size_t size() const {
-        return reinterpret_cast<const UString*>(this)->size();
+        return reinterpret_cast<const StringSlice*>(this)->size();
     }
     CXB_MAYBE_INLINE bool empty() const {
-        return reinterpret_cast<const UString*>(this)->empty();
+        return reinterpret_cast<const StringSlice*>(this)->empty();
     }
     CXB_MAYBE_INLINE char& operator[](size_t idx) {
-        return reinterpret_cast<UString*>(this)->operator[](idx);
+        return reinterpret_cast<StringSlice*>(this)->operator[](idx);
     }
     CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
-        return reinterpret_cast<const UString*>(this)->operator[](idx);
+        return reinterpret_cast<const StringSlice*>(this)->operator[](idx);
     }
     CXB_MAYBE_INLINE char& back() {
-        return reinterpret_cast<UString*>(this)->back();
+        return reinterpret_cast<StringSlice*>(this)->back();
     }
     CXB_MAYBE_INLINE operator StringSlice() const {
-        return reinterpret_cast<const UString*>(this)->operator StringSlice();
+        return *reinterpret_cast<const StringSlice*>(this);
     }
 
     CXB_MAYBE_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
-        return reinterpret_cast<UString*>(this)->slice(i, j);
+        return reinterpret_cast<StringSlice*>(this)->slice(i, j);
     }
 
     CXB_MAYBE_INLINE const char* c_str() const {
-        return reinterpret_cast<const UString*>(this)->c_str();
+        return reinterpret_cast<const StringSlice*>(this)->c_str();
     }
 
     CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
-        return reinterpret_cast<const UString*>(this)->operator==(o);
+        return reinterpret_cast<const StringSlice*>(this)->operator==(o);
     }
 
     CXB_MAYBE_INLINE bool operator<(const StringSlice& o) const {
-        return reinterpret_cast<const UString*>(this)->operator<(o);
+        return reinterpret_cast<const StringSlice*>(this)->operator<(o);
     }
 
     CXB_MAYBE_INLINE bool operator!=(const StringSlice& o) const {
-        return reinterpret_cast<const UString*>(this)->operator!=(o);
+        return reinterpret_cast<const StringSlice*>(this)->operator!=(o);
     }
 
     CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
-        return reinterpret_cast<const UString*>(this)->operator>(o);
+        return reinterpret_cast<const StringSlice*>(this)->operator>(o);
     }
 
     // ** SECTION: allocator-related methods - delegate to UString
     CXB_MAYBE_INLINE MString& copy_(Allocator* to_allocator = &default_alloc) {
+        MString temp = *this;
         *this = move(this->copy(to_allocator));
+        temp.destroy();
         return *this;
     }
 
@@ -761,15 +763,15 @@ struct MString {
         reinterpret_cast<UString*>(this)->ensure_capacity(new_capacity, this->allocator);
     }
 
-    void reserve(size_t cap) {
+    CXB_MAYBE_INLINE void reserve(size_t cap) {
         reinterpret_cast<UString*>(this)->reserve(cap, this->allocator);
     }
 
-    void resize(size_t new_len, char fill_char = '\0') {
+    CXB_MAYBE_INLINE void resize(size_t new_len, char fill_char = '\0') {
         reinterpret_cast<UString*>(this)->resize(new_len, fill_char, this->allocator);
     }
 
-    void push_back(char c) {
+    CXB_MAYBE_INLINE void push_back(char c) {
         reinterpret_cast<UString*>(this)->push_back(c, this->allocator);
     }
 
@@ -781,7 +783,7 @@ struct MString {
         return reinterpret_cast<UString*>(this)->pop_back();
     }
 
-    void extend(StringSlice other) {
+    CXB_MAYBE_INLINE void extend(StringSlice other) {
         reinterpret_cast<UString*>(this)->extend(other, this->allocator);
     }
 
