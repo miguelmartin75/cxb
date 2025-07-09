@@ -69,7 +69,14 @@ memory, "M" stands for "manual"
         - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
 */
 
-#pragma once
+#ifndef CXB_H
+#define CXB_H
+
+#ifndef __cplusplus
+#error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb.h> is C++-only."
+#endif
+
+#include "cxb-c.h"
 
 /* SECTION: configuration */
 // #define CXB_ALLOC_TEMPLATE
@@ -82,15 +89,40 @@ memory, "M" stands for "manual"
 #endif
 
 /* SECTION: includes */
-#include <stdatomic.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-
-#ifdef __cplusplus
 #include <new>
 #include <type_traits> // 27ms
+
+/* SECTION: macros */
+#if defined(__GNUC__)
+#define CXB_INLINE inline __attribute__((__always_inline__))
+#elif defined(_MSC_VER)
+#define CXB_INLINE __forceinline
+#else
+#define CXB_INLINE inline
+#endif
+
+#if defined(CXB_NAMESPACE) && defined(__cplusplus)
+#define CXB_NS_BEGIN namespace cxb {
+#define CXB_NS_END }
+#define CXB_USE_NS using namespace cxb
+#else
+#define CXB_NS_BEGIN
+#define CXB_NS_END
+#define CXB_USE_NS
+#endif
+
+#define CXB_COMPTIME constexpr CXB_INLINE
+#define CXB_COMPTIME_INLINE constexpr CXB_INLINE
+
+#if defined(__clang_major__) && __clang_major__ >= 6
+#define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
+#elif defined(__GNUC__) && __GNUC__ >= 6
+#define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
+#else
+#define CXB_PURE CXB_COMPTIME
+#endif
+
+CXB_NS_BEGIN
 
 template <typename T>
 static inline const T& min(const T& a, const T& b) {
@@ -117,109 +149,30 @@ template <typename T>
 static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept {
     return static_cast<T&&>(v);
 }
-#endif
 
-/* SECTION: macros */
-// NOTE some macros are copied/modified from Blend2D, see:
-// https://github.com/blend2d/blend2d/blob/bae3b6c600186a69a9f212243ed9700dc93a314a/src/blend2d/api.h#L563
-#define CXB_EXPORT
-#define CXB_INTERNAL static
+/* SECTION: primitive functions */
+template <typename T>
+CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
+    REQUIRES(a < b);
+    return max(min(b, x), a);
+}
 
-#if defined(CXB_NAMESPACE) && defined(__cplusplus)
-#define CXB_NS_BEGIN namespace cxb {
-#define CXB_NS_END }
-#define CXB_USE_NS using namespace cxb
-#else
-#define CXB_NS_BEGIN
-#define CXB_NS_END
-#define CXB_USE_NS
-#endif
+template <typename T>
+CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
+    T temp(move(t1));
+    t1 = move(t2);
+    t2 = move(temp);
+}
 
-#if defined(__clang__)
-#define BREAKPOINT() __builtin_debugtrap()
-#elif defined(__GNUC__)
-#define BREAKPOINT() __builtin_trap()
-#else
-#define BREAKPOINT() abort()
-#endif
+CXB_NS_END
 
-#ifdef __cplusplus
-#define CXB_C_EXPORT extern "C"
-#define CXB_C_IMPORT extern "C"
-#else
-#define CXB_C_EXPORT
-#define CXB_C_IMPORT
-#endif
-
-#define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
-#define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
-#define ASSERT(x, msg)    \
-    if(!(x)) BREAKPOINT()
-#define REQUIRES(x)       \
-    if(!(x)) BREAKPOINT()
-#define LIKELY(x) x
-#define UNLIKELY(x) x
-// #define INFO(msg)
-// #define WARN(msg)
-// #define FATAL(msg)
-
-#define CXB_MAYBE_INLINE inline
-
-#if defined(__GNUC__)
-#define CXB_INLINE inline __attribute__((__always_inline__))
-#elif defined(_MSC_VER)
-#define CXB_INLINE __forceinline
-#else
-#define CXB_INLINE inline
-#endif
-
-#define CXB_COMPTIME constexpr CXB_INLINE
-#define CXB_COMPTIME_INLINE constexpr CXB_INLINE
-
-#if defined(__clang_major__) && __clang_major__ >= 6
-#define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
-#elif defined(__GNUC__) && __GNUC__ >= 6
-#define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
-#else
-#define CXB_PURE CXB_COMPTIME
-#endif
-
-/* * SECTION: primitives */
-typedef uint8_t byte8;
-typedef float f32;
-typedef double f64;
-typedef int32_t i32;
-typedef int64_t i64;
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int64_t ll;
-typedef int32_t rune;
-
-#if defined(__GNUC__)
-typedef __uint128_t u128;
-typedef __int128_t i128;
-// TODO: support MSVC
-#endif
-
-typedef _Atomic(i32) atomic_i32;
-typedef _Atomic(i64) atomic_i64;
-typedef _Atomic(u32) atomic_u32;
-typedef _Atomic(u64) atomic_u64;
-#if defined(__GNUC__)
-typedef _Atomic(i128) atomic_i128;
-typedef _Atomic(u128) atomic_u128;
-#endif
-
-/* C API */
+/* SECTION: C API compatible types */
 struct Allocator {
     size_t (*growth_sug_impl)(const struct Allocator* a, size_t count);
     void* (*alloc_impl)(
         struct Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
     void (*free_impl)(struct Allocator* a, void* head, size_t n_bytes);
 
-#ifdef __cplusplus
     template <typename T, typename H>
     struct AllocationWithHeader {
         T* data;
@@ -227,28 +180,28 @@ struct Allocator {
     };
 
     // suggested growth
-    CXB_INLINE size_t growth_sug(size_t count) const {
+    CXB_MAYBE_INLINE size_t growth_sug(size_t count) const {
         return this->growth_sug_impl(this, count);
     }
-    CXB_INLINE size_t min_count_sug() const {
+    CXB_MAYBE_INLINE size_t min_count_sug() const {
         return this->growth_sug_impl(this, 0);
     }
 
     template <typename T, typename... Args>
-    CXB_INLINE T* alloc(size_t count = 1, Args&&... args) {
+    CXB_MAYBE_INLINE T* alloc(size_t count = 1, Args&&... args) {
         T* result = (T*) this->alloc_impl(this, false, nullptr, sizeof(T) * count, alignof(T), 0);
         for(size_t i = 0; i < count; ++i) new(result + i) T{args...};
         return result;
     }
 
     template <typename T>
-    CXB_INLINE T* calloc(size_t old_count, size_t count = 1) {
+    CXB_MAYBE_INLINE T* calloc(size_t old_count, size_t count = 1) {
         T* result = (T*) this->alloc_impl(this, true, nullptr, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
         return result;
     }
 
     template <typename T, typename... Args>
-    CXB_INLINE T* realloc(T* head, size_t old_count, size_t count = 1, Args&&... args) {
+    CXB_MAYBE_INLINE T* realloc(T* head, size_t old_count, size_t count = 1, Args&&... args) {
         T* result =
             (T*) this->alloc_impl(this, false, (void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
         for(size_t i = old_count; i < count; ++i) {
@@ -258,10 +211,10 @@ struct Allocator {
     }
 
     template <typename H, typename T, typename... Args>
-    CXB_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header,
-                                                              size_t old_count,
-                                                              size_t count,
-                                                              Args&&... args) {
+    CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header,
+                                                                    size_t old_count,
+                                                                    size_t count,
+                                                                    Args&&... args) {
         char* new_header = (char*) this->alloc_impl(this,                             // allocator
                                                     false,                            // fill_zeros
                                                     (void*) header,                   // header
@@ -278,7 +231,7 @@ struct Allocator {
     }
 
     template <typename H, typename T>
-    CXB_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
+    CXB_MAYBE_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
         char* new_header = (char*) this->alloc_impl(this,                                               // allocator
                                                     true,                                               // fill_zeros
                                                     (void*) header,                                     // header
@@ -291,39 +244,18 @@ struct Allocator {
     }
 
     template <typename T>
-    CXB_INLINE void free(T* head, size_t count) {
+    CXB_MAYBE_INLINE void free(T* head, size_t count) {
         this->free_impl(this, (void*) head, sizeof(T) * count);
     }
 
     // TODO: inconsistent
     template <typename H, typename T>
-    CXB_INLINE void free_header_offset(T* offset_from_header, size_t count) {
+    CXB_MAYBE_INLINE void free_header_offset(T* offset_from_header, size_t count) {
         this->free_impl(this, (char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H));
     }
-#endif
 };
 
-typedef struct Allocator Allocator;
-
 CXB_NS_BEGIN
-
-#ifdef __cplusplus
-/* SECTION: primitive functions */
-template <typename T>
-CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
-    REQUIRES(a < b);
-    return max(min(b, x), a);
-}
-
-template <typename T>
-CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
-    T temp(move(t1));
-    t1 = move(t2);
-    t2 = move(temp);
-}
-
-// TODO: placement new?
-// inline void *operator new(size_t, void *p) noexcept { return p; }
 
 template <typename T>
 struct Atomic {
@@ -459,6 +391,8 @@ struct Atomic {
     static constexpr bool is_always_lock_free = true;
 };
 
+CXB_NS_END
+
 struct Mallocator : Allocator {
     Mallocator();
 
@@ -466,31 +400,17 @@ struct Mallocator : Allocator {
     Atomic<i64> n_allocated_bytes;
     Atomic<i64> n_freed_bytes;
 };
-#else
-typedef struct Allocator Mallocator;
-#endif
 
-// TODO: implement arena allocator
-// struct Arena : Allocator {
-//     Arena();
-// };
-
-extern Mallocator default_alloc;
-
-/* SECTION: containers */
-
-/* SUB-SECTION: strings */
 struct StringSlice {
     char* data;
     union {
         struct {
-            size_t len : 62;
+            size_t len : 63;
             bool null_term : 1;
         };
         size_t metadata;
     };
 
-#ifdef __cplusplus
     // ** SECTION: slice compatible methods
     CXB_MAYBE_INLINE size_t n_bytes() const {
         return len + null_term;
@@ -520,10 +440,7 @@ struct StringSlice {
     }
 
     CXB_MAYBE_INLINE const char* c_str() const {
-        if(!null_term) {
-            return nullptr;
-        }
-        return data;
+        return null_term ? data : nullptr;
     }
 
     CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
@@ -547,92 +464,78 @@ struct StringSlice {
     CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
         return o < *this;
     }
-#endif
 };
 
-struct MString {
+struct UString {
     char* data;
     union {
         struct {
-            size_t len : 62;
+            size_t len : 63;
             bool null_term : 1;
         };
         size_t metadata;
     };
-    Allocator* allocator;
+    size_t capacity;
 
-#ifdef __cplusplus
-    // ** SECTION: slice compatible methods
+    // ** SECTION: slice compatible methods - delegate to StringSlice
     CXB_MAYBE_INLINE size_t n_bytes() const {
-        return len + null_term;
+        return reinterpret_cast<const StringSlice*>(this)->n_bytes();
     }
     CXB_MAYBE_INLINE size_t size() const {
-        return len;
+        return reinterpret_cast<const StringSlice*>(this)->size();
     }
     CXB_MAYBE_INLINE bool empty() const {
-        return len == 0;
+        return reinterpret_cast<const StringSlice*>(this)->empty();
     }
     CXB_MAYBE_INLINE char& operator[](size_t idx) {
-        return data[idx];
+        return reinterpret_cast<StringSlice*>(this)->operator[](idx);
     }
     CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
-        return data[idx];
+        return reinterpret_cast<const StringSlice*>(this)->operator[](idx);
     }
     CXB_MAYBE_INLINE char& back() {
-        return data[len - 1];
+        return reinterpret_cast<StringSlice*>(this)->back();
     }
     CXB_MAYBE_INLINE operator StringSlice() const {
-        return StringSlice{.data = data, .len = len, .null_term = null_term};
+        return *reinterpret_cast<const StringSlice*>(this);
     }
 
     CXB_MAYBE_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
-        StringSlice c = *this;
-        c.data = c.data + i;
-        size_t new_len = j == SIZE_MAX ? len - i : j - i;
-        c.len = new_len;
-        c.null_term = i + new_len == len ? this->null_term : false;
-        return c;
+        return reinterpret_cast<StringSlice*>(this)->slice(i, j);
     }
+
     CXB_MAYBE_INLINE const char* c_str() const {
-        if(!null_term) {
-            return nullptr;
-        }
-        return data;
+        return reinterpret_cast<const StringSlice*>(this)->c_str();
     }
 
     CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
-        if(size() != o.size()) return false;
-        if(size() == 0) return true;
-        return memcmp(data, o.data, size()) == 0;
+        return reinterpret_cast<const StringSlice*>(this)->operator==(o);
     }
 
     CXB_MAYBE_INLINE bool operator!=(const StringSlice& o) const {
-        return !(*this == o);
+        return reinterpret_cast<const StringSlice*>(this)->operator!=(o);
     }
 
     CXB_MAYBE_INLINE bool operator<(const StringSlice& o) const {
-        size_t n = len < o.len ? len : o.len;
-        int cmp = memcmp(data, o.data, n);
-        if(cmp < 0) return true;
-        if(cmp > 0) return false;
-        return len < o.len;
+        return reinterpret_cast<const StringSlice*>(this)->operator<(o);
     }
 
     CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
-        return o < *this;
+        return reinterpret_cast<const StringSlice*>(this)->operator>(o);
     }
 
     // ** SECTION: allocator-related methods
-    CXB_MAYBE_INLINE MString& copy_(Allocator* to_allocator = &default_alloc) {
-        *this = move(this->copy(to_allocator));
-        return *this;
-    }
-
-    CXB_MAYBE_INLINE MString copy(Allocator* to_allocator = nullptr) {
-        if(to_allocator == nullptr) to_allocator = allocator;
+    CXB_MAYBE_INLINE UString copy(Allocator* to_allocator) {
         REQUIRES(to_allocator != nullptr);
 
-        MString result{.data = data, .len = len, .null_term = null_term, .allocator = to_allocator};
+        UString result{.data = nullptr, .len = len, .null_term = null_term, .capacity = 0};
+        if(len > 0) {
+            result.reserve(len + null_term, to_allocator);
+            memcpy(result.data, data, len);
+            if(null_term) {
+                result.data[len] = '\0';
+            }
+        }
         return result;
     }
 
@@ -643,55 +546,43 @@ struct MString {
         return data;
     }
 
-    CXB_MAYBE_INLINE size_t* start_mem() {
-        if(this->data == nullptr) return nullptr;
-        return ((size_t*) this->data) - 1;
-    }
-
-    CXB_MAYBE_INLINE size_t& _capacity() {
-        REQUIRES(allocator);
-        return *start_mem();
-    }
-
-    CXB_MAYBE_INLINE size_t capacity() {
-        if(!data) return 0;
-        return *start_mem();
-    }
-
-    CXB_MAYBE_INLINE void destroy() {
+    CXB_MAYBE_INLINE void destroy(Allocator* allocator) {
         if(data && allocator) {
-            allocator->free_header_offset<size_t>(data, capacity());
+            allocator->free(data, capacity);
             data = nullptr;
+            capacity = 0;
         }
     }
 
-    CXB_MAYBE_INLINE void ensure_capacity(size_t new_capacity = 0) {
+    CXB_MAYBE_INLINE void ensure_capacity(size_t new_capacity, Allocator* allocator) {
         if(new_capacity == 0) {
             new_capacity = len + null_term;
         }
 
-        if(capacity() < new_capacity) {
-            reserve(new_capacity);
+        if(capacity < new_capacity) {
+            reserve(new_capacity, allocator);
         }
     }
 
-    void reserve(size_t cap) {
+    void reserve(size_t cap, Allocator* allocator) {
         REQUIRES(allocator != nullptr);
 
-        size_t* alloc_mem = start_mem();
-        size_t old_count = capacity();
+        size_t old_count = capacity;
         size_t new_count = max(cap, allocator->min_count_sug());
-        auto mem = allocator->recalloc_with_header<size_t, char>(alloc_mem, old_count, new_count);
-        data = mem.data;
-        _capacity() = new_count;
+        if(new_count > old_count) {
+            data = allocator->realloc(data, old_count, new_count);
+            capacity = new_count;
+        }
     }
 
-    void resize(size_t new_len, char fill_char = '\0') {
+    void resize(size_t new_len, char fill_char, Allocator* allocator) {
+        REQUIRES(UNLIKELY(allocator != nullptr));
+
         bool was_null_terminated = null_term;
         size_t reserve_size = new_len + was_null_terminated;
 
-        if(capacity() < reserve_size) {
-            reserve(reserve_size);
+        if(capacity < reserve_size) {
+            reserve(reserve_size, allocator);
         }
 
         size_t old_len = len;
@@ -707,14 +598,14 @@ struct MString {
         null_term = was_null_terminated;
     }
 
-    void push_back(char c) {
+    void push_back(char c, Allocator* allocator) {
         REQUIRES(UNLIKELY(allocator != nullptr));
 
         size_t needed_cap = len + null_term + 1;
-        if(capacity() < needed_cap) {
-            size_t new_cap = allocator->growth_sug(capacity());
+        if(capacity < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity);
             if(new_cap < needed_cap) new_cap = needed_cap;
-            reserve(new_cap);
+            reserve(new_cap, allocator);
         }
 
         data[len] = c;
@@ -728,8 +619,8 @@ struct MString {
         }
     }
 
-    CXB_MAYBE_INLINE char& push() {
-        push_back('\0');
+    CXB_MAYBE_INLINE char& push(Allocator* allocator) {
+        push_back('\0', allocator);
         return data[len - 1];
     }
 
@@ -743,19 +634,150 @@ struct MString {
         return ret;
     }
 
-    void extend(StringSlice other) {
+    void extend(StringSlice other, Allocator* allocator) {
         if(other.len == 0) return;
         REQUIRES(allocator);
 
         size_t needed_cap = len + other.len;
-        if(capacity() < needed_cap) {
-            size_t new_cap = allocator->growth_sug(capacity());
+        if(capacity < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity);
             if(new_cap < needed_cap) new_cap = needed_cap;
-            reserve(new_cap);
+            reserve(new_cap, allocator);
         }
 
         memcpy(data + len, other.data, other.len);
         len += other.len;
+    }
+
+    CXB_MAYBE_INLINE void extend(const char* str, size_t n, Allocator* allocator) {
+        if(!str) {
+            return;
+        }
+        size_t len = n == SIZE_MAX ? strlen(str) : n;
+        this->extend(StringSlice{.data = const_cast<char*>(str), .len = len, .null_term = true}, allocator);
+    }
+
+    CXB_MAYBE_INLINE void ensure_null_terminated(Allocator* allocator) {
+        if(null_term) return;
+        REQUIRES(allocator != nullptr);
+
+        this->push_back('\0', allocator);
+        this->null_term = true;
+    }
+};
+
+struct MString {
+    char* data;
+    union {
+        struct {
+            size_t len : 63;
+            bool null_term : 1;
+        };
+        size_t metadata;
+    };
+    size_t capacity;
+    Allocator* allocator;
+
+    // ** SECTION: slice compatible methods - delegate to UString
+    CXB_MAYBE_INLINE size_t n_bytes() const {
+        return reinterpret_cast<const StringSlice*>(this)->n_bytes();
+    }
+    CXB_MAYBE_INLINE size_t size() const {
+        return reinterpret_cast<const StringSlice*>(this)->size();
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return reinterpret_cast<const StringSlice*>(this)->empty();
+    }
+    CXB_MAYBE_INLINE char& operator[](size_t idx) {
+        return reinterpret_cast<StringSlice*>(this)->operator[](idx);
+    }
+    CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
+        return reinterpret_cast<const StringSlice*>(this)->operator[](idx);
+    }
+    CXB_MAYBE_INLINE char& back() {
+        return reinterpret_cast<StringSlice*>(this)->back();
+    }
+    CXB_MAYBE_INLINE operator StringSlice() const {
+        return *reinterpret_cast<const StringSlice*>(this);
+    }
+
+    CXB_MAYBE_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
+        return reinterpret_cast<StringSlice*>(this)->slice(i, j);
+    }
+
+    CXB_MAYBE_INLINE const char* c_str() const {
+        return reinterpret_cast<const StringSlice*>(this)->c_str();
+    }
+
+    CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
+        return reinterpret_cast<const StringSlice*>(this)->operator==(o);
+    }
+
+    CXB_MAYBE_INLINE bool operator<(const StringSlice& o) const {
+        return reinterpret_cast<const StringSlice*>(this)->operator<(o);
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const StringSlice& o) const {
+        return reinterpret_cast<const StringSlice*>(this)->operator!=(o);
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
+        return reinterpret_cast<const StringSlice*>(this)->operator>(o);
+    }
+
+    // ** SECTION: allocator-related methods - delegate to UString
+    CXB_MAYBE_INLINE MString& copy_(Allocator* to_allocator = &default_alloc) {
+        MString temp = *this;
+        *this = move(this->copy(to_allocator));
+        temp.destroy();
+        return *this;
+    }
+
+    CXB_MAYBE_INLINE MString copy(Allocator* to_allocator = nullptr) {
+        if(to_allocator == nullptr) to_allocator = allocator;
+        REQUIRES(to_allocator != nullptr);
+
+        UString u_result = reinterpret_cast<UString*>(this)->copy(to_allocator);
+        return MString{.data = u_result.data,
+                       .metadata = u_result.metadata,
+                       .capacity = u_result.capacity,
+                       .allocator = to_allocator};
+    }
+
+    CXB_MAYBE_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
+        return reinterpret_cast<UString*>(this)->c_str_maybe_copy(copy_alloc_if_not);
+    }
+
+    CXB_MAYBE_INLINE void destroy() {
+        reinterpret_cast<UString*>(this)->destroy(this->allocator);
+    }
+
+    CXB_MAYBE_INLINE void ensure_capacity(size_t new_capacity = 0) {
+        reinterpret_cast<UString*>(this)->ensure_capacity(new_capacity, this->allocator);
+    }
+
+    CXB_MAYBE_INLINE void reserve(size_t cap) {
+        reinterpret_cast<UString*>(this)->reserve(cap, this->allocator);
+    }
+
+    CXB_MAYBE_INLINE void resize(size_t new_len, char fill_char = '\0') {
+        reinterpret_cast<UString*>(this)->resize(new_len, fill_char, this->allocator);
+    }
+
+    CXB_MAYBE_INLINE void push_back(char c) {
+        reinterpret_cast<UString*>(this)->push_back(c, this->allocator);
+    }
+
+    CXB_MAYBE_INLINE char& push() {
+        return reinterpret_cast<UString*>(this)->push(this->allocator);
+    }
+
+    CXB_MAYBE_INLINE char pop_back() {
+        return reinterpret_cast<UString*>(this)->pop_back();
+    }
+
+    CXB_MAYBE_INLINE void extend(StringSlice other) {
+        reinterpret_cast<UString*>(this)->extend(other, this->allocator);
     }
 
     CXB_MAYBE_INLINE void operator+=(StringSlice other) {
@@ -763,11 +785,7 @@ struct MString {
     }
 
     CXB_MAYBE_INLINE void extend(const char* str, size_t n = SIZE_MAX) {
-        if(!str) {
-            return;
-        }
-        size_t len = n == SIZE_MAX ? strlen(str) : n;
-        this->extend(StringSlice{.data = const_cast<char*>(str), .len = len, .null_term = true});
+        reinterpret_cast<UString*>(this)->extend(str, n, this->allocator);
     }
 
     CXB_MAYBE_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
@@ -777,27 +795,34 @@ struct MString {
         if(allocator == nullptr) {
             *this = move(this->copy(copy_alloc_if_not));
         } else {
-            this->push_back('\0');
-            this->null_term = true;
+            reinterpret_cast<UString*>(this)->ensure_null_terminated(this->allocator);
         }
     }
-#endif
 };
 
 /* SECTION: C++-only API */
-#ifdef __cplusplus
+CXB_NS_BEGIN
 
-struct String : MString {
-    String(Allocator* allocator = &default_alloc)
-        : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = allocator} {}
+// TODO: placement new?
+// inline void *operator new(size_t, void *p) noexcept { return p; }
 
-    String(const MString& m)
-        : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} {}
+/* SECTION: containers */
+struct AString : MString {
+    AString(Allocator* allocator = &default_alloc)
+        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = allocator} {}
 
-    String(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
+    AString(const MString& m)
+        : MString{.data = m.data,
+                  .len = m.len,
+                  .null_term = m.null_term,
+                  .capacity = m.capacity,
+                  .allocator = m.allocator} {}
+
+    AString(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
         : MString{.data = nullptr,
                   .len = n == SIZE_MAX ? strlen(cstr) : n,
                   .null_term = null_term,
+                  .capacity = 0,
                   .allocator = allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
@@ -810,45 +835,50 @@ struct String : MString {
         }
     }
 
-    String(const String& o) : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = nullptr} {
+    AString(const AString& o)
+        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = nullptr} {
         data = o.data;
         metadata = o.metadata;
+        capacity = o.capacity;
     }
 
-    String(String&& o) : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = o.allocator} {
+    AString(AString&& o)
+        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = o.allocator} {
         data = o.data;
         metadata = o.metadata;
+        capacity = o.capacity;
         o.allocator = nullptr;
     }
 
-    String& operator=(const String& o) = delete;
-    CXB_INLINE String& operator=(String&& o) {
+    AString& operator=(const AString& o) = delete;
+    CXB_INLINE AString& operator=(AString&& o) {
         allocator = o.allocator;
         o.allocator = nullptr;
         data = o.data;
         metadata = o.metadata;
+        capacity = o.capacity;
         return *this;
     }
 
-    CXB_MAYBE_INLINE ~String() {
+    CXB_MAYBE_INLINE ~AString() {
         destroy();
     }
 
-    CXB_MAYBE_INLINE String& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_MAYBE_INLINE AString& copy_(Allocator* to_allocator = &default_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
 
-    CXB_MAYBE_INLINE String copy(Allocator* to_allocator = nullptr) {
+    CXB_MAYBE_INLINE AString copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
-        String result{data, len, null_term, to_allocator};
+        AString result{data, len, null_term, to_allocator};
         return result;
     }
 
     CXB_MAYBE_INLINE MString release() {
-        MString result{.data = data, .len = len, .null_term = null_term, .allocator = allocator};
+        MString result{.data = data, .len = len, .null_term = null_term, .capacity = capacity, .allocator = allocator};
         this->allocator = nullptr;
         return result;
     }
@@ -1037,196 +1067,25 @@ struct Seq {
     }
 };
 
-#endif
-
-/* SECTION: math types */
-// TODO
-struct Vec2f {
-    f32 x, y;
-};
-
-struct Vec2i {
-    i32 x, y;
-};
-
-struct Size2i {
-    i32 w, h;
-};
-
-struct Vec3f {
-    f32 x, y, z;
-};
-
-struct Vec3i {
-    i32 x, y, z;
-};
-
-struct Rect2f {
-    f32 x, y;
-    f32 w, h;
-};
-
-struct Rect2ui {
-    u32 x, y;
-    u32 w, h;
-};
-
-struct Color4f {
-    f32 r, g, b, a;
-};
-
-struct Color4i {
-    byte8 r, g, b, a;
-};
-
-struct Mat33f {
-    f32 arr[9];
-};
-
-#ifndef __cplusplus
-typedef struct Mat33f Mat33f;
-#endif
-
-struct Mat44f {
-    f32 arr[16];
-};
-
-#ifndef __cplusplus
-typedef struct Mat44f Mat44f;
-#endif
-
-#ifdef __cplusplus
-static const Mat44f identity4x4 = {.arr = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
-static const Mat33f identity3x3 = {.arr = {
-                                       1,
-                                       0,
-                                       0,
-                                       0,
-                                       1,
-                                       0,
-                                       0,
-                                       0,
-                                       1,
-                                   }};
-#endif
-
 /* SECTION: variant types */
 
-#ifdef __cplusplus
 template <typename T>
 struct Optional {
     T value;
     bool exists;
 };
-#endif
-
 CXB_NS_END
+
+/* SECTION: C API (continued) */
+// TODO: implement arena allocator
+// struct Arena : Allocator {
+//     Arena();
+// };
+
+#define S8_STR(s) (StringSlice{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
 #endif
 
-#define S8_LIT(s) (StringSlice{.data = (char*) &s[0], .len = LENGTHOF_LIT(s), .null_term = true})
-#define S8_DATA(c, l) (StringSlice{.data = (char*) &c[0], .len = (l), .null_term = false})
-#define S8_STR(s) (StringSlice{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
-#define S8_CSTR(s) (StringSlice{.data = (char*) s, .len = (size_t) strlen(s), .null_term = true})
-
-/* SECTION: C API */
-// NOTE: declared here to avoid declaring these functions in CXB_NS_BEGIN/END
-#ifndef __cplusplus
-typedef struct StringSlice StringSlice;
 #endif
-
-CXB_C_EXPORT CXB_INLINE size_t cxb_ss_size(StringSlice s) {
-    return s.len;
-}
-CXB_C_EXPORT CXB_INLINE size_t cxb_ss_n_bytes(StringSlice s) {
-    return s.len + (size_t) s.null_term;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_ss_empty(StringSlice s) {
-    return s.len == 0;
-}
-CXB_C_EXPORT CXB_INLINE const char* cxb_ss_c_str(StringSlice s) {
-    return s.null_term ? s.data : NULL;
-}
-CXB_C_EXPORT CXB_INLINE StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
-    REQUIRES(j >= i);
-    REQUIRES(i < cxb_ss_n_bytes(s));
-
-    size_t new_len = j == SIZE_MAX ? s.len - i : j - i;
-
-    StringSlice result = {.data = s.data ? s.data + i : NULL,
-                          .len = new_len,
-                          .null_term = (bool) ((i + new_len == s.len) && s.null_term)};
-    return result;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_ss_eq(StringSlice a, StringSlice b) {
-    if(a.len != b.len) return false;
-    if(a.len == 0) return true;
-    return memcmp(a.data, b.data, a.len) == 0;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_ss_neq(StringSlice a, StringSlice b) {
-    return !cxb_ss_eq(a, b);
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_ss_lt(StringSlice a, StringSlice b) {
-    size_t n = a.len < b.len ? a.len : b.len;
-    for(size_t i = 0; i < n; ++i) {
-        if(a.data[i] < b.data[i]) return true;
-        if(a.data[i] > b.data[i]) return false;
-    }
-    return a.len < b.len;
-}
-CXB_C_EXPORT CXB_INLINE char cxb_ss_back(StringSlice s) {
-    REQUIRES(s.len > 0);
-    return s.data[s.len - 1];
-}
-
-#ifndef __cplusplus
-typedef struct MString MString;
-#endif
-
-CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_size(MString s) {
-    return s.len;
-}
-CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_n_bytes(MString s) {
-    return s.len + (size_t) s.null_term;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_mstring_empty(MString s) {
-    return s.len == 0;
-}
-CXB_C_EXPORT CXB_INLINE const char* cxb_mstring_c_str(MString s) {
-    return s.null_term ? s.data : NULL;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_mstring_eq(MString a, MString b) {
-    if(a.len != b.len) return false;
-    if(a.len == 0) return true;
-    return memcmp(a.data, b.data, a.len) == 0;
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_mstring_neq(MString a, MString b) {
-    return !cxb_mstring_eq(a, b);
-}
-CXB_C_EXPORT CXB_INLINE bool cxb_mstring_lt(MString a, MString b) {
-    size_t n = a.len < b.len ? a.len : b.len;
-    int cmp = memcmp(a.data, b.data, n);
-    if(cmp < 0) return true;
-    if(cmp > 0) return false;
-    return a.len < b.len;
-}
-CXB_C_EXPORT CXB_INLINE char cxb_mstring_back(MString s) {
-    REQUIRES(s.len > 0);
-    return s.data[s.len - 1];
-}
-CXB_C_EXPORT CXB_INLINE size_t cxb_mstring_capacity(MString s) {
-    REQUIRES(s.allocator);
-    return s.data ? *(((size_t*) s.data) - 1) : 0;
-}
-
-CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
-CXB_C_EXPORT void cxb_mstring_ensure_capacity(MString* s, size_t cap);
-CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size);
-CXB_C_EXPORT void cxb_mstring_extend(MString* s, StringSlice slice);
-CXB_C_EXPORT void cxb_mstring_push_back(MString* s, char val);
-CXB_C_EXPORT char* cxb_mstring_push(MString* s);
-CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap);
-CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s);
-CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator);

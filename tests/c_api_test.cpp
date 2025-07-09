@@ -1,4 +1,7 @@
+#include "cxb/cxb.h"
+#define CXB_SKIP_C_TYPES
 #include "c_api_test.h"
+#undef CXB_SKIP_C_TYPES
 
 CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc) {
     if(alloc == nullptr) {
@@ -7,7 +10,7 @@ CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc
 
     size_t new_len = p1.len + 1 + p2.len;
 
-    MString result{.data = nullptr, .len = 0, .null_term = true, .allocator = alloc};
+    MString result{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = alloc};
     result.reserve(new_len + 1);
 
     if(p1.len > 0) {
