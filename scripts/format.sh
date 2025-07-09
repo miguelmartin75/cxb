@@ -24,7 +24,11 @@ echo $(clang-format --version)
 echo ""
 
 # Find all C/C++ files, excluding patterns from .gitignore
-FILES=$(find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" | grep -v "./build" | grep -v "./.cache" | grep -v "./prototype")
+FILES=$(find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \
+  | grep -v "./build" \
+  | grep -v "./.cache" \
+  | grep -v "./prototype" \
+  | grep -v "./deps")
 
 if [ -z "$FILES" ]; then
     echo -e "${YELLOW}No C/C++ files found to format${NC}"
