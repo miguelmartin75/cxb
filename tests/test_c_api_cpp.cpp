@@ -1,5 +1,7 @@
-#include "c_api_test.h"
 #include "cxb/cxb.h"
+#define CXB_SKIP_C_TYPES
+#include "c_api_test.h"
+#undef CXB_SKIP_C_TYPES
 
 #include <catch2/catch_test_macros.hpp>
 

@@ -1,4 +1,7 @@
+#include "cxb/cxb.h"
+#define CXB_SKIP_C_TYPES
 #include "c_api_test.h"
+#undef CXB_SKIP_C_TYPES
 
 CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc) {
     if(alloc == nullptr) {

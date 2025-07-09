@@ -70,6 +70,13 @@ memory, "M" stands for "manual"
 */
 
 #pragma once
+#ifndef __cplusplus
+#error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb.h> is C++-only."
+#endif
+
+#define CXB_SKIP_C_TYPES
+#include "cxb-c.h"
+#undef CXB_SKIP_C_TYPES
 
 /* SECTION: configuration */
 // #define CXB_ALLOC_TEMPLATE
@@ -466,8 +473,7 @@ struct Mallocator : Allocator {
     Atomic<i64> n_allocated_bytes;
     Atomic<i64> n_freed_bytes;
 };
-#else
-typedef struct Allocator Mallocator;
+#endif // end of C++-only def struct Allocator Mallocator;
 #endif
 
 // TODO: implement arena allocator
