@@ -4,7 +4,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("join_paths -> MString in C++") {
-    size_t mem_before = default_alloc.n_active_bytes;
+    i64 mem_before = default_alloc.n_active_bytes;
     {
         StringSlice p1 = S8_LIT("foo");
         StringSlice p2 = S8_LIT("bar");
@@ -18,7 +18,7 @@ TEST_CASE("join_paths -> MString in C++") {
 }
 
 TEST_CASE("join_paths -> String in C++") {
-    size_t mem_before = default_alloc.n_active_bytes;
+    i64 mem_before = default_alloc.n_active_bytes;
     {
         StringSlice p1 = S8_LIT("foo");
         StringSlice p2 = S8_LIT("bar");

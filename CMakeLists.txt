@@ -25,16 +25,31 @@ find_package(Catch2 3 REQUIRED)
 
 enable_testing()
 
-add_executable(test_seq tests/test_seq.cpp)
-target_include_directories(test_seq PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(test_seq PRIVATE Catch2::Catch2WithMain cxb)
+function(add_test_exe test_name test_source fsanitize)
+    add_executable(${test_name} ${test_source})
+    target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain cxb ${ARGN})
+    if(${fsanitize} AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${test_name} PRIVATE 
+            -fsanitize=address 
+            -fsanitize=undefined 
+            -fno-omit-frame-pointer
+        )
+        target_link_options(${test_name} PRIVATE 
+            -fsanitize=address 
+            -fsanitize=undefined 
+        )
+    endif()
+endfunction()
 
-add_executable(test_string tests/test_string.cpp)
-target_include_directories(test_string PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(test_string PRIVATE Catch2::Catch2WithMain cxb)
+add_test_exe(test_seq tests/test_seq.cpp YES)
+add_test_exe(test_string tests/test_string.cpp YES)
+add_test_exe(bench_string benchmarks/bench_string.cpp YES)
+add_test_exe(bench_std_headers benchmarks/bench_std_headers.cpp NO)
 
-add_test(NAME seq_tests COMMAND test_seq)
-add_test(NAME string_tests COMMAND test_string)
+add_test(NAME test_seq COMMAND test_seq)
+add_test(NAME test_string COMMAND test_string)
+add_test(NAME bench_std_headers COMMAND bench_std_headers)
 
 # C API tests (conditional)
 if(BUILD_C_API_TESTS)

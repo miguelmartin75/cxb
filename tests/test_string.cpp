@@ -1,9 +1,7 @@
 #define CATCH_CONFIG_MAIN
-#include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb-unicode.h>
 #include <cxb/cxb.h>
-#include <random>
 
 CXB_USE_NS;
 
@@ -56,8 +54,8 @@ TEST_CASE("StringSlice from raw data", "[StringSlice]") {
     }
 }
 
-TEST_CASE("String push_back", "[StringSlice]") {
-    size_t allocated_bytes = 0;
+TEST_CASE("String push_back", "[String]") {
+    i64 allocated_bytes = 0;
     {
         String s;
         s.push_back('H');
@@ -74,7 +72,7 @@ TEST_CASE("String push_back", "[StringSlice]") {
     REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
 }
 
-TEST_CASE("StringSlice push_back with null termination", "[StringSlice]") {
+TEST_CASE("StringSlice push_back with null termination", "[String]") {
     String s("Hello");
     REQUIRE(s.null_term);
     REQUIRE(s.allocator);
@@ -86,7 +84,7 @@ TEST_CASE("StringSlice push_back with null termination", "[StringSlice]") {
     REQUIRE(s.null_term);
 
     StringSlice cmp = S8_LIT("Hello!");
-    for(int i = 0; i < s.size(); ++i) {
+    for(u64 i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == cmp[i]);
     }
     REQUIRE(s == cmp);
@@ -309,128 +307,8 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
 }
 
-TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
-    // Create a large ASCII string for benchmarking with varied content
-    String ascii_text;
-    std::mt19937 rng(42); // Fixed seed for reproducibility
-    std::uniform_int_distribution<int> char_dist('A', 'Z');
-
-    // Create varied ASCII content to prevent optimization
-    for(int i = 0; i < 1000; ++i) {
-        for(int j = 0; j < 45; ++j) {
-            ascii_text.push_back(static_cast<char>(char_dist(rng)));
-        }
-        ascii_text.push_back(' ');
-    }
-
-    BENCHMARK("UTF-8 decode ASCII with utf8_decode") {
-        size_t pos = 0;
-        u64 checksum = 0;
-
-        while(pos < ascii_text.size()) {
-            auto result = utf8_decode(ascii_text.data + pos, ascii_text.size() - pos);
-            if(!result.valid) break;
-            pos += result.bytes_consumed;
-            checksum ^= result.codepoint;
-        }
-
-        return checksum;
-    };
-
-    BENCHMARK("UTF-8 decode ASCII with Utf8Iterator") {
-        Utf8Iterator iter(ascii_text);
-        u64 checksum = 0;
-
-        while(iter.has_next()) {
-            auto result = iter.next();
-            if(!result.valid) break;
-            checksum ^= result.codepoint; // Prevent optimization
-        }
-
-        return checksum;
-    };
-}
-
-TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
-    String unicode_text;
-    const char* samples[] = {
-        "Hello 🌍 World! ",   // ASCII + emoji
-        "Café naïve résumé ", // ASCII + accented chars
-        "こんにちは世界 ",    // Japanese
-        "🚀🌟💫⭐🎉 ",        // Multiple emojis
-        "Привет мир! "        // Cyrillic
-    };
-
-    for(int i = 0; i < 200; ++i) {
-        for(const char* sample : samples) {
-            unicode_text.extend(sample);
-        }
-    }
-
-    BENCHMARK("UTF-8 decode single") {
-        Utf8Iterator iter(unicode_text);
-        u64 checksum = 0;
-
-        while(iter.has_next()) {
-            auto result = iter.next();
-            if(!result.valid) break;
-            checksum ^= result.codepoint;
-        }
-
-        return checksum;
-    };
-}
-
-TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
-    String ascii_text;
-    String unicode_text;
-
-    std::mt19937 rng(123);
-    std::uniform_int_distribution<int> ascii_dist(32, 126);
-
-    for(int i = 0; i < 10000; ++i) {
-        while(ascii_text.size() < 100) {
-            ascii_text.push_back(static_cast<char>(ascii_dist(rng)));
-        }
-        ascii_text.push_back('\n');
-    }
-
-    u32 unicode_codepoints[] = {
-        0x1F600, 0x1F601, 0x1F602, 0x1F603, 0x1F604, 0x1F605, 0x1F606, 0x1F607, // Smileys
-        0x1F680, 0x1F681, 0x1F682, 0x1F683, 0x1F684, 0x1F685, 0x1F686, 0x1F687, // Transportation
-        0x1F300, 0x1F301, 0x1F302, 0x1F303, 0x1F304, 0x1F305, 0x1F306, 0x1F307, // Nature
-        0x1F30D, 0x1F30E, 0x1F30F, 0x1F311, 0x1F313, 0x1F314, 0x1F315, 0x1F319, // Earth/Moon
-        0x1F44D, 0x1F44E, 0x1F44F, 0x1F450, 0x1F451, 0x1F4A9, 0x1F4AA, 0x1F525, // Hands/Objects
-        0x2764,  0x2665,  0x2B50,  0x2728,  0x26A1,  0x1F525, 0x1F4A5, 0x1F31F  // Hearts/Stars
-    };
-    std::uniform_int_distribution<size_t> unicode_dist(0,
-                                                       sizeof(unicode_codepoints) / sizeof(unicode_codepoints[0]) - 1);
-
-    for(int i = 0; i < 10000; ++i) {
-        while(unicode_text.size() < 100) {
-            u32 codepoint = unicode_codepoints[unicode_dist(rng)];
-            auto encode_result = utf8_encode(codepoint);
-            if(encode_result.valid) {
-                for(u8 j = 0; j < encode_result.byte_count; ++j) {
-                    unicode_text.extend(S8_DATA(encode_result.bytes, encode_result.byte_count));
-                }
-            }
-        }
-        unicode_text.push_back('\n');
-    }
-
-    BENCHMARK("Iterate ASCII text") {
-        u64 result = 0;
-        for(size_t i = 0; i < ascii_text.size(); ++i) {
-            result ^= ascii_text[i];
-        }
-        REQUIRE(result);
-        return result;
-    };
-}
-
 TEST_CASE("MString manual cleanup", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         MString s{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         s.extend("Hello, World!");
@@ -444,7 +322,7 @@ TEST_CASE("MString manual cleanup", "[MString]") {
 }
 
 TEST_CASE("MString -> String", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         MString m{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         m.extend("Hello, World!");
@@ -458,46 +336,32 @@ TEST_CASE("MString -> String", "[MString]") {
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("String -> MString release + leak", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+TEST_CASE("String -> MString", "[MString]") {
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         String s;
         s.extend("Hello, World!");
-        MString m = s;
-        s.release();
+        MString m = s.release();
 
         REQUIRE(m.len == 13);
         REQUIRE(m.allocator == &default_alloc);
         REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
         REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+        m.destroy();
     }
-    REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-}
-TEST_CASE("MString leaks", "[MString]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
-    {
-        MString s{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
-        s.extend("Hello, World!");
-        REQUIRE(s.len == 13);
-        REQUIRE(s.allocator == &default_alloc);
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
-    }
-    REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
-    size_t allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
         Seq<String> strings;
         REQUIRE(strings.len == 0);
         REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
-        // Add various strings to the sequence
         for(int i = 0; i < 10; ++i) {
             String s;
             s.extend("String #");
-            // Convert i to string manually
             if(i == 0)
                 s.extend("0");
             else {
@@ -518,22 +382,18 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
 
         REQUIRE(strings.len == 10);
 
-        // Verify the content of each string
-        for(int i = 0; i < strings.len; ++i) {
+        for(u64 i = 0; i < strings.len; ++i) {
             REQUIRE(strings[i].len > 0);
             REQUIRE(strings[i].null_term);
             REQUIRE(strings[i].allocator);
 
-            // Check that it starts with "String #"
             StringSlice prefix = strings[i].slice(0, 8);
             REQUIRE(prefix == S8_LIT("String #"));
 
-            // Check that it ends with " - Content"
             StringSlice suffix = strings[i].slice(strings[i].len - 10);
             REQUIRE(suffix == S8_LIT(" - Content"));
         }
 
-        // Modify one of the strings
         strings[5].extend(" (modified)");
         REQUIRE(strings[5].len > strings[4].len);
 
@@ -556,7 +416,6 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
         REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
     }
 
-    // Verify all memory has been deallocated
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
 
@@ -574,7 +433,7 @@ TEST_CASE("StringSlice free functions (C API)", "[StringSlice][CAPI]") {
 }
 
 TEST_CASE("MString free function destroy (C API)", "[MString][CAPI]") {
-    size_t mem_before = default_alloc.n_active_bytes;
+    i64 mem_before = default_alloc.n_active_bytes;
     {
         MString ms{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         ms.extend("Hello, World!");
@@ -592,93 +451,93 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     StringSlice s3 = S8_LIT("app");
     StringSlice s4 = S8_LIT("apple");
     StringSlice s5 = S8_LIT("application");
-    
+
     // Basic lexicographic comparison
-    REQUIRE(s1 < s2);       // "apple" < "banana"
-    REQUIRE(!(s2 < s1));    // "banana" not < "apple"
-    
+    REQUIRE(s1 < s2);    // "apple" < "banana"
+    REQUIRE(!(s2 < s1)); // "banana" not < "apple"
+
     // Prefix comparison
-    REQUIRE(s3 < s1);       // "app" < "apple"
-    REQUIRE(!(s1 < s3));    // "apple" not < "app"
-    
+    REQUIRE(s3 < s1);    // "app" < "apple"
+    REQUIRE(!(s1 < s3)); // "apple" not < "app"
+
     // Equal strings
-    REQUIRE(!(s1 < s4));    // "apple" not < "apple"
-    REQUIRE(!(s4 < s1));    // "apple" not < "apple"
-    
+    REQUIRE(!(s1 < s4)); // "apple" not < "apple"
+    REQUIRE(!(s4 < s1)); // "apple" not < "apple"
+
     // Longer vs shorter with same prefix
-    REQUIRE(s1 < s5);       // "apple" < "application"
-    REQUIRE(!(s5 < s1));    // "application" not < "apple"
-    
+    REQUIRE(s1 < s5);    // "apple" < "application"
+    REQUIRE(!(s5 < s1)); // "application" not < "apple"
+
     // Test with empty strings
     StringSlice empty1 = S8_LIT("");
     StringSlice empty2 = S8_LIT("");
     StringSlice non_empty = S8_LIT("a");
-    
+
     REQUIRE(!(empty1 < empty2));    // empty not < empty
     REQUIRE(empty1 < non_empty);    // empty < non-empty
     REQUIRE(!(non_empty < empty1)); // non-empty not < empty
-    
+
     // Test case sensitivity
     StringSlice lower = S8_LIT("apple");
     StringSlice upper = S8_LIT("APPLE");
-    
-    REQUIRE(upper < lower);  // "APPLE" < "apple" (ASCII values)
+
+    REQUIRE(upper < lower); // "APPLE" < "apple" (ASCII values)
     REQUIRE(!(lower < upper));
-    
+
     // Test with special characters
     StringSlice alpha = S8_LIT("abc");
     StringSlice numeric = S8_LIT("123");
     StringSlice special = S8_LIT("!@#");
-    
-    REQUIRE(special < numeric);  // "!@#" < "123" (ASCII values)
-    REQUIRE(numeric < alpha);    // "123" < "abc" (ASCII values)
-    
+
+    REQUIRE(special < numeric); // "!@#" < "123" (ASCII values)
+    REQUIRE(numeric < alpha);   // "123" < "abc" (ASCII values)
+
     // Test String operator< (should behave the same as StringSlice)
     String str1("apple");
     String str2("banana");
     String str3("app");
     String str4("apple");
-    
-    REQUIRE(str1 < str2);       // "apple" < "banana"
-    REQUIRE(!(str2 < str1));    // "banana" not < "apple"
-    REQUIRE(str3 < str1);       // "app" < "apple"
-    REQUIRE(!(str1 < str3));    // "apple" not < "app"
-    REQUIRE(!(str1 < str4));    // "apple" not < "apple"
-    REQUIRE(!(str4 < str1));    // "apple" not < "apple"
-    
+
+    REQUIRE(str1 < str2);    // "apple" < "banana"
+    REQUIRE(!(str2 < str1)); // "banana" not < "apple"
+    REQUIRE(str3 < str1);    // "app" < "apple"
+    REQUIRE(!(str1 < str3)); // "apple" not < "app"
+    REQUIRE(!(str1 < str4)); // "apple" not < "apple"
+    REQUIRE(!(str4 < str1)); // "apple" not < "apple"
+
     // Test mixed String and StringSlice comparison
-    REQUIRE(str1 < s2);         // String("apple") < StringSlice("banana")
-    REQUIRE(s3 < str1);         // StringSlice("app") < String("apple")
-    
+    REQUIRE(str1 < s2); // String("apple") < StringSlice("banana")
+    REQUIRE(s3 < str1); // StringSlice("app") < String("apple")
+
     // Test operator> for StringSlice
-    REQUIRE(s2 > s1);           // "banana" > "apple"
-    REQUIRE(!(s1 > s2));        // "apple" not > "banana"
-    REQUIRE(s1 > s3);           // "apple" > "app"
-    REQUIRE(!(s3 > s1));        // "app" not > "apple"
-    REQUIRE(s5 > s1);           // "application" > "apple"
-    REQUIRE(!(s1 > s5));        // "apple" not > "application"
-    REQUIRE(non_empty > empty1);// "a" > ""
+    REQUIRE(s2 > s1);               // "banana" > "apple"
+    REQUIRE(!(s1 > s2));            // "apple" not > "banana"
+    REQUIRE(s1 > s3);               // "apple" > "app"
+    REQUIRE(!(s3 > s1));            // "app" not > "apple"
+    REQUIRE(s5 > s1);               // "application" > "apple"
+    REQUIRE(!(s1 > s5));            // "apple" not > "application"
+    REQUIRE(non_empty > empty1);    // "a" > ""
     REQUIRE(!(empty1 > non_empty)); // "" not > "a"
-    REQUIRE(lower > upper);     // "apple" > "APPLE" (ASCII values)
-    REQUIRE(!(upper > lower));  // "APPLE" not > "apple"
-    REQUIRE(alpha > numeric);   // "abc" > "123" (ASCII values)
-    REQUIRE(numeric > special); // "123" > "!@#" (ASCII values)
-    
+    REQUIRE(lower > upper);         // "apple" > "APPLE" (ASCII values)
+    REQUIRE(!(upper > lower));      // "APPLE" not > "apple"
+    REQUIRE(alpha > numeric);       // "abc" > "123" (ASCII values)
+    REQUIRE(numeric > special);     // "123" > "!@#" (ASCII values)
+
     // Test operator> for String
-    REQUIRE(str2 > str1);       // "banana" > "apple"
-    REQUIRE(!(str1 > str2));    // "apple" not > "banana"
-    REQUIRE(str1 > str3);       // "apple" > "app"
-    REQUIRE(!(str3 > str1));    // "app" not > "apple"
-    
+    REQUIRE(str2 > str1);    // "banana" > "apple"
+    REQUIRE(!(str1 > str2)); // "apple" not > "banana"
+    REQUIRE(str1 > str3);    // "apple" > "app"
+    REQUIRE(!(str3 > str1)); // "app" not > "apple"
+
     // Test mixed String and StringSlice operator> comparison
-    REQUIRE(s2 > str1);         // StringSlice("banana") > String("apple")
-    REQUIRE(str1 > s3);         // String("apple") > StringSlice("app")
-    
+    REQUIRE(s2 > str1); // StringSlice("banana") > String("apple")
+    REQUIRE(str1 > s3); // String("apple") > StringSlice("app")
+
     // Test that equal strings are not greater than each other
-    REQUIRE(!(s1 > s4));        // "apple" not > "apple"
-    REQUIRE(!(s4 > s1));        // "apple" not > "apple"
-    REQUIRE(!(str1 > str4));    // "apple" not > "apple"
-    REQUIRE(!(str4 > str1));    // "apple" not > "apple"
-    REQUIRE(!(empty1 > empty2));// "" not > ""
-    REQUIRE(!(empty2 > empty1));// "" not > ""
+    REQUIRE(!(s1 > s4));         // "apple" not > "apple"
+    REQUIRE(!(s4 > s1));         // "apple" not > "apple"
+    REQUIRE(!(str1 > str4));     // "apple" not > "apple"
+    REQUIRE(!(str4 > str1));     // "apple" not > "apple"
+    REQUIRE(!(empty1 > empty2)); // "" not > ""
+    REQUIRE(!(empty2 > empty1)); // "" not > ""
 }
