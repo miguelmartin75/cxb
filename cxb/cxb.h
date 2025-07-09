@@ -412,7 +412,7 @@ struct StringSlice {
     char* data;
     union {
         struct {
-            size_t len : 62;
+            size_t len : 63;
             bool null_term : 1;
         };
         size_t metadata;
@@ -480,11 +480,12 @@ struct MString {
     char* data;
     union {
         struct {
-            size_t len : 62;
+            size_t len : 63;
             bool null_term : 1;
         };
         size_t metadata;
     };
+    size_t capacity;
     Allocator* allocator;
 
     // ** SECTION: slice compatible methods
@@ -557,7 +558,14 @@ struct MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
 
-        MString result{.data = data, .len = len, .null_term = null_term, .allocator = to_allocator};
+        MString result{.data = nullptr, .len = len, .null_term = null_term, .capacity = 0, .allocator = to_allocator};
+        if(len > 0) {
+            result.reserve(len + null_term);
+            memcpy(result.data, data, len);
+            if(null_term) {
+                result.data[len] = '\0';
+            }
+        }
         return result;
     }
 
@@ -568,25 +576,11 @@ struct MString {
         return data;
     }
 
-    CXB_MAYBE_INLINE size_t* start_mem() {
-        if(this->data == nullptr) return nullptr;
-        return ((size_t*) this->data) - 1;
-    }
-
-    CXB_MAYBE_INLINE size_t& _capacity() {
-        REQUIRES(allocator);
-        return *start_mem();
-    }
-
-    CXB_MAYBE_INLINE size_t capacity() {
-        if(!data) return 0;
-        return *start_mem();
-    }
-
     CXB_MAYBE_INLINE void destroy() {
         if(data && allocator) {
-            allocator->free_header_offset<size_t>(data, capacity());
+            allocator->free(data, capacity);
             data = nullptr;
+            capacity = 0;
         }
     }
 
@@ -595,7 +589,7 @@ struct MString {
             new_capacity = len + null_term;
         }
 
-        if(capacity() < new_capacity) {
+        if(capacity < new_capacity) {
             reserve(new_capacity);
         }
     }
@@ -603,19 +597,19 @@ struct MString {
     void reserve(size_t cap) {
         REQUIRES(allocator != nullptr);
 
-        size_t* alloc_mem = start_mem();
-        size_t old_count = capacity();
+        size_t old_count = capacity;
         size_t new_count = max(cap, allocator->min_count_sug());
-        auto mem = allocator->recalloc_with_header<size_t, char>(alloc_mem, old_count, new_count);
-        data = mem.data;
-        _capacity() = new_count;
+        if(new_count > old_count) {
+            data = allocator->realloc(data, old_count, new_count);
+            capacity = new_count;
+        }
     }
 
     void resize(size_t new_len, char fill_char = '\0') {
         bool was_null_terminated = null_term;
         size_t reserve_size = new_len + was_null_terminated;
 
-        if(capacity() < reserve_size) {
+        if(capacity < reserve_size) {
             reserve(reserve_size);
         }
 
@@ -636,8 +630,8 @@ struct MString {
         REQUIRES(UNLIKELY(allocator != nullptr));
 
         size_t needed_cap = len + null_term + 1;
-        if(capacity() < needed_cap) {
-            size_t new_cap = allocator->growth_sug(capacity());
+        if(capacity < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity);
             if(new_cap < needed_cap) new_cap = needed_cap;
             reserve(new_cap);
         }
@@ -673,8 +667,8 @@ struct MString {
         REQUIRES(allocator);
 
         size_t needed_cap = len + other.len;
-        if(capacity() < needed_cap) {
-            size_t new_cap = allocator->growth_sug(capacity());
+        if(capacity < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity);
             if(new_cap < needed_cap) new_cap = needed_cap;
             reserve(new_cap);
         }
@@ -717,15 +711,20 @@ CXB_NS_BEGIN
 /* SECTION: containers */
 struct String : MString {
     String(Allocator* allocator = &default_alloc)
-        : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = allocator} {}
+        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = allocator} {}
 
     String(const MString& m)
-        : MString{.data = m.data, .len = m.len, .null_term = m.null_term, .allocator = m.allocator} {}
+        : MString{.data = m.data,
+                  .len = m.len,
+                  .null_term = m.null_term,
+                  .capacity = m.capacity,
+                  .allocator = m.allocator} {}
 
     String(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
         : MString{.data = nullptr,
                   .len = n == SIZE_MAX ? strlen(cstr) : n,
                   .null_term = null_term,
+                  .capacity = 0,
                   .allocator = allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
@@ -738,14 +737,18 @@ struct String : MString {
         }
     }
 
-    String(const String& o) : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = nullptr} {
+    String(const String& o)
+        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = nullptr} {
         data = o.data;
         metadata = o.metadata;
+        capacity = o.capacity;
     }
 
-    String(String&& o) : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = o.allocator} {
+    String(String&& o)
+        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = o.allocator} {
         data = o.data;
         metadata = o.metadata;
+        capacity = o.capacity;
         o.allocator = nullptr;
     }
 
@@ -755,6 +758,7 @@ struct String : MString {
         o.allocator = nullptr;
         data = o.data;
         metadata = o.metadata;
+        capacity = o.capacity;
         return *this;
     }
 
@@ -776,7 +780,7 @@ struct String : MString {
     }
 
     CXB_MAYBE_INLINE MString release() {
-        MString result{.data = data, .len = len, .null_term = null_term, .allocator = allocator};
+        MString result{.data = data, .len = len, .null_term = null_term, .capacity = capacity, .allocator = allocator};
         this->allocator = nullptr;
         return result;
     }
