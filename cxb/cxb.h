@@ -860,17 +860,17 @@ struct Seq {
     size_t len;
     Allocator* allocator;
 
-    Seq(Allocator* allocator = &default_alloc) : allocator{allocator}, data{nullptr}, len{0} {
+    Seq(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, allocator{allocator} {
         if(allocator) {
             reserve(0);
         }
     }
-    Seq(T* data, size_t n, Allocator* allocator = &default_alloc) : allocator{allocator}, data{data}, len{n} {
+    Seq(T* data, size_t n, Allocator* allocator = &default_alloc) : data{data}, len{n}, allocator{allocator} {
         if(allocator) {
             reserve(0);
         }
     }
-    Seq(Seq<T>&& o) : allocator{o.allocator}, data{o.data}, len{o.len} {
+    Seq(Seq<T>&& o) : data{o.data}, len{o.len}, allocator{o.allocator} {
         o.allocator = nullptr;
     }
     Seq<T>& operator=(Seq<T>&& o) {
