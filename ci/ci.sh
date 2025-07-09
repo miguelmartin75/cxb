@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Ensure submodules are present (Catch2)
+git submodule update --init --recursive
+
 # Simple CI script intended to be run inside the Nix devShell (see ci/flake.nix)
 
 # Allow CI to override compiler via the COMPILER env variable (e.g. gcc or clang)
@@ -24,8 +27,9 @@ for compiler in "${compilers[@]}"; do
     fi
 
     build_dir="build-${compiler}-${build_type}"
+    rm -rf "$build_dir"
     cmake -B "$build_dir" -DCMAKE_BUILD_TYPE="${build_type}" -DBUILD_C_API_TESTS=ON
-    cmake --build "$build_dir" --config "${build_type}"
+    cmake --build "$build_dir" --config "${build_type}" -j
 
     pushd "$build_dir" >/dev/null
     ctest --output-on-failure --verbose
