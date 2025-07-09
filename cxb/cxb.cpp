@@ -185,5 +185,5 @@ CXB_C_EXPORT char cxb_mstring_back(MString s) {
 }
 
 CXB_C_EXPORT size_t cxb_mstring_capacity(MString s) {
-    return s.capacity();
+    return s.capacity;
 }
