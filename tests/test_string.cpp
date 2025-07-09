@@ -55,7 +55,7 @@ TEST_CASE("StringSlice from raw data", "[StringSlice]") {
 }
 
 TEST_CASE("String push_back", "[String]") {
-    size_t allocated_bytes = 0;
+    u64 allocated_bytes = 0;
     {
         String s;
         s.push_back('H');
@@ -84,7 +84,7 @@ TEST_CASE("StringSlice push_back with null termination", "[String]") {
     REQUIRE(s.null_term);
 
     StringSlice cmp = S8_LIT("Hello!");
-    for(int i = 0; i < s.size(); ++i) {
+    for(u64 i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == cmp[i]);
     }
     REQUIRE(s == cmp);
@@ -382,7 +382,7 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
 
         REQUIRE(strings.len == 10);
 
-        for(int i = 0; i < strings.len; ++i) {
+        for(u64 i = 0; i < strings.len; ++i) {
             REQUIRE(strings[i].len > 0);
             REQUIRE(strings[i].null_term);
             REQUIRE(strings[i].allocator);

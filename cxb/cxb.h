@@ -92,12 +92,12 @@ memory, "M" stands for "manual"
 #include <new>
 #include <type_traits> // 27ms
 
-template <class T>
+template <typename T>
 static inline const T& min(const T& a, const T& b) {
     return a < b ? a : b;
 }
 
-template <class T>
+template <typename T>
 static inline const T& max(const T& a, const T& b) {
     return a > b ? a : b;
 }
@@ -185,8 +185,6 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 #endif
 
 /* * SECTION: primitives */
-CXB_NS_BEGIN
-
 typedef uint8_t byte8;
 typedef float f32;
 typedef double f64;
@@ -214,6 +212,7 @@ typedef _Atomic(i128) atomic_i128;
 typedef _Atomic(u128) atomic_u128;
 #endif
 
+/* C API */
 struct Allocator {
     size_t (*growth_sug_impl)(const struct Allocator* a, size_t count);
     void* (*alloc_impl)(
@@ -221,7 +220,7 @@ struct Allocator {
     void (*free_impl)(struct Allocator* a, void* head, size_t n_bytes);
 
 #ifdef __cplusplus
-    template <class T, class H>
+    template <typename T, typename H>
     struct AllocationWithHeader {
         T* data;
         H* header;
@@ -235,20 +234,20 @@ struct Allocator {
         return this->growth_sug_impl(this, 0);
     }
 
-    template <class T, class... Args>
+    template <typename T, typename... Args>
     CXB_INLINE T* alloc(size_t count = 1, Args&&... args) {
         T* result = (T*) this->alloc_impl(this, false, nullptr, sizeof(T) * count, alignof(T), 0);
         for(size_t i = 0; i < count; ++i) new(result + i) T{args...};
         return result;
     }
 
-    template <class T>
+    template <typename T>
     CXB_INLINE T* calloc(size_t old_count, size_t count = 1) {
         T* result = (T*) this->alloc_impl(this, true, nullptr, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
         return result;
     }
 
-    template <class T, class... Args>
+    template <typename T, typename... Args>
     CXB_INLINE T* realloc(T* head, size_t old_count, size_t count = 1, Args&&... args) {
         T* result =
             (T*) this->alloc_impl(this, false, (void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
@@ -258,7 +257,7 @@ struct Allocator {
         return result;
     }
 
-    template <class H, class T, class... Args>
+    template <typename H, typename T, typename... Args>
     CXB_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header,
                                                               size_t old_count,
                                                               size_t count,
@@ -278,7 +277,7 @@ struct Allocator {
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
 
-    template <class H, class T>
+    template <typename H, typename T>
     CXB_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
         char* new_header = (char*) this->alloc_impl(this,                                               // allocator
                                                     true,                                               // fill_zeros
@@ -291,29 +290,181 @@ struct Allocator {
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
 
-    template <class T>
+    template <typename T>
     CXB_INLINE void free(T* head, size_t count) {
         this->free_impl(this, (void*) head, sizeof(T) * count);
     }
 
     // TODO: inconsistent
-    template <class H, class T>
+    template <typename H, typename T>
     CXB_INLINE void free_header_offset(T* offset_from_header, size_t count) {
         this->free_impl(this, (char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H));
     }
 #endif
 };
 
-#ifndef __cplusplus
 typedef struct Allocator Allocator;
-#endif
+
+CXB_NS_BEGIN
 
 #ifdef __cplusplus
+/* SECTION: primitive functions */
+template <typename T>
+CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
+    REQUIRES(a < b);
+    return max(min(b, x), a);
+}
+
+template <typename T>
+CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
+    T temp(move(t1));
+    t1 = move(t2);
+    t2 = move(temp);
+}
+
+// TODO: placement new?
+// inline void *operator new(size_t, void *p) noexcept { return p; }
+
+template <typename T>
+struct Atomic {
+    static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
+                  "Atomic wrapper only supports integral and pointer types");
+
+    _Atomic(T) value;
+
+    CXB_COMPTIME Atomic(T desired = T{}) noexcept : value(desired) {}
+
+    CXB_COMPTIME Atomic(_Atomic(T) desired) noexcept : value(desired) {}
+
+    Atomic(const Atomic&) = delete;
+    Atomic& operator=(const Atomic&) = delete;
+    Atomic(Atomic&&) = delete;
+    Atomic& operator=(Atomic&&) = delete;
+
+    CXB_INLINE void store(T desired, memory_order order = memory_order_seq_cst) noexcept {
+        atomic_store_explicit(&value, desired, order);
+    }
+
+    CXB_INLINE T load(memory_order order = memory_order_seq_cst) const noexcept {
+        return atomic_load_explicit(&value, order);
+    }
+
+    CXB_INLINE T exchange(T desired, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_exchange_explicit(&value, desired, order);
+    }
+
+    CXB_INLINE bool compare_exchange_weak(T& expected,
+                                          T desired,
+                                          memory_order success = memory_order_seq_cst,
+                                          memory_order failure = memory_order_seq_cst) noexcept {
+        return atomic_compare_exchange_weak_explicit(&value, &expected, desired, success, failure);
+    }
+
+    CXB_INLINE bool compare_exchange_strong(T& expected,
+                                            T desired,
+                                            memory_order success = memory_order_seq_cst,
+                                            memory_order failure = memory_order_seq_cst) noexcept {
+        return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
+    }
+
+    // Arithmetic operations (only for integral types)
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_add_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_sub_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_and_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_or_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_xor_explicit(&value, arg, order);
+    }
+
+    CXB_INLINE operator T() const noexcept {
+        return load();
+    }
+
+    CXB_INLINE T operator=(T desired) noexcept {
+        store(desired);
+        return desired;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++() noexcept {
+        return fetch_add(1) + 1;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++(int) noexcept {
+        return fetch_add(1);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--() noexcept {
+        return fetch_sub(1) - 1;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--(int) noexcept {
+        return fetch_sub(1);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator+=(T arg) noexcept {
+        return fetch_add(arg) + arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator-=(T arg) noexcept {
+        return fetch_sub(arg) - arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator&=(T arg) noexcept {
+        return fetch_and(arg) & arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator|=(T arg) noexcept {
+        return fetch_or(arg) | arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator^=(T arg) noexcept {
+        return fetch_xor(arg) ^ arg;
+    }
+
+    bool is_lock_free() const noexcept {
+        return atomic_is_lock_free(&value);
+    }
+
+    static constexpr bool is_always_lock_free = true;
+};
+
 struct Mallocator : Allocator {
     Mallocator();
-    atomic_i64 n_active_bytes;
-    atomic_i64 n_allocated_bytes;
-    atomic_i64 n_freed_bytes;
+
+    Atomic<i64> n_active_bytes;
+    Atomic<i64> n_allocated_bytes;
+    Atomic<i64> n_freed_bytes;
 };
 #else
 typedef struct Allocator Mallocator;
@@ -431,7 +582,7 @@ struct MString {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE operator StringSlice() const {
-        return StringSlice{data, len, null_term};
+        return StringSlice{.data = data, .len = len, .null_term = null_term};
     }
 
     CXB_MAYBE_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
@@ -636,157 +787,6 @@ struct MString {
 /* SECTION: C++-only API */
 #ifdef __cplusplus
 
-/* SECTION: primitive functions */
-template <class T>
-CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
-    REQUIRES(a < b);
-    return max(min(b, x), a);
-}
-
-template <typename T>
-CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
-    T temp(move(t1));
-    t1 = move(t2);
-    t2 = move(temp);
-}
-
-// TODO: placement new?
-// inline void *operator new(size_t, void *p) noexcept { return p; }
-
-template <typename T>
-struct Atomic {
-    static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
-                  "Atomic wrapper only supports integral and pointer types");
-
-    _Atomic(T) value;
-
-    CXB_COMPTIME Atomic(T desired = T{}) noexcept : value(desired) {}
-
-    CXB_COMPTIME Atomic(_Atomic(T) desired) noexcept : value(desired) {}
-
-    Atomic(const Atomic&) = delete;
-    Atomic& operator=(const Atomic&) = delete;
-    Atomic(Atomic&&) = delete;
-    Atomic& operator=(Atomic&&) = delete;
-
-    CXB_INLINE void store(T desired, memory_order order = memory_order_seq_cst) noexcept {
-        atomic_store_explicit(&value, desired, order);
-    }
-
-    CXB_INLINE T load(memory_order order = memory_order_seq_cst) const noexcept {
-        return atomic_load_explicit(&value, order);
-    }
-
-    CXB_INLINE T exchange(T desired, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_exchange_explicit(&value, desired, order);
-    }
-
-    CXB_INLINE bool compare_exchange_weak(T& expected,
-                                          T desired,
-                                          memory_order success = memory_order_seq_cst,
-                                          memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_weak_explicit(&value, &expected, desired, success, failure);
-    }
-
-    CXB_INLINE bool compare_exchange_strong(T& expected,
-                                            T desired,
-                                            memory_order success = memory_order_seq_cst,
-                                            memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
-    }
-
-    // Arithmetic operations (only for integral types)
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_add_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_sub_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_and_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_or_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_xor_explicit(&value, arg, order);
-    }
-
-    CXB_INLINE operator T() const noexcept {
-        return load();
-    }
-
-    CXB_INLINE T operator=(T desired) noexcept {
-        store(desired);
-        return desired;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++() noexcept {
-        return fetch_add(1) + 1;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++(int) noexcept {
-        return fetch_add(1);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--() noexcept {
-        return fetch_sub(1) - 1;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--(int) noexcept {
-        return fetch_sub(1);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator+=(T arg) noexcept {
-        return fetch_add(arg) + arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator-=(T arg) noexcept {
-        return fetch_sub(arg) - arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator&=(T arg) noexcept {
-        return fetch_and(arg) & arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator|=(T arg) noexcept {
-        return fetch_or(arg) | arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator^=(T arg) noexcept {
-        return fetch_xor(arg) ^ arg;
-    }
-
-    bool is_lock_free() const noexcept {
-        return atomic_is_lock_free(&value);
-    }
-
-    static constexpr bool is_always_lock_free = true;
-};
-
 struct String : MString {
     String(Allocator* allocator = &default_alloc)
         : MString{.data = nullptr, .len = 0, .null_term = true, .allocator = allocator} {}
@@ -854,7 +854,7 @@ struct String : MString {
     }
 };
 
-template <class T>
+template <typename T>
 struct Seq {
     T* data;
     size_t len;
@@ -987,7 +987,7 @@ struct Seq {
         _capacity() = new_count;
     }
 
-    template <class... Args>
+    template <typename... Args>
     CXB_MAYBE_INLINE void resize(size_t new_len, Args&&... args) {
         if(capacity() < new_len) {
             reserve(new_len);
@@ -1113,7 +1113,7 @@ static const Mat33f identity3x3 = {.arr = {
 /* SECTION: variant types */
 
 #ifdef __cplusplus
-template <class T>
+template <typename T>
 struct Optional {
     T value;
     bool exists;
