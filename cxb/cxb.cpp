@@ -113,3 +113,77 @@ CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s) {
 CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator) {
     return s.copy(to_allocator);
 }
+
+// ** SECTION: StringSlice C functions
+CXB_C_EXPORT size_t cxb_ss_size(StringSlice s) {
+    return s.size();
+}
+
+CXB_C_EXPORT size_t cxb_ss_n_bytes(StringSlice s) {
+    return s.n_bytes();
+}
+
+CXB_C_EXPORT bool cxb_ss_empty(StringSlice s) {
+    return s.empty();
+}
+
+CXB_C_EXPORT const char* cxb_ss_c_str(StringSlice s) {
+    return s.c_str();
+}
+
+CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
+    return s.slice(i, j);
+}
+
+CXB_C_EXPORT bool cxb_ss_eq(StringSlice a, StringSlice b) {
+    return a == b;
+}
+
+CXB_C_EXPORT bool cxb_ss_neq(StringSlice a, StringSlice b) {
+    return a != b;
+}
+
+CXB_C_EXPORT bool cxb_ss_lt(StringSlice a, StringSlice b) {
+    return a < b;
+}
+
+CXB_C_EXPORT char cxb_ss_back(StringSlice s) {
+    return s.back();
+}
+
+// ** SECTION: MString C functions (inline ones)
+CXB_C_EXPORT size_t cxb_mstring_size(MString s) {
+    return s.size();
+}
+
+CXB_C_EXPORT size_t cxb_mstring_n_bytes(MString s) {
+    return s.n_bytes();
+}
+
+CXB_C_EXPORT bool cxb_mstring_empty(MString s) {
+    return s.empty();
+}
+
+CXB_C_EXPORT const char* cxb_mstring_c_str(MString s) {
+    return s.c_str();
+}
+
+CXB_C_EXPORT bool cxb_mstring_eq(MString a, MString b) {
+    return a == b;
+}
+
+CXB_C_EXPORT bool cxb_mstring_neq(MString a, MString b) {
+    return a != b;
+}
+
+CXB_C_EXPORT bool cxb_mstring_lt(MString a, MString b) {
+    return a < b;
+}
+
+CXB_C_EXPORT char cxb_mstring_back(MString s) {
+    return s.back();
+}
+
+CXB_C_EXPORT size_t cxb_mstring_capacity(MString s) {
+    return s.capacity;
+}

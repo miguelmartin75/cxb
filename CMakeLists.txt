@@ -21,7 +21,7 @@ endif()
 add_library(cxb SHARED ${CXB_SRCS})
 target_include_directories(cxb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-find_package(Catch2 3 REQUIRED)
+add_subdirectory(deps/Catch2)
 
 enable_testing()
 
