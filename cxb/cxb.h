@@ -92,11 +92,6 @@ memory, "M" stands for "manual"
 
 /* SECTION: includes */
 #include <new>
-#include <stdatomic.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
 #include <type_traits> // 27ms
 
 /* SECTION: macros */
