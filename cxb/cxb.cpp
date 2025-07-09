@@ -15,11 +15,14 @@ void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes);
 Mallocator::Mallocator() : Allocator{mallocator_growth_sug_impl, mallocator_alloc_impl, malloctor_free_impl} {}
 
 size_t mallocator_growth_sug_impl(const Allocator* a, size_t count) {
+    (void) a;
     return max(size_t{CXB_MALLOCATOR_MIN_CAP}, CXB_MALLOCATOR_GROW_FN(count));
 }
 
 void* mallocator_alloc_impl(
     Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes) {
+    (void) alignment;
+
     Mallocator* ma = static_cast<Mallocator*>(a);
     ma->n_active_bytes += (n_bytes - old_n_bytes);
     ma->n_allocated_bytes += (n_bytes - old_n_bytes);
