@@ -6,6 +6,7 @@
 // structs with additional C++ methods without conflicting redefinitions.
 
 /* SECTION: includes */
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
