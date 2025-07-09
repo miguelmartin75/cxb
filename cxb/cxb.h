@@ -164,6 +164,7 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 // #define FATAL(msg)
 
 #define CXB_MAYBE_INLINE inline
+
 #if defined(__GNUC__)
 #define CXB_INLINE inline __attribute__((__always_inline__))
 #elif defined(_MSC_VER)
@@ -212,7 +213,6 @@ typedef _Atomic(u64) atomic_u64;
 typedef _Atomic(i128) atomic_i128;
 typedef _Atomic(u128) atomic_u128;
 #endif
-
 
 struct Allocator {
     size_t (*growth_sug_impl)(const struct Allocator* a, size_t count);
@@ -367,6 +367,7 @@ struct StringSlice {
         c.null_term = i + new_len == len ? this->null_term : false;
         return c;
     }
+
     CXB_MAYBE_INLINE const char* c_str() const {
         if(!null_term) {
             return nullptr;
@@ -397,7 +398,6 @@ struct StringSlice {
     }
 #endif
 };
-
 
 struct MString {
     char* data;
