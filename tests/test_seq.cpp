@@ -132,14 +132,14 @@ TEST_CASE("Seq operator<", "[Seq]") {
         REQUIRE(!(seq1 < seq4));
 
         // Test lexicographic order with strings
-        Seq<String> str_seq1;
-        Seq<String> str_seq2;
+        Seq<AString> str_seq1;
+        Seq<AString> str_seq2;
 
-        str_seq1.push_back(String("apple"));
-        str_seq1.push_back(String("banana"));
+        str_seq1.push_back(AString("apple"));
+        str_seq1.push_back(AString("banana"));
 
-        str_seq2.push_back(String("apple"));
-        str_seq2.push_back(String("cherry"));
+        str_seq2.push_back(AString("apple"));
+        str_seq2.push_back(AString("cherry"));
 
         REQUIRE(str_seq1 < str_seq2); // "banana" < "cherry"
         REQUIRE(!(str_seq2 < str_seq1));
@@ -193,21 +193,21 @@ TEST_CASE("Seq operator==", "[Seq]") {
         REQUIRE(!(seq3 == seq1));
 
         // Test with strings
-        Seq<String> str_seq1;
-        Seq<String> str_seq2;
+        Seq<AString> str_seq1;
+        Seq<AString> str_seq2;
 
-        str_seq1.push_back(String("hello"));
-        str_seq1.push_back(String("world"));
+        str_seq1.push_back(AString("hello"));
+        str_seq1.push_back(AString("world"));
 
-        str_seq2.push_back(String("hello"));
-        str_seq2.push_back(String("world"));
+        str_seq2.push_back(AString("hello"));
+        str_seq2.push_back(AString("world"));
 
         REQUIRE(str_seq1 == str_seq2);
         REQUIRE(str_seq2 == str_seq1);
 
         // Different strings
         str_seq2.pop_back();
-        str_seq2.push_back(String("test"));
+        str_seq2.push_back(AString("test"));
 
         REQUIRE(!(str_seq1 == str_seq2));
         REQUIRE(!(str_seq2 == str_seq1));
@@ -268,14 +268,14 @@ TEST_CASE("Seq operator> and operator!=", "[Seq]") {
         REQUIRE(seq1 != seq4);
 
         // Test with strings
-        Seq<String> str_seq1;
-        Seq<String> str_seq2;
+        Seq<AString> str_seq1;
+        Seq<AString> str_seq2;
 
-        str_seq1.push_back(String("apple"));
-        str_seq1.push_back(String("banana"));
+        str_seq1.push_back(AString("apple"));
+        str_seq1.push_back(AString("banana"));
 
-        str_seq2.push_back(String("apple"));
-        str_seq2.push_back(String("cherry"));
+        str_seq2.push_back(AString("apple"));
+        str_seq2.push_back(AString("cherry"));
 
         REQUIRE(str_seq2 > str_seq1); // "cherry" > "banana"
         REQUIRE(!(str_seq1 > str_seq2));
