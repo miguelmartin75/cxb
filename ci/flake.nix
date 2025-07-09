@@ -24,7 +24,7 @@
           clang
           clang-tools
           lld
-          catch2_3
+          git
         ];
 
         shellHook = ''
