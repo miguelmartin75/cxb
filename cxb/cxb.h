@@ -446,12 +446,7 @@ struct StringSlice {
         return c;
     }
 
-    CXB_MAYBE_INLINE const char* c_str() const {
-        if(!null_term) {
-            return nullptr;
-        }
-        return data;
-    }
+    CXB_MAYBE_INLINE const char* c_str() const { return null_term ? data : nullptr; }
 
     CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
         if(size() != o.size()) return false;
@@ -473,6 +468,214 @@ struct StringSlice {
 
     CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
         return o < *this;
+    }
+};
+
+
+struct UString {
+    char* data;
+    union {
+        struct {
+            size_t len : 63;
+            bool null_term : 1;
+        };
+        size_t metadata;
+    };
+    size_t capacity;
+
+    // ** SECTION: slice compatible methods
+    CXB_MAYBE_INLINE size_t n_bytes() const {
+        return len + null_term;
+    }
+    CXB_MAYBE_INLINE size_t size() const {
+        return len;
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_MAYBE_INLINE char& operator[](size_t idx) {
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE char& back() {
+        return data[len - 1];
+    }
+    CXB_MAYBE_INLINE operator StringSlice() const {
+        return *reinterpret_cast<const StringSlice*>(this);
+    }
+
+    CXB_MAYBE_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
+        StringSlice c = *this;
+        c.data = c.data + i;
+        size_t new_len = j == SIZE_MAX ? len - i : j - i;
+        c.len = new_len;
+        c.null_term = i + new_len == len ? this->null_term : false;
+        return c;
+    }
+
+    CXB_MAYBE_INLINE const char* c_str() const { return null_term ? data : nullptr; }
+
+    CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
+        if(size() != o.size()) return false;
+        if(size() == 0) return true;
+        return memcmp(data, o.data, size()) == 0;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const StringSlice& o) const {
+        return !(*this == o);
+    }
+
+    CXB_MAYBE_INLINE bool operator<(const StringSlice& o) const {
+        size_t n = len < o.len ? len : o.len;
+        int cmp = memcmp(data, o.data, n);
+        if(cmp < 0) return true;
+        if(cmp > 0) return false;
+        return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
+        return o < *this;
+    }
+
+    // ** SECTION: allocator-related methods
+    CXB_MAYBE_INLINE UString copy(Allocator* to_allocator) {
+        REQUIRES(to_allocator != nullptr);
+
+        UString result{.data = nullptr, .len = len, .null_term = null_term, .capacity = 0};
+        if(len > 0) {
+            result.reserve(len + null_term, to_allocator);
+            memcpy(result.data, data, len);
+            if(null_term) {
+                result.data[len] = '\0';
+            }
+        }
+        return result;
+    }
+
+    CXB_MAYBE_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
+        if(!null_term) {
+            ensure_null_terminated(copy_alloc_if_not);
+        }
+        return data;
+    }
+
+    CXB_MAYBE_INLINE void destroy(Allocator* allocator) {
+        if(data && allocator) {
+            allocator->free(data, capacity);
+            data = nullptr;
+            capacity = 0;
+        }
+    }
+
+    CXB_MAYBE_INLINE void ensure_capacity(size_t new_capacity, Allocator* allocator) {
+        if(new_capacity == 0) {
+            new_capacity = len + null_term;
+        }
+
+        if(capacity < new_capacity) {
+            reserve(new_capacity, allocator);
+        }
+    }
+
+    void reserve(size_t cap, Allocator* allocator) {
+        REQUIRES(allocator != nullptr);
+
+        size_t old_count = capacity;
+        size_t new_count = max(cap, allocator->min_count_sug());
+        if(new_count > old_count) {
+            data = allocator->realloc(data, old_count, new_count);
+            capacity = new_count;
+        }
+    }
+
+    void resize(size_t new_len, Allocator* allocator, char fill_char = '\0') {
+        bool was_null_terminated = null_term;
+        size_t reserve_size = new_len + was_null_terminated;
+
+        if(capacity < reserve_size) {
+            reserve(reserve_size, allocator);
+        }
+
+        size_t old_len = len;
+        if(new_len > old_len) {
+            memset(data + old_len, fill_char, new_len - old_len);
+        }
+
+        if(was_null_terminated) {
+            data[new_len] = '\0';
+        }
+
+        len = new_len;
+        null_term = was_null_terminated;
+    }
+
+    void push_back(char c, Allocator* allocator) {
+        REQUIRES(UNLIKELY(allocator != nullptr));
+
+        size_t needed_cap = len + null_term + 1;
+        if(capacity < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity);
+            if(new_cap < needed_cap) new_cap = needed_cap;
+            reserve(new_cap, allocator);
+        }
+
+        data[len] = c;
+        if(UNLIKELY(c == '\0')) {
+            null_term = true;
+        } else {
+            if(null_term) {
+                data[len + 1] = '\0';
+            }
+            len += 1;
+        }
+    }
+
+    CXB_MAYBE_INLINE char& push(Allocator* allocator) {
+        push_back('\0', allocator);
+        return data[len - 1];
+    }
+
+    CXB_MAYBE_INLINE char pop_back() {
+        REQUIRES(len > 0);
+        char ret = data[len - 1];
+        if(null_term && len > 0) {
+            data[len - 1] = '\0';
+        }
+        len--;
+        return ret;
+    }
+
+    void extend(StringSlice other, Allocator* allocator) {
+        if(other.len == 0) return;
+        REQUIRES(allocator);
+
+        size_t needed_cap = len + other.len;
+        if(capacity < needed_cap) {
+            size_t new_cap = allocator->growth_sug(capacity);
+            if(new_cap < needed_cap) new_cap = needed_cap;
+            reserve(new_cap, allocator);
+        }
+
+        memcpy(data + len, other.data, other.len);
+        len += other.len;
+    }
+
+    CXB_MAYBE_INLINE void extend(const char* str, size_t n, Allocator* allocator) {
+        if(!str) {
+            return;
+        }
+        size_t len = n == SIZE_MAX ? strlen(str) : n;
+        this->extend(StringSlice{.data = const_cast<char*>(str), .len = len, .null_term = true}, allocator);
+    }
+
+    CXB_MAYBE_INLINE void ensure_null_terminated(Allocator* allocator) {
+        if(null_term) return;
+        REQUIRES(allocator != nullptr);
+        
+        this->push_back('\0', allocator);
+        this->null_term = true;
     }
 };
 
@@ -508,7 +711,7 @@ struct MString {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE operator StringSlice() const {
-        return StringSlice{.data = data, .len = len, .null_term = null_term};
+        return *reinterpret_cast<const StringSlice*>(this);
     }
 
     CXB_MAYBE_INLINE StringSlice slice(size_t i, size_t j = SIZE_MAX) {
@@ -519,21 +722,13 @@ struct MString {
         c.null_term = i + new_len == len ? this->null_term : false;
         return c;
     }
-    CXB_MAYBE_INLINE const char* c_str() const {
-        if(!null_term) {
-            return nullptr;
-        }
-        return data;
-    }
+
+    CXB_MAYBE_INLINE const char* c_str() const { return null_term ? data : nullptr; }
 
     CXB_MAYBE_INLINE bool operator==(const StringSlice& o) const {
         if(size() != o.size()) return false;
         if(size() == 0) return true;
         return memcmp(data, o.data, size()) == 0;
-    }
-
-    CXB_MAYBE_INLINE bool operator!=(const StringSlice& o) const {
-        return !(*this == o);
     }
 
     CXB_MAYBE_INLINE bool operator<(const StringSlice& o) const {
@@ -542,6 +737,10 @@ struct MString {
         if(cmp < 0) return true;
         if(cmp > 0) return false;
         return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const StringSlice& o) const {
+        return !(*this == o);
     }
 
     CXB_MAYBE_INLINE bool operator>(const StringSlice& o) const {
@@ -701,6 +900,7 @@ struct MString {
         }
     }
 };
+
 
 /* SECTION: C++-only API */
 CXB_NS_BEGIN
