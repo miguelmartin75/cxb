@@ -57,7 +57,7 @@ TEST_CASE("StringSlice from raw data", "[StringSlice]") {
 TEST_CASE("String push_back", "[String]") {
     i64 allocated_bytes = 0;
     {
-        String s;
+        AString s;
         s.push_back('H');
         s.push_back('i');
 
@@ -73,7 +73,7 @@ TEST_CASE("String push_back", "[String]") {
 }
 
 TEST_CASE("StringSlice push_back with null termination", "[String]") {
-    String s("Hello");
+    AString s("Hello");
     REQUIRE(s.null_term);
     REQUIRE(s.allocator);
     REQUIRE(s.len == 5);
@@ -92,7 +92,7 @@ TEST_CASE("StringSlice push_back with null termination", "[String]") {
 }
 
 TEST_CASE("StringSlice append C string", "[StringSlice]") {
-    String s("Hello");
+    AString s("Hello");
     s.extend(", World!");
 
     REQUIRE(s.len == 13);
@@ -102,7 +102,7 @@ TEST_CASE("StringSlice append C string", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice append other StringSlice", "[StringSlice]") {
-    String s1("Hello");
+    AString s1("Hello");
     StringSlice s2 = S8_LIT(", World!");
     s1.extend(s2);
 
@@ -112,7 +112,7 @@ TEST_CASE("StringSlice append other StringSlice", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice append to non-null-terminated", "[StringSlice]") {
-    String s;
+    AString s;
     s.push_back('H');
     s.push_back('i');
     REQUIRE(s.null_term);
@@ -129,7 +129,7 @@ TEST_CASE("StringSlice append to non-null-terminated", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice resize", "[StringSlice]") {
-    String s("Hello");
+    AString s("Hello");
     s.resize(10, 'X');
 
     REQUIRE(s.size() == 10);
@@ -139,7 +139,7 @@ TEST_CASE("StringSlice resize", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice resize shrinking", "[StringSlice]") {
-    String s("Hello, World!");
+    AString s("Hello, World!");
     s.resize(5);
 
     REQUIRE(s.size() == 5);
@@ -148,7 +148,7 @@ TEST_CASE("StringSlice resize shrinking", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice pop_back", "[StringSlice]") {
-    String s("Hello");
+    AString s("Hello");
     char c = s.pop_back();
 
     REQUIRE(c == 'o');
@@ -179,8 +179,8 @@ TEST_CASE("StringSlice slice", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice copy", "[StringSlice]") {
-    String original("Hello, World!");
-    String copy = original.copy();
+    AString original("Hello, World!");
+    AString copy = original.copy();
 
     REQUIRE(copy.size() == original.size());
     REQUIRE(copy.null_term == original.null_term);
@@ -190,7 +190,7 @@ TEST_CASE("StringSlice copy", "[StringSlice]") {
 }
 
 TEST_CASE("StringSlice ensure_null_terminated", "[StringSlice]") {
-    String s;
+    AString s;
     s.push_back('H');
     s.push_back('i');
     REQUIRE(s.null_term);
@@ -326,7 +326,7 @@ TEST_CASE("MString -> String", "[MString]") {
     {
         MString m{.data = nullptr, .len = 0, .null_term = true, .allocator = &default_alloc};
         m.extend("Hello, World!");
-        String s = m;
+        AString s = m;
 
         REQUIRE(s.len == 13);
         REQUIRE(s.allocator == &default_alloc);
@@ -339,7 +339,7 @@ TEST_CASE("MString -> String", "[MString]") {
 TEST_CASE("String -> MString", "[MString]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        String s;
+        AString s;
         s.extend("Hello, World!");
         MString m = s.release();
 
@@ -355,18 +355,18 @@ TEST_CASE("String -> MString", "[MString]") {
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<String> strings;
+        Seq<AString> strings;
         REQUIRE(strings.len == 0);
         REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 10; ++i) {
-            String s;
+            AString s;
             s.extend("String #");
             if(i == 0)
                 s.extend("0");
             else {
                 int temp = i;
-                String num_str;
+                AString num_str;
                 while(temp > 0) {
                     num_str.push_back('0' + (temp % 10));
                     temp /= 10;
@@ -398,14 +398,14 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
         REQUIRE(strings[5].len > strings[4].len);
 
         // Add a new string with emoji
-        String emoji_str("Hello 🌍!");
+        AString emoji_str("Hello 🌍!");
         strings.push_back(move(emoji_str));
 
         REQUIRE(strings.len == 11);
         REQUIRE(strings[10] == S8_LIT("Hello 🌍!"));
 
         // Add an empty string
-        String empty_str;
+        AString empty_str;
         strings.push_back(move(empty_str));
 
         REQUIRE(strings.len == 12);
@@ -493,10 +493,10 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     REQUIRE(numeric < alpha);   // "123" < "abc" (ASCII values)
 
     // Test String operator< (should behave the same as StringSlice)
-    String str1("apple");
-    String str2("banana");
-    String str3("app");
-    String str4("apple");
+    AString str1("apple");
+    AString str2("banana");
+    AString str3("app");
+    AString str4("apple");
 
     REQUIRE(str1 < str2);    // "apple" < "banana"
     REQUIRE(!(str2 < str1)); // "banana" not < "apple"
