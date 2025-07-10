@@ -1,5 +1,6 @@
-#include "cxb/cxb.h"
 #include "c_api_test.h"
+
+#include "cxb/cxb.h"
 
 CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc) {
     if(alloc == nullptr) {
