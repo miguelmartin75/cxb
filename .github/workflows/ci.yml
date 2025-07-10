@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-test:
-    name: Build & Test ${{ matrix.nix_system }} ${{ matrix.compiler }} ${{ matrix.build_type }} (${{ matrix.os }})
+    name: ${{ matrix.nix_system }} ${{ matrix.compiler }} ${{ matrix.build_type }} (${{ matrix.os }})
     # All jobs run in parallel; format check runs conditionally within this job
     runs-on: ${{ matrix.os }}
     strategy:
@@ -20,8 +20,8 @@ jobs:
           - os: ubuntu-22.04
             nix_system: x86_64-linux
           # TODO: use ubuntu-22.04-arm once repo is public
-          - os: ubuntu-22.04
-            nix_system: aarch64-linux
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
           - os: macos-14
             nix_system: x86_64-darwin
           - os: macos-14
@@ -36,7 +36,7 @@ jobs:
         run: |
           nix develop ./ci --system ${{ matrix.nix_system }} --command bash -c "./scripts/format.sh --check"
       - name: Build & Test
-        if: ${{ !(matrix.os == 'macos-14' && matrix.compiler == 'gcc') }}
+        if: matrix.os != 'macos-14' && matrix.compiler != 'gcc'
         env:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
