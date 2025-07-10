@@ -26,6 +26,9 @@ jobs:
             nix_system: x86_64-darwin
           - os: macos-14
             nix_system: aarch64-darwin
+        exclude:
+          - os: macos-14
+            compiler: gcc
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v25
@@ -36,7 +39,6 @@ jobs:
         run: |
           nix develop ./ci --system ${{ matrix.nix_system }} --command bash -c "./scripts/format.sh --check"
       - name: Build & Test
-        if: matrix.os != 'macos-14' || matrix.compiler != 'gcc'
         env:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
