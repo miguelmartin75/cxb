@@ -1088,4 +1088,8 @@ CXB_NS_END
 #include "cxb.cpp"
 #endif
 
+// ensure the C API is included
+#define CXB_C_API
+#include "cxb-c.h"
+
 #endif

@@ -190,6 +190,15 @@ static const Mat33f identity3x3 = {.arr = {
                                    }};
 
 #endif /* CXB_H */
+#define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
+#define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
+#define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
+
+#endif
+
+#ifndef CXB_C_API_DECL
+#if !defined(CXB_H) || defined(CXB_C_API)
+#define CXB_C_API_DECL
 
 // ** SECTION: StringSlice C functions
 CXB_C_EXPORT size_t cxb_ss_size(StringSlice s);
@@ -222,9 +231,5 @@ CXB_C_EXPORT char* cxb_mstring_push(MString* s);
 CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap);
 CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s);
 CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator);
-
-#define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
-#define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
-#define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
-
+#endif
 #endif
