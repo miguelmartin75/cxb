@@ -86,10 +86,11 @@ typedef struct Allocator Allocator;
 typedef struct Mallocator Mallocator;
 extern Mallocator default_alloc;
 
-#ifdef CXB_H
+#ifdef __cplusplus
 
 typedef struct StringSlice StringSlice;
 typedef struct MString MString;
+typedef struct UString UString;
 
 #else /* !defined(CXB_H) */
 
@@ -190,10 +191,13 @@ static const Mat33f identity3x3 = {.arr = {
                                    }};
 
 #endif /* CXB_H */
+
 #define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
+#define USTRING_CONSTRUCT() (UString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0})
+#define MSTRING_CONSTRUCT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
 #endif
 
 #ifndef CXB_C_API_DECL
