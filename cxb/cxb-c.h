@@ -7,7 +7,7 @@
 // structs with additional C++ methods without conflicting redefinitions.
 
 /* SECTION: includes */
-#include <stdatomic.h>
+#include <stdatomic.h> // _Atomic(T)
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -86,14 +86,7 @@ typedef struct Allocator Allocator;
 typedef struct Mallocator Mallocator;
 extern Mallocator default_alloc;
 
-#ifdef __cplusplus
-
-typedef struct StringSlice StringSlice;
-typedef struct MString MString;
-typedef struct UString UString;
-
-#else /* !defined(CXB_H) */
-
+#ifndef __cplusplus
 typedef struct StringSlice {
     char* data;
     union {
@@ -190,7 +183,7 @@ static const Mat33f identity3x3 = {.arr = {
                                        1,
                                    }};
 
-#endif /* CXB_H */
+#endif /* !__cplusplus */
 
 #define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
