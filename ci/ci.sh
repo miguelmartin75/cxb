@@ -31,7 +31,7 @@ for compiler in "${compilers[@]}"; do
       export CXX=g++
     fi
 
-    build_dir="build-${compiler}-${build_type}"
+    build_dir="build/${compiler}-${build_type}"
     rm -rf "$build_dir"
     cmake -B "$build_dir" -DCMAKE_BUILD_TYPE="${build_type}" -DBUILD_C_API_TESTS=ON
     cmake --build "$build_dir" --config "${build_type}" -j
