@@ -28,6 +28,15 @@ jobs:
         os: [ubuntu-22.04, ubuntu-22.04-arm, macos-13, macos-14]
         compiler: [gcc, clang]
         build_type: [Debug, Release]
+        include:
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+          - os: ubuntu-22.04-arm
+            nix_system: aarch64-linux
+          - os: macos-13
+            nix_system: x86_64-darwin
+          - os: macos-14
+            nix_system: aarch64-darwin
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v25
@@ -38,4 +47,4 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
         run: |
-          nix develop ./ci --command bash ./ci/ci.sh
+          nix develop ./ci --system ${{ matrix.nix_system }} --command bash ./ci/ci.sh
