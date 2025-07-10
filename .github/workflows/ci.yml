@@ -13,22 +13,64 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-14]
-        compiler: [gcc, clang]
-        build_type: [Debug, Release]
+        # NOTE: this is flattened intentionally, such that it's easier to read
+        # and understand what combinations are being tested
         include:
+          # Linux x86_64 variants
           - os: ubuntu-22.04
             nix_system: x86_64-linux
-          - os: macos-14
-            nix_system: x86_64-darwin
-          - os: macos-14
-            nix_system: aarch64-darwin
+            compiler: gcc
+            build_type: Debug
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: gcc
+            build_type: Release
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: clang
+            build_type: Debug
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: clang
+            build_type: Release
+          
           # TODO: use ubuntu-22.04-arm once repo is public
           # - os: ubuntu-22.04-arm
           #   nix_system: aarch64-linux
-        exclude:
+          #   compiler: gcc
+          #   build_type: Debug
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: gcc
+          #   build_type: Release
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: clang
+          #   build_type: Debug
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: clang
+          #   build_type: Release
+
+          # macOS Intel (macos-13) variants
+          - os: macos-13
+            nix_system: x86_64-darwin
+            compiler: clang
+            build_type: Debug
+          - os: macos-13
+            nix_system: x86_64-darwin
+            compiler: clang
+            build_type: Release
+
+          # macOS Apple Silicon (macos-14)
           - os: macos-14
-            compiler: gcc
+            nix_system: aarch64-darwin
+            compiler: clang
+            build_type: Debug
+          - os: macos-14
+            nix_system: aarch64-darwin
+            compiler: clang
+            build_type: Release
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v25
