@@ -36,7 +36,7 @@ jobs:
         run: |
           nix develop ./ci --system ${{ matrix.nix_system }} --command bash -c "./scripts/format.sh --check"
       - name: Build & Test
-        if: matrix.os != 'macos-14' && matrix.compiler != 'gcc'
+        if: matrix.os != 'macos-14' || matrix.compiler != 'gcc'
         env:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
