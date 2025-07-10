@@ -19,13 +19,13 @@ jobs:
         include:
           - os: ubuntu-22.04
             nix_system: x86_64-linux
-          # TODO: use ubuntu-22.04-arm once repo is public
-          # - os: ubuntu-22.04-arm
-          #   nix_system: aarch64-linux
           - os: macos-14
             nix_system: x86_64-darwin
           - os: macos-14
             nix_system: aarch64-darwin
+          # TODO: use ubuntu-22.04-arm once repo is public
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
         exclude:
           - os: macos-14
             compiler: gcc
