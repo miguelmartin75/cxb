@@ -1,4 +1,4 @@
-name: CI (Nix)
+name: CI
 
 on:
   push:
@@ -7,28 +7,82 @@ on:
     branches: [main, master]
 
 jobs:
-  nix-ci:
-    name: Nix Build, Format & Test
-    runs-on: ubuntu-latest
+  build-test:
+    name: ${{ matrix.nix_system }} ${{ matrix.compiler }} ${{ matrix.build_type }} (${{ matrix.os }})
+    # All jobs run in parallel; format check runs conditionally within this job
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        compiler: [gcc, clang]
-        build_type: [Debug, Release]
+        # NOTE: this is flattened intentionally, such that it's easier to read
+        # and understand what combinations are being tested
+        include:
+          # Linux x86_64 variants
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: gcc
+            build_type: Debug
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: gcc
+            build_type: Release
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: clang
+            build_type: Debug
+          - os: ubuntu-22.04
+            nix_system: x86_64-linux
+            compiler: clang
+            build_type: Release
+          
+          # TODO: use ubuntu-22.04-arm once repo is public
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: gcc
+          #   build_type: Debug
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: gcc
+          #   build_type: Release
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: clang
+          #   build_type: Debug
+          # - os: ubuntu-22.04-arm
+          #   nix_system: aarch64-linux
+          #   compiler: clang
+          #   build_type: Release
+
+          # macOS Intel (macos-13) variants
+          - os: macos-13
+            nix_system: x86_64-darwin
+            compiler: clang
+            build_type: Debug
+          - os: macos-13
+            nix_system: x86_64-darwin
+            compiler: clang
+            build_type: Release
+
+          # macOS Apple Silicon (macos-14)
+          - os: macos-14
+            nix_system: aarch64-darwin
+            compiler: clang
+            build_type: Debug
+          - os: macos-14
+            nix_system: aarch64-darwin
+            compiler: clang
+            build_type: Release
     steps:
       - uses: actions/checkout@v4
-
-      # Install Nix on the runner
       - uses: cachix/install-nix-action@v25
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-
       - name: Check formatting
+        if: matrix.os == 'ubuntu-22.04' && matrix.compiler == 'clang' && matrix.build_type == 'Debug' && matrix.nix_system == 'x86_64-linux'
         run: |
-          nix develop ./ci --command bash -c "./scripts/format.sh --check"
-
-      - name: Build & Test (${{ matrix.compiler }} ${{ matrix.build_type }})
+          nix develop ./ci --system ${{ matrix.nix_system }} --command bash -c "./scripts/format.sh --check"
+      - name: Build & Test
         env:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
         run: |
-          nix develop ./ci --command bash ./ci/ci.sh
+          nix develop ./ci --system ${{ matrix.nix_system }} --command bash ./ci/ci.sh
