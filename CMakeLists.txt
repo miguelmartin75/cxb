@@ -46,10 +46,12 @@ add_test_exe(test_seq tests/test_seq.cpp YES)
 add_test_exe(test_string tests/test_string.cpp YES)
 add_test_exe(bench_string benchmarks/bench_string.cpp YES)
 add_test_exe(bench_std_headers benchmarks/bench_std_headers.cpp NO)
+add_test_exe(bench_string_header benchmarks/bench_string_header.cpp YES)
 
 add_test(NAME test_seq COMMAND test_seq)
 add_test(NAME test_string COMMAND test_string)
 add_test(NAME bench_std_headers COMMAND bench_std_headers)
+add_test(NAME bench_string_header COMMAND bench_string_header)
 
 # C API tests (conditional)
 if(BUILD_C_API_TESTS)
