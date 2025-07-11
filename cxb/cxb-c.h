@@ -98,18 +98,6 @@ typedef struct StringSlice {
     };
 } StringSlice;
 
-typedef struct UString {
-    char* data;
-    union {
-        struct {
-            size_t len : 63;
-            bool null_term : 1;
-        };
-        size_t metadata;
-    };
-    size_t capacity;
-} UString;
-
 typedef struct MString {
     char* data;
     union {
@@ -189,7 +177,6 @@ static const Mat33f identity3x3 = {.arr = {
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
-#define USTRING_CONSTRUCT() (UString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0})
 #define MSTRING_CONSTRUCT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
 #endif
 
