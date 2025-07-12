@@ -20,7 +20,6 @@ Name, choices between:
 ** TODO Allocator Re-Design
 - Odin's allocator design is simpler, one indirect call + a switch
 - https://github.com/odin-lang/Odin/blob/master/src/gb/gb.h#L882-L887
-
 - https://github.com/odin-lang/Odin/blob/master/src/common_memory.cpp#L597-L598
 
 - [X] Remove `growth_sug_impl` from `Allocator` and `Mallocator` for MString and Seq<T> in cxb-cxx.h
@@ -38,3 +37,38 @@ Name, choices between:
 - [ ] blocks
 ** TODO Documentation
 - [ ] Design of API
+** TODO Math Types
+** TODO Repository cleanup
+
+#+begin_src zsh
+ls ../../
+#+end_src
+
+
+| DIR            | TODO / NOTES             |
+|----------------+--------------------------|
+| benchmarks     | move to tests/benchmarks |
+| tests          | leave alone              |
+| ci             | move to scripts/ci       |
+| scripts        | leave alone              |
+| deps           | leave alone              |
+| docs           | restructure              |
+| cxb            | leave alone              |
+| README.md      |                          |
+| CMakeLists.txt |                          |
+
+
+#+begin_src zsh
+ls ../../docs ../../docs/dev
+#+end_src
+
+#+RESULTS:
+| DIR             | TODO / NOTES          |
+|-----------------+-----------------------|
+| ../../docs:     |                       |
+| dev             |                       |
+| DEVELOPMENT.md  | rename to SETUP.md?   |
+| STYLE_GUIDE.md  |                       |
+|                 |                       |
+| ../../docs/dev: |                       |
+| LOG.org         | move to private notes |
