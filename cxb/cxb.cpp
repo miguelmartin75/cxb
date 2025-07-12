@@ -121,7 +121,7 @@ CXB_C_EXPORT const char* cxb_ss_c_str(StringSlice s) {
     return s.c_str();
 }
 
-CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j) {
+CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, i64 i, i64 j) {
     return s.slice(i, j);
 }
 
