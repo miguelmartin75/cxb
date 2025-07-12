@@ -29,7 +29,9 @@
 #define BREAKPOINT() abort()
 #endif
 
-#define ASSERT(x, msg)    \
+#define DEBUG_ASSERT(x, msg, ...) \
+    if(!(x)) BREAKPOINT()
+#define ASSERT(x, msg, ...) \
     if(!(x)) BREAKPOINT()
 #define REQUIRES(x)       \
     if(!(x)) BREAKPOINT()
@@ -177,7 +179,7 @@ static const Mat33f identity3x3 = {.arr = {
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
-#define MSTRING_CONSTRUCT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
 #endif
 
 #ifndef CXB_C_API_DECL
