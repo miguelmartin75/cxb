@@ -1,31 +1,18 @@
-#include "cxb/cxb.h"
-#define CXB_SKIP_C_TYPES
 #include "c_api_test.h"
-#undef CXB_SKIP_C_TYPES
+
+#include "cxb/cxb.h"
 
 CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc) {
     if(alloc == nullptr) {
         alloc = &default_alloc;
     }
 
-    size_t new_len = p1.len + 1 + p2.len;
-
-    MString result{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = alloc};
-    result.reserve(new_len + 1);
-
-    if(p1.len > 0) {
-        memcpy(result.data, p1.data, p1.len);
+    MString result = MSTRING_NT(alloc);
+    result.reserve(p1.len + p2.len + 1);
+    result.extend(p1);
+    if(result.back() != '/') {
+        result.push_back('/');
     }
-
-    result.data[p1.len] = '/';
-
-    if(p2.len > 0) {
-        memcpy(result.data + p1.len + 1, p2.data, p2.len);
-    }
-
-    result.data[new_len] = '\0';
-    result.len = new_len;
-    result.null_term = true;
-
+    result.extend(p2);
     return result;
 }

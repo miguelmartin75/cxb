@@ -275,7 +275,7 @@ def update_readme(readme_path: Path, metrics: Dict[str, Dict[str, float]], heade
             stats = metrics[metric_key]
             new_line = (
                 f"* {header_display}: {stats['avg_time']:.0f}±{stats['std_dev']:.0f}ms "
-                f"({stats['parse_count']} parses) on {cpu_info}"
+                f"on {cpu_info}"
             )
         else:
             new_line = f"* {header_display}: Unable to measure on {cpu_info}"
@@ -376,7 +376,7 @@ def main():
     parser.add_argument(
         "--headers",
         nargs="+",
-        default=["cxb.h"],
+        default=["cxb-cxx.h"],
         help="Headers to analyze"
     )
     args = parser.parse_args()

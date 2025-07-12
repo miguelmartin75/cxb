@@ -7,7 +7,7 @@
 // structs with additional C++ methods without conflicting redefinitions.
 
 /* SECTION: includes */
-#include <stdatomic.h>
+#include <stdatomic.h> // _Atomic(T)
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -29,7 +29,9 @@
 #define BREAKPOINT() abort()
 #endif
 
-#define ASSERT(x, msg)    \
+#define DEBUG_ASSERT(x, msg, ...) \
+    if(!(x)) BREAKPOINT()
+#define ASSERT(x, msg, ...) \
     if(!(x)) BREAKPOINT()
 #define REQUIRES(x)       \
     if(!(x)) BREAKPOINT()
@@ -86,13 +88,7 @@ typedef struct Allocator Allocator;
 typedef struct Mallocator Mallocator;
 extern Mallocator default_alloc;
 
-#ifdef CXB_H
-
-typedef struct StringSlice StringSlice;
-typedef struct MString MString;
-
-#else /* !defined(CXB_H) */
-
+#ifndef __cplusplus
 typedef struct StringSlice {
     char* data;
     union {
@@ -103,18 +99,6 @@ typedef struct StringSlice {
         size_t metadata;
     };
 } StringSlice;
-
-typedef struct UString {
-    char* data;
-    union {
-        struct {
-            size_t len : 63;
-            bool null_term : 1;
-        };
-        size_t metadata;
-    };
-    size_t capacity;
-} UString;
 
 typedef struct MString {
     char* data;
@@ -189,7 +173,18 @@ static const Mat33f identity3x3 = {.arr = {
                                        1,
                                    }};
 
-#endif /* CXB_H */
+#endif /* !__cplusplus */
+
+#define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
+#define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
+#define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
+
+#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#endif
+
+#ifndef CXB_C_API_DECL
+#if !defined(CXB_H) || defined(CXB_C_API)
+#define CXB_C_API_DECL
 
 // ** SECTION: StringSlice C functions
 CXB_C_EXPORT size_t cxb_ss_size(StringSlice s);
@@ -222,9 +217,5 @@ CXB_C_EXPORT char* cxb_mstring_push(MString* s);
 CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap);
 CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s);
 CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator);
-
-#define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
-#define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
-#define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
-
+#endif
 #endif
