@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cxb/cxb-c.h"
+#include "cxb/cxb.h"
 
 #ifdef __cplusplus
 extern "C" {
