@@ -355,7 +355,7 @@ TEST_CASE("String -> MString", "[MString]") {
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<AString> strings;
+        AArray<AString> strings;
         REQUIRE(strings.len == 0);
         // REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
 

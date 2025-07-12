@@ -6,6 +6,15 @@
 extern "C" {
 #endif
 
+typedef struct IntArray {
+    int* data;
+    size_t len;
+    size_t capacity;
+    Allocator* allocator;
+} IntArray;
+
+CXB_C_EXPORT void extend_elements(IntArray in_array);
+
 CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc);
 
 #ifdef __cplusplus
