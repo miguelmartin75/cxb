@@ -742,40 +742,10 @@ struct AString : MString {
 };
 
 template <typename T>
-struct Seq {
+struct ArraySlice {
     T* data;
     size_t len;
-    Allocator* allocator;
 
-    Seq(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, allocator{allocator} {
-        if(allocator) {
-            reserve(0);
-        }
-    }
-    Seq(T* data, size_t n, Allocator* allocator = &default_alloc) : data{data}, len{n}, allocator{allocator} {
-        if(allocator) {
-            reserve(0);
-        }
-    }
-    Seq(Seq<T>&& o) : data{o.data}, len{o.len}, allocator{o.allocator} {
-        o.allocator = nullptr;
-    }
-    Seq<T>& operator=(Seq<T>&& o) {
-        allocator = o.allocator;
-        o.allocator = nullptr;
-        data = o.data;
-        len = o.len;
-        return *this;
-    }
-
-    Seq(const Seq<T>& o) = delete;
-    Seq<T>& operator=(const Seq<T>& o) = delete;
-
-    ~Seq() {
-        destroy();
-    }
-
-    // ** SECTION: slice compatible methods
     CXB_INLINE size_t size() const {
         return len;
     }
@@ -791,11 +761,11 @@ struct Seq {
     CXB_INLINE T& back() {
         return data[len - 1];
     }
-    CXB_INLINE Seq<T> slice(size_t i = 0, size_t j = SIZE_MAX) {
-        return Seq<T>{data + i, j == SIZE_MAX ? len : j - i, nullptr};
+    CXB_INLINE ArraySlice<T> slice(i64 i = 0, i64 j = -1) {
+        return ArraySlice<T>{data + i, j == SIZE_MAX ? len : j - i, nullptr};
     }
 
-    CXB_INLINE bool operator<(const Seq<T>& o) const {
+    CXB_INLINE bool operator<(const ArraySlice<T>& o) const {
         size_t n = len < o.len ? len : o.len;
         for(size_t i = 0; i < n; ++i) {
             if(o.data[i] < data[i])
@@ -806,7 +776,7 @@ struct Seq {
         return len < o.len;
     }
 
-    CXB_INLINE bool operator==(const Seq<T>& o) const {
+    CXB_INLINE bool operator==(const ArraySlice<T>& o) const {
         if(len != o.len) return false;
         for(size_t i = 0; i < len; ++i) {
             if(!(data[i] == o.data[i])) return false;
@@ -814,75 +784,89 @@ struct Seq {
         return true;
     }
 
-    CXB_INLINE bool operator!=(const Seq<T>& o) const {
+    CXB_INLINE bool operator!=(const ArraySlice<T>& o) const {
         return !(*this == o);
     }
 
-    CXB_INLINE bool operator>(const Seq<T>& o) const {
+    CXB_INLINE bool operator>(const ArraySlice<T>& o) const {
         return o < *this;
     }
+};
+
+template <typename T>
+struct MArray {
+    T* data;
+    size_t len;
+    size_t capacity;
+    Allocator* allocator;
+
+    MArray(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {}
+    MArray(T* data, size_t len, Allocator* allocator = &default_alloc) : data{data}, len{len}, capacity{0}, allocator{allocator} {}
+    MArray(T* data, size_t len, size_t capacity, Allocator* allocator) : data{data}, len{len}, capacity{capacity}, allocator{allocator} {}
+    MArray(MArray<T>&& o) : data{o.data}, len{o.len}, capacity{o.capacity}, allocator{o.allocator} { o.allocator = nullptr; }
+    MArray<T>& operator=(MArray<T>&& o) {
+        allocator = o.allocator;
+        o.allocator = nullptr;
+        data = o.data;
+        len = o.len;
+        return *this;
+    }
+
+    MArray(const MArray<T>& o) = delete;
+    MArray<T>& operator=(const MArray<T>& o) = delete;
 
     // ** SECTION: allocator-related methods
-    CXB_INLINE Seq<T>& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_INLINE MArray<T>& copy_(Allocator* to_allocator = &default_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
 
-    CXB_MAYBE_INLINE Seq<T> copy(Allocator* to_allocator = nullptr) {
+    CXB_MAYBE_INLINE MArray<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         REQUIRES(to_allocator != nullptr);
-        Seq<T> result{nullptr, 0, to_allocator};
+
+        MArray<T> result{nullptr, 0, to_allocator};
         result.reserve(len);
         if(data && len > 0) {
+            // TODO: std::copy
             memcpy(result.data, data, len * sizeof(T));
         }
         result.len = len;
         return result;
     }
 
-    size_t* start_mem() {
-        if(this->data == nullptr) return nullptr;
-        return ((size_t*) this->data) - 1;
-    }
-
-    size_t& _capacity() {
-        REQUIRES(data);
-        return *start_mem();
-    }
-
-    size_t capacity() {
-        if(!data) return 0;
-        return *start_mem();
-    }
-
-    CXB_INLINE void destroy() {
+    CXB_MAYBE_INLINE void destroy() {
         if(data && allocator) {
+            // TODO: is trivial ?
             for(size_t i = 0; i < len; ++i) {
                 data[i].~T();
             }
-            allocator->free_header_offset<size_t>(data, capacity());
+            allocator->free(data, capacity);
             data = nullptr;
         }
     }
 
-    CXB_INLINE void reserve(size_t cap) {
+    CXB_MAYBE_INLINE void reserve(size_t cap) {
         REQUIRES(allocator != nullptr);
 
-        size_t* alloc_mem = start_mem();
-        size_t old_count = capacity();
-        size_t new_count = cap < CXB_SEQ_MIN_CAP ? CXB_SEQ_MIN_CAP : cap;
-        auto mem = allocator->recalloc_with_header<size_t, T>(alloc_mem, old_count, new_count);
-        data = mem.data;
-        _capacity() = new_count;
+        size_t old_count = capacity;
+        size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
+        if(new_count > old_count) {
+            data = allocator->realloc(data, old_count, new_count);
+            capacity = new_count;
+        }
     }
 
     template <typename... Args>
     CXB_MAYBE_INLINE void resize(size_t new_len, Args&&... args) {
-        if(capacity() < new_len) {
+        REQUIRES(UNLIKELY(allocator != nullptr));
+
+        if(capacity < new_len) {
             reserve(new_len);
         }
+
+        // TODO: is new [] faster?
         for(size_t i = len; i < new_len; ++i) {
-            // TODO: new []
             new(data + i) T{forward<Args>(args)...};
         }
         len = new_len;
@@ -890,7 +874,7 @@ struct Seq {
 
     CXB_MAYBE_INLINE void push_back(T value) {
         REQUIRES(UNLIKELY(allocator != nullptr));
-        size_t c = capacity();
+        size_t c = capacity;
         if(len + 1 >= c) {
             c = CXB_SEQ_GROW_FN(c);
             reserve(c);
@@ -919,6 +903,43 @@ struct Seq {
         }
         return data[idx];
     }
+
+    void extend(ArraySlice<T> other) {
+        if(other.len == 0) return;
+        reserve(len + other.len);
+        // TODO std::copy alternative
+        memmove(data + len, other.data, other.len);
+        len += other.len;
+    }
+
+};
+
+
+template <class T, class O>
+static constexpr MArray<T> marray_from_pod(O o, Allocator* allocator) {
+    return MArray<T>{o.data, o.len, o.capacity, allocator};
+}
+
+template <typename T>
+struct AArray: MArray<T> {
+    T* data;
+    size_t len;
+    size_t capacity;
+    Allocator* allocator;
+
+    AArray(Allocator* allocator = &default_alloc) : MArray<T>(allocator) {}
+    AArray(T* data, size_t len, Allocator* allocator = &default_alloc) : MArray<T>(data, len, allocator) {}
+    AArray(T* data, size_t len, size_t capacity, Allocator* allocator) : MArray<T>(data, len, capacity, allocator) {}
+    AArray(MArray<T>&& o) : MArray<T>(move(o)) {}
+    AArray(AArray<T>&& o) : MArray<T>(move(o)) {}
+    AArray<T>& operator=(AArray<T>&& o) {
+        return MArray<T>::operator=(move(o));
+    }
+
+    AArray(const MArray<T>& o) = delete;
+    AArray<T>& operator=(const MArray<T>& o) = delete;
+
+    ~AArray() { this->destroy(); }
 };
 
 /* SECTION: variant types */

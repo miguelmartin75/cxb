@@ -6,7 +6,7 @@ CXB_USE_NS;
 TEST_CASE("push_back", "[Seq]") {
     i64 allocated_bytes = 0;
     {
-        Seq<int> xs;
+        AArray<int> xs;
         REQUIRE(xs.len == 0);
         // REQUIRE(xs.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
@@ -29,16 +29,16 @@ TEST_CASE("push_back", "[Seq]") {
 TEST_CASE("copy", "[Seq]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<int> xs;
+        AArray<int> xs;
         xs.resize(64, 2);
         for(u64 i = 0; i < xs.len; ++i) {
             REQUIRE(xs[i] == 2);
         }
 
-        Seq<int> view = xs.slice();
+        AArray<int> view = xs.slice();
         REQUIRE(view.allocator == nullptr);
 
-        Seq<int> real_copy = xs.copy();
+        AArray<int> real_copy = xs.copy();
         REQUIRE(real_copy.allocator == xs.allocator);
         REQUIRE(real_copy.data != xs.data);
     }
@@ -48,12 +48,12 @@ TEST_CASE("copy", "[Seq]") {
 TEST_CASE("nested_seq", "[Seq]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<Seq<int>> nested;
+        AArray<AArray<int>> nested;
         REQUIRE(nested.len == 0);
         // REQUIRE(nested.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 10; ++i) {
-            Seq<int> inner;
+            AArray<int> inner;
             for(int j = 0; j < i + 1; ++j) {
                 inner.push_back(i * 10 + j);
             }
@@ -73,7 +73,7 @@ TEST_CASE("nested_seq", "[Seq]") {
         REQUIRE(nested[5].len == 7);
         REQUIRE(nested[5][6] == 999);
 
-        Seq<int> new_inner;
+        AArray<int> new_inner;
         for(int k = 0; k < 5; ++k) {
             new_inner.push_back(k * 100);
         }
@@ -93,8 +93,8 @@ TEST_CASE("nested_seq", "[Seq]") {
 TEST_CASE("Seq operator<", "[Seq]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<int> seq1;
-        Seq<int> seq2;
+        AArray<int> seq1;
+        AArray<int> seq2;
 
         // Empty sequences should be equal
         REQUIRE(seq1 == seq2);
@@ -114,7 +114,7 @@ TEST_CASE("Seq operator<", "[Seq]") {
         REQUIRE(!(seq2 < seq1));
 
         // Test with different values
-        Seq<int> seq3;
+        AArray<int> seq3;
         seq3.push_back(1);
         seq3.push_back(2);
         seq3.push_back(2); // smaller value at same position
@@ -123,7 +123,7 @@ TEST_CASE("Seq operator<", "[Seq]") {
         REQUIRE(!(seq1 < seq3));
 
         // Test with different first element
-        Seq<int> seq4;
+        AArray<int> seq4;
         seq4.push_back(0);
         seq4.push_back(5);
         seq4.push_back(10);
@@ -132,8 +132,8 @@ TEST_CASE("Seq operator<", "[Seq]") {
         REQUIRE(!(seq1 < seq4));
 
         // Test lexicographic order with strings
-        Seq<AString> str_seq1;
-        Seq<AString> str_seq2;
+        AArray<AString> str_seq1;
+        AArray<AString> str_seq2;
 
         str_seq1.push_back(AString("apple"));
         str_seq1.push_back(AString("banana"));
@@ -145,7 +145,7 @@ TEST_CASE("Seq operator<", "[Seq]") {
         REQUIRE(!(str_seq2 < str_seq1));
 
         // Test identical sequences
-        Seq<int> seq5;
+        AArray<int> seq5;
         seq5.push_back(1);
         seq5.push_back(2);
         seq5.push_back(3);
@@ -159,8 +159,8 @@ TEST_CASE("Seq operator<", "[Seq]") {
 TEST_CASE("Seq operator==", "[Seq]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<int> seq1;
-        Seq<int> seq2;
+        AArray<int> seq1;
+        AArray<int> seq2;
 
         // Empty sequences should be equal
         REQUIRE(seq1 == seq2);
@@ -184,7 +184,7 @@ TEST_CASE("Seq operator==", "[Seq]") {
         REQUIRE(!(seq2 == seq1));
 
         // Test different values
-        Seq<int> seq3;
+        AArray<int> seq3;
         seq3.push_back(1);
         seq3.push_back(2);
         seq3.push_back(2); // different value
@@ -193,8 +193,8 @@ TEST_CASE("Seq operator==", "[Seq]") {
         REQUIRE(!(seq3 == seq1));
 
         // Test with strings
-        Seq<AString> str_seq1;
-        Seq<AString> str_seq2;
+        AArray<AString> str_seq1;
+        AArray<AString> str_seq2;
 
         str_seq1.push_back(AString("hello"));
         str_seq1.push_back(AString("world"));
@@ -222,8 +222,8 @@ TEST_CASE("Seq operator==", "[Seq]") {
 TEST_CASE("Seq operator> and operator!=", "[Seq]") {
     i64 allocated_bytes_before = default_alloc.n_active_bytes;
     {
-        Seq<int> seq1;
-        Seq<int> seq2;
+        AArray<int> seq1;
+        AArray<int> seq2;
 
         // Empty sequences should be equal (not greater than each other)
         REQUIRE(!(seq1 > seq2));
@@ -246,7 +246,7 @@ TEST_CASE("Seq operator> and operator!=", "[Seq]") {
         REQUIRE(seq2 != seq1);
 
         // Test with different values
-        Seq<int> seq3;
+        AArray<int> seq3;
         seq3.push_back(1);
         seq3.push_back(2);
         seq3.push_back(4); // larger value at same position
@@ -257,7 +257,7 @@ TEST_CASE("Seq operator> and operator!=", "[Seq]") {
         REQUIRE(seq1 != seq3);
 
         // Test with different first element
-        Seq<int> seq4;
+        AArray<int> seq4;
         seq4.push_back(2);
         seq4.push_back(1);
         seq4.push_back(1);
@@ -268,8 +268,8 @@ TEST_CASE("Seq operator> and operator!=", "[Seq]") {
         REQUIRE(seq1 != seq4);
 
         // Test with strings
-        Seq<AString> str_seq1;
-        Seq<AString> str_seq2;
+        AArray<AString> str_seq1;
+        AArray<AString> str_seq2;
 
         str_seq1.push_back(AString("apple"));
         str_seq1.push_back(AString("banana"));
@@ -283,7 +283,7 @@ TEST_CASE("Seq operator> and operator!=", "[Seq]") {
         REQUIRE(str_seq2 != str_seq1);
 
         // Test identical sequences
-        Seq<int> seq5;
+        AArray<int> seq5;
         seq5.push_back(1);
         seq5.push_back(2);
         seq5.push_back(3);
