@@ -72,6 +72,7 @@ memory, "M" stands for "manual"
 #ifndef CXB_H
 #define CXB_H
 
+#include <_string.h>
 #include <cstring>
 #ifndef __cplusplus
 #error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb.h> is C++-only."
@@ -195,9 +196,9 @@ struct Allocator {
     }
 
     template <typename T>
-    CXB_MAYBE_INLINE T* realloc(T* head, size_t old_count, size_t count = 1) {
+    CXB_MAYBE_INLINE T* realloc(T* head, size_t old_count, bool fill_zeros, size_t count) {
         T* result =
-            (T*) this->alloc_impl(this, false, (void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
+            (T*) this->alloc_impl(this, fill_zeros, (void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
         return result;
     }
 
@@ -421,7 +422,7 @@ struct StringSlice {
     CXB_MAYBE_INLINE char& back() {
         return data[len - 1];
     }
-    CXB_MAYBE_INLINE StringSlice slice(i64 i, i64 j = -1) const {
+    CXB_MAYBE_INLINE StringSlice slice(i64 i = 0, i64 j = -1) const {
         i64 ii = i < 0 ? len + i : i;
         i64 jj = j < 0 ? len + j : j;
         DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
@@ -505,7 +506,7 @@ struct MString {
         return *reinterpret_cast<const StringSlice*>(this);
     }
 
-    CXB_MAYBE_INLINE StringSlice slice(i64 i, i64 j = -1) const {
+    CXB_MAYBE_INLINE StringSlice slice(i64 i = 0, i64 j = -1) const {
         return reinterpret_cast<const StringSlice*>(this)->slice(i, j);
     }
 
@@ -577,7 +578,7 @@ struct MString {
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
         if(new_count > old_count) {
-            data = allocator->realloc(data, old_count, new_count);
+            data = allocator->realloc(data, old_count, false, new_count);
             capacity = new_count;
         }
     }
@@ -746,26 +747,36 @@ struct ArraySlice {
     T* data;
     size_t len;
 
-    CXB_INLINE size_t size() const {
+    CXB_MAYBE_INLINE size_t size() const {
         return len;
     }
-    CXB_INLINE bool empty() const {
+    CXB_MAYBE_INLINE bool empty() const {
         return len == 0;
     }
-    CXB_INLINE T& operator[](size_t idx) {
+    CXB_MAYBE_INLINE T& operator[](size_t idx) {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
         return data[idx];
     }
-    CXB_INLINE const T& operator[](size_t idx) const {
+    CXB_MAYBE_INLINE const T& operator[](size_t idx) const {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
         return data[idx];
     }
-    CXB_INLINE T& back() {
+    CXB_MAYBE_INLINE T& back() {
         return data[len - 1];
     }
-    CXB_INLINE ArraySlice<T> slice(i64 i = 0, i64 j = -1) {
-        return ArraySlice<T>{data + i, j == SIZE_MAX ? len : j - i, nullptr};
+    CXB_MAYBE_INLINE ArraySlice<T> slice(i64 i = 0, i64 j = -1) {
+        i64 ii = i < 0 ? len + i : i;
+        i64 jj = j < 0 ? len + j : j;
+        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
+        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+
+        ArraySlice<T> c = *this;
+        c.data = c.data + ii;
+        c.len = jj - ii + 1;
+        return c;
     }
 
-    CXB_INLINE bool operator<(const ArraySlice<T>& o) const {
+    CXB_MAYBE_INLINE bool operator<(const ArraySlice<T>& o) const {
         size_t n = len < o.len ? len : o.len;
         for(size_t i = 0; i < n; ++i) {
             if(o.data[i] < data[i])
@@ -776,7 +787,7 @@ struct ArraySlice {
         return len < o.len;
     }
 
-    CXB_INLINE bool operator==(const ArraySlice<T>& o) const {
+    CXB_MAYBE_INLINE bool operator==(const ArraySlice<T>& o) const {
         if(len != o.len) return false;
         for(size_t i = 0; i < len; ++i) {
             if(!(data[i] == o.data[i])) return false;
@@ -784,12 +795,25 @@ struct ArraySlice {
         return true;
     }
 
-    CXB_INLINE bool operator!=(const ArraySlice<T>& o) const {
+    CXB_MAYBE_INLINE bool operator!=(const ArraySlice<T>& o) const {
         return !(*this == o);
     }
 
-    CXB_INLINE bool operator>(const ArraySlice<T>& o) const {
+    CXB_MAYBE_INLINE bool operator>(const ArraySlice<T>& o) const {
         return o < *this;
+    }
+
+    CXB_MAYBE_INLINE T* begin() {
+        return data;
+    }
+    CXB_MAYBE_INLINE T* end() {
+        return data + len;
+    }
+    CXB_MAYBE_INLINE const T* begin() const {
+        return data;
+    }
+    CXB_MAYBE_INLINE const T* end() const {
+        return data + len;
     }
 };
 
@@ -801,22 +825,90 @@ struct MArray {
     Allocator* allocator;
 
     MArray(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {}
-    MArray(T* data, size_t len, Allocator* allocator = &default_alloc) : data{data}, len{len}, capacity{0}, allocator{allocator} {}
-    MArray(T* data, size_t len, size_t capacity, Allocator* allocator) : data{data}, len{len}, capacity{capacity}, allocator{allocator} {}
-    MArray(MArray<T>&& o) : data{o.data}, len{o.len}, capacity{o.capacity}, allocator{o.allocator} { o.allocator = nullptr; }
-    MArray<T>& operator=(MArray<T>&& o) {
-        allocator = o.allocator;
-        o.allocator = nullptr;
-        data = o.data;
-        len = o.len;
-        return *this;
+    MArray(T* data, size_t len, Allocator* allocator = &default_alloc)
+        : data{data}, len{len}, capacity{0}, allocator{allocator} {}
+    MArray(T* data, size_t len, size_t capacity, Allocator* allocator)
+        : data{data}, len{len}, capacity{capacity}, allocator{allocator} {}
+    MArray(const MArray<T>& o) = default;
+    MArray<T>& operator=(const MArray<T>& o) = default;
+
+    // ** SECTION: slice compatible methods
+    CXB_MAYBE_INLINE size_t size() const {
+        return len;
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_MAYBE_INLINE T& operator[](size_t idx) {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE const T& operator[](size_t idx) const {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE T& back() {
+        return data[len - 1];
+    }
+    CXB_MAYBE_INLINE ArraySlice<T> slice(i64 i = 0, i64 j = -1) {
+        i64 ii = i < 0 ? len + i : i;
+        i64 jj = j < 0 ? len + j : j;
+        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
+        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+
+        ArraySlice<T> c = *this;
+        c.data = c.data + ii;
+        c.len = jj - ii + 1;
+        return c;
     }
 
-    MArray(const MArray<T>& o) = delete;
-    MArray<T>& operator=(const MArray<T>& o) = delete;
+    CXB_MAYBE_INLINE bool operator<(const ArraySlice<T>& o) const {
+        size_t n = len < o.len ? len : o.len;
+        for(size_t i = 0; i < n; ++i) {
+            if(o.data[i] < data[i])
+                return false;
+            else if(data[i] < o.data[i])
+                return true;
+        }
+        return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator==(const ArraySlice<T>& o) const {
+        if(len != o.len) return false;
+        for(size_t i = 0; i < len; ++i) {
+            if(!(data[i] == o.data[i])) return false;
+        }
+        return true;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const ArraySlice<T>& o) const {
+        return !(*this == o);
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const ArraySlice<T>& o) const {
+        return o < *this;
+    }
+
+    CXB_MAYBE_INLINE operator ArraySlice<T>() const {
+        return *reinterpret_cast<const ArraySlice<T>*>(this);
+    }
+
+    // ** SECTION: iterator methods
+    CXB_MAYBE_INLINE T* begin() {
+        return data;
+    }
+    CXB_MAYBE_INLINE T* end() {
+        return data + len;
+    }
+    CXB_MAYBE_INLINE const T* begin() const {
+        return data;
+    }
+    CXB_MAYBE_INLINE const T* end() const {
+        return data + len;
+    }
 
     // ** SECTION: allocator-related methods
-    CXB_INLINE MArray<T>& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_MAYBE_INLINE MArray<T>& copy_(Allocator* to_allocator = &default_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
@@ -828,8 +920,13 @@ struct MArray {
         MArray<T> result{nullptr, 0, to_allocator};
         result.reserve(len);
         if(data && len > 0) {
-            // TODO: std::copy
-            memcpy(result.data, data, len * sizeof(T));
+            if constexpr(std::is_trivially_assignable_v<T, T>) {
+                memcpy(result.data, data, len * sizeof(T));
+            } else {
+                for(size_t i = 0; i < len; ++i) {
+                    data[i] = result.data[i];
+                }
+            }
         }
         result.len = len;
         return result;
@@ -837,9 +934,10 @@ struct MArray {
 
     CXB_MAYBE_INLINE void destroy() {
         if(data && allocator) {
-            // TODO: is trivial ?
-            for(size_t i = 0; i < len; ++i) {
-                data[i].~T();
+            if constexpr(!std::is_trivially_destructible_v<T>) {
+                for(size_t i = 0; i < len; ++i) {
+                    data[i].~T();
+                }
             }
             allocator->free(data, capacity);
             data = nullptr;
@@ -852,22 +950,31 @@ struct MArray {
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
         if(new_count > old_count) {
-            data = allocator->realloc(data, old_count, new_count);
+            data = allocator->realloc(data, old_count, std::is_trivially_default_constructible_v<T>, new_count);
             capacity = new_count;
         }
     }
 
-    template <typename... Args>
-    CXB_MAYBE_INLINE void resize(size_t new_len, Args&&... args) {
+    CXB_MAYBE_INLINE void resize(size_t new_len) {
         REQUIRES(UNLIKELY(allocator != nullptr));
 
         if(capacity < new_len) {
             reserve(new_len);
         }
 
-        // TODO: is new [] faster?
+        len = new_len;
+    }
+
+    CXB_MAYBE_INLINE void resize(size_t new_len, T value) {
+        REQUIRES(UNLIKELY(allocator != nullptr));
+
+        if(capacity < new_len) {
+            reserve(new_len);
+        }
+
+        // TODO: optimize
         for(size_t i = len; i < new_len; ++i) {
-            new(data + i) T{forward<Args>(args)...};
+            new(data + i) T{value};
         }
         len = new_len;
     }
@@ -911,9 +1018,7 @@ struct MArray {
         memmove(data + len, other.data, other.len);
         len += other.len;
     }
-
 };
-
 
 template <class T, class O>
 static constexpr MArray<T> marray_from_pod(O o, Allocator* allocator) {
@@ -921,25 +1026,44 @@ static constexpr MArray<T> marray_from_pod(O o, Allocator* allocator) {
 }
 
 template <typename T>
-struct AArray: MArray<T> {
-    T* data;
-    size_t len;
-    size_t capacity;
-    Allocator* allocator;
-
+struct AArray : MArray<T> {
     AArray(Allocator* allocator = &default_alloc) : MArray<T>(allocator) {}
     AArray(T* data, size_t len, Allocator* allocator = &default_alloc) : MArray<T>(data, len, allocator) {}
     AArray(T* data, size_t len, size_t capacity, Allocator* allocator) : MArray<T>(data, len, capacity, allocator) {}
-    AArray(MArray<T>&& o) : MArray<T>(move(o)) {}
-    AArray(AArray<T>&& o) : MArray<T>(move(o)) {}
+    AArray(const AArray<T>& o) = delete;
+    AArray<T>& operator=(const AArray<T>& o) = delete;
+
+    AArray(AArray<T>&& o) : MArray<T>{o.data, o.len, o.capacity, o.allocator} {
+        o.allocator = nullptr;
+    }
+    AArray(MArray<T>&& o) : MArray<T>{o.data, o.len, o.capacity, o.allocator} {
+        o.allocator = nullptr;
+    }
     AArray<T>& operator=(AArray<T>&& o) {
-        return MArray<T>::operator=(move(o));
+        this->allocator = o.allocator;
+        o.allocator = nullptr;
+        this->data = o.data;
+        this->len = o.len;
+        this->capacity = o.capacity;
+        return *this;
+    }
+    AArray<T>& operator=(MArray<T>&& o) {
+        this->allocator = o.allocator;
+        o.allocator = nullptr;
+        this->data = o.data;
+        this->len = o.len;
+        this->capacity = o.capacity;
+        return *this;
     }
 
-    AArray(const MArray<T>& o) = delete;
-    AArray<T>& operator=(const MArray<T>& o) = delete;
+    ~AArray() {
+        this->destroy();
+    }
 
-    ~AArray() { this->destroy(); }
+    // CXB_MAYBE_INLINE bool operator<(const ArraySlice<T>& o) const { return MArray<T>::operator<(o); }
+    // CXB_MAYBE_INLINE bool operator==(const ArraySlice<T>& o) const { return MArray<T>::operator==(o); }
+    // CXB_MAYBE_INLINE bool operator!=(const ArraySlice<T>& o) const { return MArray<T>::operator!=(o); }
+    // CXB_MAYBE_INLINE bool operator>(const ArraySlice<T>& o) const { return MArray<T>::operator>(o); }
 };
 
 /* SECTION: variant types */
