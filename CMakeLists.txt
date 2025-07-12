@@ -30,14 +30,14 @@ function(add_test_exe test_name test_source fsanitize)
     target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain cxb ${ARGN})
     if(${fsanitize} AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(${test_name} PRIVATE 
-            -fsanitize=address 
-            -fsanitize=undefined 
+        target_compile_options(${test_name} PRIVATE
+            -fsanitize=address
+            -fsanitize=undefined
             -fno-omit-frame-pointer
         )
-        target_link_options(${test_name} PRIVATE 
-            -fsanitize=address 
-            -fsanitize=undefined 
+        target_link_options(${test_name} PRIVATE
+            -fsanitize=address
+            -fsanitize=undefined
         )
     endif()
 endfunction()
@@ -50,8 +50,6 @@ add_test_exe(bench_string_header benchmarks/bench_string_header.cpp YES)
 
 add_test(NAME test_seq COMMAND test_seq)
 add_test(NAME test_string COMMAND test_string)
-add_test(NAME bench_std_headers COMMAND bench_std_headers)
-add_test(NAME bench_string_header COMMAND bench_string_header)
 
 # C API tests (conditional)
 if(BUILD_C_API_TESTS)
@@ -65,6 +63,6 @@ if(BUILD_C_API_TESTS)
     target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain cxb)
 
-    add_test(NAME c_api_c_tests COMMAND test_c_api_c)
-    add_test(NAME c_api_cpp_tests COMMAND test_c_api_cpp)
+    add_test(NAME test_c_api_c COMMAND test_c_api_c)
+    add_test(NAME test_c_api_cpp COMMAND test_c_api_cpp)
 endif()
