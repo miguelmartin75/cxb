@@ -25,5 +25,13 @@ int main(void) {
     cxb_mstring_destroy(&result);
 
     REQUIRES(result.data == NULL);
+
+    IntArray arr = {};
+    extend_elements(&arr);
+    REQUIRES(arr.len == 10);
+    REQUIRES(arr.allocator != NULL);
+    for(int i = 0; i < 10; ++i) {
+        REQUIRES(arr.data[i] == i);
+    }
     return ret;
 }

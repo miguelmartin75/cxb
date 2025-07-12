@@ -13,7 +13,7 @@ typedef struct IntArray {
     Allocator* allocator;
 } IntArray;
 
-CXB_C_EXPORT void extend_elements(IntArray in_array);
+CXB_C_EXPORT void extend_elements(IntArray* in_array);
 
 CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc);
 

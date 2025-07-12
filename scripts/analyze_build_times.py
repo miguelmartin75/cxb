@@ -40,9 +40,9 @@ PARSE_TIMES_MD = Path(__file__).parent.parent / "benchmarks" / "PARSE_TIMES.md"
 def run_command(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
     try:
         result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
+            cmd,
+            capture_output=True,
+            text=True,
             cwd=cwd,
             check=False
         )
@@ -60,7 +60,7 @@ def clean_build_dir(build_dir: Path) -> None:
 def configure_cmake(build_dir: Path, source_dir: Path) -> bool:
     """Configure CMake with Clang and -ftime-trace."""
     cmd = [
-        "cmake", 
+        "cmake",
         "-B", str(build_dir),
         "-S", str(source_dir),
         "-DCMAKE_BUILD_TYPE=Debug",
@@ -68,12 +68,12 @@ def configure_cmake(build_dir: Path, source_dir: Path) -> bool:
         "-DCMAKE_CXX_COMPILER=clang++",
         "-DBUILD_C_API_TESTS=ON"
     ]
-    
+
     exit_code, _, e = run_command(cmd)
     if exit_code != 0:
         sys.stderr.write(f"CMake configuration failed:\n{e}")
         return False
-    
+
     return True
 
 
@@ -83,7 +83,7 @@ def build_project(build_dir: Path) -> bool:
     if exit_code != 0:
         sys.stderr.write(f"Build failed:\n{e}")
         return False
-    
+
     return True
 
 
@@ -228,7 +228,7 @@ def get_cpu_info() -> str:
                 for line in f:
                     if "model name" in line:
                         return line.split(":")[1].strip()
-        
+
         return "Unknown CPU"
     except Exception:
         return "Unknown CPU"
@@ -369,8 +369,8 @@ def main():
         description="Analyze build times using Clang's -ftime-trace feature"
     )
     parser.add_argument(
-        "--clean", 
-        action="store_true", 
+        "--clean",
+        action="store_true",
         help="Clean the build directory before building"
     )
     parser.add_argument(
@@ -380,27 +380,27 @@ def main():
         help="Headers to analyze"
     )
     args = parser.parse_args()
-    
+
     script_dir = Path(__file__).parent
     project_dir = script_dir.parent
     build_dir = project_dir / "build"
     readme_path = project_dir / "README.md"
-    
+
     print(f"Project directory: {project_dir}")
     print(f"Build directory: {build_dir}")
-    
+
     exit_code, _, _ = run_command(["clang", "--version"])
     if exit_code != 0:
         sys.stderr.write("Clang not found. This script requires Clang for -ftime-trace support.\n")
         return 2
-    
+
     if args.clean:
         print("Cleaning build directory...")
         clean_build_dir(build_dir)
     elif not build_dir.exists():
         print("Build directory doesn't exist, creating it...")
         build_dir.mkdir(parents=True, exist_ok=True)
-    
+
     cmake_cache = build_dir / "CMakeCache.txt"
     if not cmake_cache.exists() or args.clean:
         print("Configuring CMake...")
@@ -408,18 +408,16 @@ def main():
             return 3
     else:
         print("Using existing CMake configuration...")
-    
+
     print("Building project...")
     if not build_project(build_dir):
         return 4
 
-    # Combine user-specified headers with the standard-library set to gather all
-    # relevant metrics in one pass.
     headers_to_scan = list(set(args.headers + STD_HEADERS))
 
     print("Analyzing build times...")
     metrics = analyze_parse_times(build_dir, headers_to_scan)
-    
+
     if metrics:
         print("Metrics found:")
         for hdr, stats in metrics.items():
@@ -438,9 +436,9 @@ def main():
         print("- No trace files were generated")
         print("- No cxb.h parsing events were found")
         print("- Trace files were malformed")
-    
+
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main()) 
+    sys.exit(main())
