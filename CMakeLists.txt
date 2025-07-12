@@ -42,13 +42,13 @@ function(add_test_exe test_name test_source fsanitize)
     endif()
 endfunction()
 
-add_test_exe(test_seq tests/test_seq.cpp YES)
+add_test_exe(test_array tests/test_array.cpp YES)
 add_test_exe(test_string tests/test_string.cpp YES)
 add_test_exe(bench_string benchmarks/bench_string.cpp YES)
 add_test_exe(bench_std_headers benchmarks/bench_std_headers.cpp NO)
 add_test_exe(bench_string_header benchmarks/bench_string_header.cpp YES)
 
-add_test(NAME test_seq COMMAND test_seq)
+add_test(NAME test_array COMMAND test_array)
 add_test(NAME test_string COMMAND test_string)
 
 # C API tests (conditional)
