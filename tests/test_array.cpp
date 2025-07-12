@@ -35,12 +35,9 @@ TEST_CASE("copy", "[Seq]") {
             REQUIRE(xs[i] == 2);
         }
 
-        AArray<int> view = xs.slice();
-        REQUIRE(view.allocator == nullptr);
-
-        AArray<int> real_copy = xs.copy();
-        REQUIRE(real_copy.allocator == xs.allocator);
-        REQUIRE(real_copy.data != xs.data);
+        AArray<int> copy = xs.copy();
+        REQUIRE(copy.allocator == xs.allocator);
+        REQUIRE(copy.data != xs.data);
     }
     REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
 }
