@@ -191,7 +191,7 @@ CXB_C_EXPORT size_t cxb_ss_size(StringSlice s);
 CXB_C_EXPORT size_t cxb_ss_n_bytes(StringSlice s);
 CXB_C_EXPORT bool cxb_ss_empty(StringSlice s);
 CXB_C_EXPORT const char* cxb_ss_c_str(StringSlice s);
-CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, size_t i, size_t j);
+CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, i64 i, i64 j);
 CXB_C_EXPORT bool cxb_ss_eq(StringSlice a, StringSlice b);
 CXB_C_EXPORT bool cxb_ss_neq(StringSlice a, StringSlice b);
 CXB_C_EXPORT bool cxb_ss_lt(StringSlice a, StringSlice b);

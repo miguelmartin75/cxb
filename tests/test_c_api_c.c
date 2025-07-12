@@ -15,12 +15,12 @@ int main(void) {
 
     StringSlice res_slice = {.data = result.data, .len = result.len, .null_term = result.null_term};
 
-    StringSlice slice_foo = cxb_ss_slice(res_slice, 0, 2);
+    StringSlice slice_foo = cxb_ss_slice(res_slice, 0, 1);
     REQUIRES(cxb_ss_size(slice_foo) == 2);
     REQUIRES(!cxb_ss_empty(slice_foo));
 
-    StringSlice slice_bar = cxb_ss_slice(res_slice, 3, SIZE_MAX);
-    REQUIRES(cxb_ss_n_bytes(slice_bar) == 4 + 1); // includes null term
+    StringSlice slice_bar = cxb_ss_slice(res_slice, 3, -1);
+    REQUIRES(cxb_ss_n_bytes(slice_bar) == 4 + 1);
 
     cxb_mstring_destroy(&result);
 
