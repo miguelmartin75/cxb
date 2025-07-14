@@ -1021,6 +1021,12 @@ struct MArray {
             reserve(new_len);
         }
 
+        if constexpr(!std::is_trivially_default_constructible_v<T>) {
+            for(size_t i = len; i < new_len; ++i) {
+                new(data + i) T{};
+            }
+        }
+
         len = new_len;
     }
 
