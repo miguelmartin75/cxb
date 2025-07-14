@@ -385,6 +385,65 @@ struct Atomic {
 
 CXB_NS_END
 
+typedef struct Vec2f {
+    f32 x, y;
+} Vec2f;
+
+typedef struct Vec2i {
+    i32 x, y;
+} Vec2i;
+
+typedef struct Size2i {
+    i32 w, h;
+} Size2i;
+
+typedef struct Vec3f {
+    f32 x, y, z;
+} Vec3f;
+
+typedef struct Vec3i {
+    i32 x, y, z;
+} Vec3i;
+
+typedef struct Rect2f {
+    f32 x, y;
+    f32 w, h;
+} Rect2f;
+
+typedef struct Rect2ui {
+    u32 x, y;
+    u32 w, h;
+} Rect2ui;
+
+typedef struct Color4f {
+    f32 r, g, b, a;
+} Color4f;
+
+typedef struct Color4i {
+    byte8 r, g, b, a;
+} Color4i;
+
+typedef struct Mat33f {
+    f32 arr[9];
+} Mat33f;
+
+typedef struct Mat44f {
+    f32 arr[16];
+} Mat44f;
+
+static const Mat44f identity4x4 = {.arr = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
+static const Mat33f identity3x3 = {.arr = {
+                                       1,
+                                       0,
+                                       0,
+                                       0,
+                                       1,
+                                       0,
+                                       0,
+                                       0,
+                                       1,
+                                   }};
+
 struct Mallocator : Allocator {
     Mallocator();
 
@@ -1011,6 +1070,15 @@ struct MArray {
         return data[idx];
     }
 
+    template <class O>
+    void release(O& out) {
+        out.data = data;
+        out.len = len;
+        out.capacity = capacity;
+        out.allocator = allocator;
+        allocator = nullptr;
+    }
+
     void extend(ArraySlice<T> other) {
         if(other.len == 0) return;
         reserve(len + other.len);
@@ -1023,6 +1091,11 @@ struct MArray {
 template <class T, class O>
 static constexpr MArray<T> marray_from_pod(O o, Allocator* allocator) {
     return MArray<T>{o.data, o.len, o.capacity, allocator};
+}
+
+template <class T, class O>
+static constexpr MArray<T> marray_from_pod(O* o, Allocator* allocator) {
+    return MArray<T>{o->data, o->len, o->capacity, allocator};
 }
 
 template <typename T>
@@ -1058,6 +1131,12 @@ struct AArray : MArray<T> {
 
     ~AArray() {
         this->destroy();
+    }
+
+    MArray<T> release() {
+        MArray<T> self = *this;
+        this->allocator = nullptr;
+        return self;
     }
 
     // CXB_MAYBE_INLINE bool operator<(const ArraySlice<T>& o) const { return MArray<T>::operator<(o); }
