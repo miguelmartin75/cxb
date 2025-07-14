@@ -7,7 +7,8 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
 # Options
-option(BUILD_C_API_TESTS "Build C API compatibility tests" ON)
+option(CXB_ENABLE_TESTS "enable tests?" OFF)
+option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 
 set(CXB_SRCS "cxb/cxb.cpp")
 
@@ -42,27 +43,28 @@ function(add_test_exe test_name test_source fsanitize)
     endif()
 endfunction()
 
-add_test_exe(test_array tests/test_array.cpp YES)
-add_test_exe(test_string tests/test_string.cpp YES)
-add_test_exe(bench_string benchmarks/bench_string.cpp YES)
-add_test_exe(bench_std_headers benchmarks/bench_std_headers.cpp NO)
-add_test_exe(bench_string_header benchmarks/bench_string_header.cpp YES)
+if(CXB_ENABLE_TESTS)
+    add_test_exe(test_array tests/test_array.cpp YES)
+    add_test_exe(test_string tests/test_string.cpp YES)
+    add_test_exe(bench_string benchmarks/bench_string.cpp YES)
+    add_test_exe(bench_std_headers benchmarks/bench_std_headers.cpp NO)
+    add_test_exe(bench_string_header benchmarks/bench_string_header.cpp YES)
 
-add_test(NAME test_array COMMAND test_array)
-add_test(NAME test_string COMMAND test_string)
+    add_test(NAME test_array COMMAND test_array)
+    add_test(NAME test_string COMMAND test_string)
 
-# C API tests (conditional)
-if(BUILD_C_API_TESTS)
-    # Pure C test
-    add_executable(test_c_api_c tests/test_c_api_c.c tests/c_api_test.cpp)
-    target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_link_libraries(test_c_api_c PRIVATE cxb)
+    if(CXB_BUILD_C_API_TESTS)
+        # Pure C test
+        add_executable(test_c_api_c tests/test_c_api_c.c tests/c_api_test.cpp)
+        target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+        target_link_libraries(test_c_api_c PRIVATE cxb)
 
-    # C++ test that uses Catch2
-    add_executable(test_c_api_cpp tests/test_c_api_cpp.cpp tests/c_api_test.cpp)
-    target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-    target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain cxb)
+        # C++ test that uses Catch2
+        add_executable(test_c_api_cpp tests/test_c_api_cpp.cpp tests/c_api_test.cpp)
+        target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+        target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain cxb)
 
-    add_test(NAME test_c_api_c COMMAND test_c_api_c)
-    add_test(NAME test_c_api_cpp COMMAND test_c_api_cpp)
+        add_test(NAME test_c_api_c COMMAND test_c_api_c)
+        add_test(NAME test_c_api_cpp COMMAND test_c_api_cpp)
+    endif()
 endif()
