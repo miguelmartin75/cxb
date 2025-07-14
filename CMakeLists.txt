@@ -22,10 +22,6 @@ endif()
 add_library(cxb SHARED ${CXB_SRCS})
 target_include_directories(cxb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_subdirectory(deps/Catch2)
-
-enable_testing()
-
 function(add_test_exe test_name test_source fsanitize)
     add_executable(${test_name} ${test_source})
     target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -44,6 +40,10 @@ function(add_test_exe test_name test_source fsanitize)
 endfunction()
 
 if(CXB_ENABLE_TESTS)
+    add_subdirectory(deps/Catch2)
+
+    enable_testing()
+
     add_test_exe(test_array tests/test_array.cpp YES)
     add_test_exe(test_string tests/test_string.cpp YES)
     add_test_exe(bench_string benchmarks/bench_string.cpp YES)
