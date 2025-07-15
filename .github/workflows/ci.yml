@@ -85,4 +85,4 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
         run: |
-          nix develop ./ci --system ${{ matrix.nix_system }} --command bash ./ci/ci.sh
+          nix develop ./ci --system ${{ matrix.nix_system }} --command bash ./scripts/ci/ci.sh

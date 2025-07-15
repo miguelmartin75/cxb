@@ -46,9 +46,9 @@ if(CXB_ENABLE_TESTS)
 
     add_test_exe(test_array tests/test_array.cpp YES)
     add_test_exe(test_string tests/test_string.cpp YES)
-    add_test_exe(bench_string benchmarks/bench_string.cpp YES)
-    add_test_exe(bench_std_headers benchmarks/bench_std_headers.cpp NO)
-    add_test_exe(bench_string_header benchmarks/bench_string_header.cpp YES)
+    add_test_exe(bench_string tests/benchmarks/bench_string.cpp YES)
+    add_test_exe(bench_std_headers tests/benchmarks/bench_std_headers.cpp NO)
+    add_test_exe(bench_string_header tests/benchmarks/bench_string_header.cpp YES)
 
     add_test(NAME test_array COMMAND test_array)
     add_test(NAME test_string COMMAND test_string)
