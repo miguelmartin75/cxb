@@ -1144,11 +1144,6 @@ struct AArray : MArray<T> {
         this->allocator = nullptr;
         return self;
     }
-
-    // CXB_MAYBE_INLINE bool operator<(const ArraySlice<T>& o) const { return MArray<T>::operator<(o); }
-    // CXB_MAYBE_INLINE bool operator==(const ArraySlice<T>& o) const { return MArray<T>::operator==(o); }
-    // CXB_MAYBE_INLINE bool operator!=(const ArraySlice<T>& o) const { return MArray<T>::operator!=(o); }
-    // CXB_MAYBE_INLINE bool operator>(const ArraySlice<T>& o) const { return MArray<T>::operator>(o); }
 };
 
 /* SECTION: variant types */
