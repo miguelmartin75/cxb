@@ -1089,8 +1089,16 @@ struct MArray {
         if(other.len == 0) return;
         reserve(len + other.len);
         // TODO std::copy alternative
-        memmove(data + len, other.data, other.len);
-        len += other.len;
+        if constexpr(std::is_trivially_assignable_v<T, T>) {
+            memmove(data + len, other.data, other.len);
+            len += other.len;
+        } else {
+            size_t old_len = len;
+            len += other.len;
+            for(size_t i = old_len; i < len; ++i) {
+                data[i] = other[i];
+            }
+        }
     }
 };
 
