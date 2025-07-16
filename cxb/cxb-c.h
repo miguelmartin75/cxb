@@ -25,6 +25,34 @@
 #define MILLIONS(x) (1000000ULL * (x))
 #define BILLIONS(x) (1000000000ULL * (x))
 
+#if defined(_MSC_VER)
+#if defined(__SANITIZE_ADDRESS__)
+#define ASAN_ENABLED 1
+#define NO_ASAN __declspec(no_sanitize_address)
+#else
+#define NO_ASAN
+#endif
+#elif defined(__clang__)
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#define ASAN_ENABLED 1
+#endif
+#endif
+#define NO_ASAN __attribute__((no_sanitize("address")))
+#else
+#define NO_ASAN
+#endif
+
+#if ASAN_ENABLED
+C_LINKAGE void __asan_poison_memory_region(void const volatile* addr, size_t size);
+C_LINKAGE void __asan_unpoison_memory_region(void const volatile* addr, size_t size);
+#define AsanPoisonMemoryRegion(addr, size) __asan_poison_memory_region((addr), (size))
+#define AsanUnpoisonMemoryRegion(addr, size) __asan_unpoison_memory_region((addr), (size))
+#else
+#define AsanPoisonMemoryRegion(addr, size) ((void) (addr), (void) (size))
+#define AsanUnpoisonMemoryRegion(addr, size) ((void) (addr), (void) (size))
+#endif
+
 #if defined(__clang__)
 #define BREAKPOINT() __builtin_debugtrap()
 #elif defined(__GNUC__)
