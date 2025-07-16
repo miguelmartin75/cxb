@@ -28,7 +28,7 @@ FILES=$(find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \
   | grep -v "./build" \
   | grep -v "./.cache" \
   | grep -v "./prototype" \
-  | grep -v "./deps"
+  | grep -v "./deps" \
   | grep -v "./3rdparty")
 
 if [ -z "$FILES" ]; then

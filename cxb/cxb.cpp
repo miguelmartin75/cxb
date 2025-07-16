@@ -7,13 +7,57 @@
 #include <unistd.h> // for sysconf()
 #endif
 
-static i64 page_size = -1;
+/*
+NOTES on Arenas
 
-CXB_C_EXPORT Arena arena_create(ArenaParams params) {}
+# mmap
 
-CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t n) {}
+To commit memory read or write to the memory, e.g. memset(base, 0, commit_n_bytes);
 
-CXB_C_EXPORT void arena_pop(Arena* arena, void* data, size_t n) {}
+To decommite memory, call mprotect:
+
+    size_t decommit = 5 * 1024 * 1024;
+    char* decommit_addr = base - decommit;
+    if (madvise(decommit_addr, decommit, MADV_FREE) != 0) {
+        perror("madvise free failed");
+    }
+    mprotect(decommit_addr, decommit, PROT_NONE);
+*/
+
+CXB_C_EXPORT Arena arena_make(ArenaParams params) {
+    Arena result = {};
+    result.params = params;
+
+    result.start = (char*) mmap(nullptr, params.reserve_bytes, PROT_NONE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    if(result.start == MAP_FAILED) {
+        result.start = nullptr;
+        return result;
+    }
+    result.pos = 0;
+    result.end = result.start + params.reserve_bytes;
+    result.n_blocks = 1;
+    return result;
+}
+
+CXB_C_EXPORT Arena arena_make_nbytes(size_t n_bytes) {
+    return arena_make(ArenaParams{.reserve_bytes = n_bytes, .max_n_blocks = 1});
+}
+
+CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
+    ASSERT(align == 0, "TODO support align > 0");
+    void* data = arena->start + arena->pos;
+    arena->pos += size;
+    return data;
+}
+
+CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
+    // ASSERT(pos >= 0 && pos < arena->pos && pos <= (arena->end - arena->start), "pop_to pos out of bounds");
+    arena->pos = pos;
+}
+
+CXB_C_EXPORT void arena_clear(Arena* arena) {
+    arena->pos = 0;
+}
 
 Mallocator default_alloc = {};
 
