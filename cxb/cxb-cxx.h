@@ -71,8 +71,6 @@ memory, "M" stands for "manual"
 #ifndef CXB_H
 #define CXB_H
 
-#include <_string.h>
-#include <cstring>
 #ifndef __cplusplus
 #error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb.h> is C++-only."
 #endif
@@ -205,7 +203,7 @@ struct Allocator {
         return result;
     }
 
-    template <typename H, typename T, typename... Args>
+    template <typename H, typename T>
     CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header, size_t old_count, size_t count) {
         char* new_header = (char*) this->alloc_impl(this,                             // allocator
                                                     false,                            // fill_zeros
@@ -1159,7 +1157,75 @@ struct Optional {
 CXB_NS_END
 
 /* SECTION: C-compat API (continued) */
-// TODO: implement arena allocator
+struct Arena;
+CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align);
+CXB_C_EXPORT void arena_pop_to(Arena* arena, size_t pos);
+CXB_C_EXPORT void arena_clear(Arena* arena);
+
+struct ArenaParams {
+    size_t reserve_bytes;
+    size_t max_n_blocks;
+};
+
+struct Arena {
+    char* start;
+    char* end;
+    size_t pos;
+    Arena* next;
+    Arena* prev;
+
+    template <typename T>
+    inline ArraySlice<T> push_array(size_t n) {
+        return ArraySlice<T>{.data = arena_push(this, sizeof(T) * n, 0), .len = n};
+    }
+
+    template<class T>
+    inline void push_back(ArraySlice<T>& xs, T value) {
+        ASSERT((void*)xs.data >= (void*)start && (void*)xs.data < end, "array not allocated on arena");
+        ASSERT((void*)(xs.data + xs.len) == (void*)(start + pos), "cannot push unless array is at the end");
+        pos += sizeof(T);
+        xs.data[xs.len] = value;
+        xs.len += 1;
+    }
+
+    template<class T, class... Args>
+    inline void emplace_back(ArraySlice<T>& xs, Args&&... args) {
+        ASSERT((void*)xs.data >= (void*)start && (void*)xs.data < end, "array not allocated on arena");
+        ASSERT((void*)(xs.data + xs.len) == (void*)(start + pos), "cannot push unless array is at the end");
+        pos += sizeof(T);
+        xs.data[xs.len] = T{forward<Args>(args)...};
+        xs.len += 1;
+    }
+
+    template <typename T>
+    inline void pop_array(ArraySlice<T>& xs) {
+        ASSERT((void*)xs.data >= (void*)start && (void*)xs.data < end, "array not allocated on arena");
+        ASSERT((void*)(xs.data + xs.len) == (void*)(start + pos), "cannot pop unless array is at the end");
+        pos -= (sizeof(xs.data) * xs.len);
+        xs.data = nullptr;
+        xs.len = 0;
+    }
+
+    template <typename T>
+    inline void pop_back(ArraySlice<T>& xs) {
+        ASSERT((void*)xs.data >= (void*)start && (void*)xs.data < end, "array not allocated on arena");
+        ASSERT((void*)(xs.data + xs.len) == (void*)(start + pos), "cannot pop unless array is at the end");
+        pos -= sizeof(xs.data);
+        xs.data[xs.len].~T();
+        xs.len -= 1;
+    }
+
+};
+
+CXB_C_EXPORT Arena arena_make(ArenaParams params);
+CXB_C_EXPORT void arena_destroy(Arena* arena);
+
+struct ArenaTemp {
+    Arena *arena;
+    u64 pos;
+};
+
+
 // struct ArenaAlloc: Allocator {
 //     Arena();
 // };

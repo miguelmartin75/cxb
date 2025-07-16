@@ -7,6 +7,8 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
 # Options
+option(CXB_BUILD_EXAMPLES "enable examples?" OFF)
+
 option(CXB_ENABLE_TESTS "enable tests?" OFF)
 option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 
@@ -38,6 +40,31 @@ function(add_test_exe test_name test_source fsanitize)
         )
     endif()
 endfunction()
+
+function(add_example_exe example_name example_sources fsanitize)
+    add_executable(${example_name} ${example_sources})
+    target_include_directories(${example_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    # target_compile_options(${example_name} PRIVATE
+    #   -nostdinc++      # skip default C++ include paths
+    #   # -nodefaultlibs   # skip linking against default C and C++ runtimes
+    # )
+
+    if(${fsanitize} AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(${example_name} PRIVATE
+            -fsanitize=address
+            -fsanitize=undefined
+            -fno-omit-frame-pointer
+        )
+        target_link_options(${example_name} PRIVATE
+            -fsanitize=address
+            -fsanitize=undefined
+        )
+    endif()
+endfunction()
+
+if(CXB_BUILD_EXAMPLES)
+    add_example_exe(interpreter "examples/interpreter.cpp" NO)
+endif()
 
 if(CXB_ENABLE_TESTS)
     add_subdirectory(deps/Catch2)
