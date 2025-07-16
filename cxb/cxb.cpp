@@ -28,7 +28,8 @@ CXB_C_EXPORT Arena arena_make(ArenaParams params) {
     Arena result = {};
     result.params = params;
 
-    result.start = (char*) mmap(nullptr, params.reserve_bytes, PROT_NONE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    // TODO: can reserve specific regions with PROT_NONE
+    result.start = (char*) mmap(nullptr, params.reserve_bytes, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
     if(result.start == MAP_FAILED) {
         result.start = nullptr;
         return result;
@@ -46,13 +47,16 @@ CXB_C_EXPORT Arena arena_make_nbytes(size_t n_bytes) {
 CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
     ASSERT(align == 0, "TODO support align > 0");
     void* data = arena->start + arena->pos;
+    ASAN_UNPOISON_MEMORY_REGION(data, size);
     arena->pos += size;
     return data;
 }
 
 CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
-    // ASSERT(pos >= 0 && pos < arena->pos && pos <= (arena->end - arena->start), "pop_to pos out of bounds");
+    ASSERT(pos >= 0 && pos < arena->pos && pos <= (u64)(arena->end - arena->start), "pop_to pos out of bounds");
+    u64 old_pos = arena->pos;
     arena->pos = pos;
+    ASAN_POISON_MEMORY_REGION(arena->start + old_pos, old_pos - pos);
 }
 
 CXB_C_EXPORT void arena_clear(Arena* arena) {

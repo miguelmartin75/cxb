@@ -17,6 +17,7 @@
 #define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
 
 // see: https://github.com/EpicGamesExt/raddebugger/blob/master/src/base/base_core.h
+#define Bytes(n) ((u64) (n))
 #define KB(n) ((u64) (n) << 10)
 #define MB(n) ((u64) (n) << 20)
 #define GB(n) ((u64) (n) << 30)
@@ -24,34 +25,6 @@
 
 #define MILLIONS(x) (1000000ULL * (x))
 #define BILLIONS(x) (1000000000ULL * (x))
-
-#if defined(_MSC_VER)
-#if defined(__SANITIZE_ADDRESS__)
-#define ASAN_ENABLED 1
-#define NO_ASAN __declspec(no_sanitize_address)
-#else
-#define NO_ASAN
-#endif
-#elif defined(__clang__)
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
-#define ASAN_ENABLED 1
-#endif
-#endif
-#define NO_ASAN __attribute__((no_sanitize("address")))
-#else
-#define NO_ASAN
-#endif
-
-#if ASAN_ENABLED
-C_LINKAGE void __asan_poison_memory_region(void const volatile* addr, size_t size);
-C_LINKAGE void __asan_unpoison_memory_region(void const volatile* addr, size_t size);
-#define AsanPoisonMemoryRegion(addr, size) __asan_poison_memory_region((addr), (size))
-#define AsanUnpoisonMemoryRegion(addr, size) __asan_unpoison_memory_region((addr), (size))
-#else
-#define AsanPoisonMemoryRegion(addr, size) ((void) (addr), (void) (size))
-#define AsanUnpoisonMemoryRegion(addr, size) ((void) (addr), (void) (size))
-#endif
 
 #if defined(__clang__)
 #define BREAKPOINT() __builtin_debugtrap()
@@ -77,6 +50,42 @@ C_LINKAGE void __asan_unpoison_memory_region(void const volatile* addr, size_t s
 #define CXB_C_EXPORT
 #define CXB_C_IMPORT
 #endif
+
+#if defined(_MSC_VER)
+#if defined(__SANITIZE_ADDRESS__)
+#define ASAN_ENABLED 1
+#define NO_ASAN __declspec(no_sanitize_address)
+#else
+#define NO_ASAN
+#endif
+#elif defined(__clang__)
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#define ASAN_ENABLED 1
+#endif
+#endif
+#define NO_ASAN __attribute__((no_sanitize("address")))
+#else
+#define NO_ASAN
+#endif
+
+#if ASAN_ENABLED
+#include <sanitizer/asan_interface.h>
+#else
+#define ASAN_POISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
+#define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
+#endif
+/*
+#if ASAN_ENABLED
+CXB_C_IMPORT void __asan_poison_memory_region(void const volatile* addr, size_t size);
+CXB_C_IMPORT void __asan_unpoison_memory_region(void const volatile* addr, size_t size);
+#define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region((addr), (size))
+#define ASAN_UNPOISON_MEMORY_REGION(addr, size) __asan_unpoison_memory_region((addr), (size))
+#else
+#define ASAN_POISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
+#define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
+#endif
+*/
 
 #define CXB_MAYBE_INLINE inline
 #if defined(__GNUC__)

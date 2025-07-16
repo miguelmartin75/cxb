@@ -673,10 +673,9 @@ struct MString {
     CXB_MAYBE_INLINE char pop_back() {
         REQUIRES(len > 0);
         char ret = data[len - 1];
-        if(null_term && len > 0) {
-            data[len - 1] = '\0';
-        }
         len--;
+        data[len] = '\0';
+        null_term = true;
         return ret;
     }
 
@@ -1176,81 +1175,215 @@ struct Arena {
     Arena* prev;
     size_t n_blocks;
     ArenaParams params;
-
-    template <typename T>
-    inline T* push(size_t n = 1) {
-        T* data = (T*) arena_push(this, sizeof(T) * n, 0);
-        if constexpr(!std::is_trivially_default_constructible_v<T>) {
-            for(size_t i = 0; i < n; ++i) {
-                new(data + i) T{};
-            }
-        } else {
-            memset(data, 0, sizeof(T) * n);
-        }
-        return data;
-    }
-
-    template <typename T>
-    inline void pop(T* x) {
-        ASSERT((void*) (x) >= (void*) start && (void*) (x) < end, "array not allocated on arena");
-        ASSERT((void*) (x) == (void*) (start + pos), "cannot pop unless array is at the end");
-        pos -= sizeof(T);
-    }
-
-    template <typename T>
-    inline ArraySlice<T> push_array(size_t n) {
-        T* data = push<T>(n);
-        return ArraySlice<T>{.data = data, .len = n};
-    }
-
-    template <class T>
-    inline void push_back(ArraySlice<T>& xs, T value) {
-        ASSERT((void*) xs.data >= (void*) start && (void*) xs.data < end, "array not allocated on arena");
-        ASSERT((void*) (xs.data + xs.len) == (void*) (start + pos), "cannot push unless array is at the end");
-        pos += sizeof(T);
-        xs.data[xs.len] = value;
-        xs.len += 1;
-    }
-
-    template <class T, class... Args>
-    inline void emplace_back(ArraySlice<T>& xs, Args&&... args) {
-        ASSERT((void*) xs.data >= (void*) start && (void*) xs.data < end, "array not allocated on arena");
-        ASSERT((void*) (xs.data + xs.len) == (void*) (start + pos), "cannot push unless array is at the end");
-        pos += sizeof(T);
-        xs.data[xs.len] = T{forward<Args>(args)...};
-        xs.len += 1;
-    }
-
-    template <typename T>
-    inline void pop_array(ArraySlice<T>& xs) {
-        ASSERT((void*) xs.data >= (void*) start && (void*) xs.data < end, "array not allocated on arena");
-        ASSERT((void*) (xs.data + xs.len) == (void*) (start + pos), "cannot pop unless array is at the end");
-        pos -= (sizeof(xs.data) * xs.len);
-        xs.data = nullptr;
-        xs.len = 0;
-    }
-
-    template <typename T>
-    inline void pop_back(ArraySlice<T>& xs) {
-        ASSERT((void*) xs.data >= (void*) start && (void*) xs.data < end, "array not allocated on arena");
-        ASSERT((void*) (xs.data + xs.len) == (void*) (start + pos), "cannot pop unless array is at the end");
-        pos -= sizeof(xs.data);
-
-        if constexpr(!std::is_trivially_destructible_v<T>) {
-            xs.data[xs.len].~T();
-        }
-        xs.len -= 1;
-    }
 };
 
 CXB_C_EXPORT Arena arena_make(ArenaParams params);
 CXB_C_EXPORT Arena arena_make_nbytes(size_t n_bytes);
 CXB_C_EXPORT void arena_destroy(Arena* arena);
 
+
+
 struct ArenaTemp {
     Arena* arena;
     u64 pos;
 };
+
+
+template <typename T>
+inline T* push(Arena& arena, size_t n = 1) {
+    const size_t size = sizeof(T) * n;
+    T* data = (T*)arena_push(&arena, size, 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < n; ++i) {
+            new(data + i) T{};
+        }
+    } else {
+        memset(data, 0, size);
+    }
+    return data;
+}
+
+template <typename T>
+inline void pop(Arena& arena, T* x) {
+    ASSERT((void*) (x) >= (void*) arena.start && (void*) (x) < arena.end, "array not allocated on arena");
+    ASSERT((void*) (x + 1) == (void*) (arena.start + arena.pos), "cannot pop unless array is at the end");
+    arena.pos -= sizeof(T);
+}
+
+// *SECTION: StringSlice arena functions
+inline StringSlice push_str(Arena& arena, size_t n = 1) {
+    REQUIRES(n > 0);
+    char* data = push<char>(arena, n);
+    return StringSlice{.data = data, .len = n - 1, .null_term = true};
+}
+
+inline StringSlice push_str(Arena& arena, StringSlice to_copy) {
+    char* data = push<char>(arena, to_copy.n_bytes());
+    StringSlice result = StringSlice{.data = data, .len = to_copy.len, .null_term = to_copy.null_term};
+    memccpy(result.data, to_copy.data, sizeof(char), to_copy.n_bytes());
+    return result;
+}
+
+inline void resize(Arena& arena, StringSlice& str, char fill_char = '\0') {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+}
+
+inline void push_back(Arena& arena, StringSlice& str, char ch) {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+
+    str.data[str.len] = ch;
+    str.len += 1;
+    if(str.null_term) {
+        str.data[str.len] = '\0';
+    }
+    arena.pos += sizeof(char);
+}
+
+inline void pop_back(Arena& arena, StringSlice& str) {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+
+    str.len -= 1;
+    str.data[str.len] = '\0';
+    str.null_term = true;
+    arena_pop_to(&arena, arena.pos - 1);
+}
+
+inline void pop_all(Arena& arena, StringSlice& str) {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+
+    arena_pop_to(&arena, arena.pos - str.n_bytes());
+    str.len = 0;
+    str.data = nullptr;
+}
+
+
+inline void insert(Arena& arena, StringSlice& str, char ch, size_t i) {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT(i <= str.len, "insert position out of bounds");
+
+    push_back(arena, str, '\0');
+    memmove(str.data + i + 1, str.data + i, str.len - i - 1);
+    str.data[i] = ch;
+}
+
+inline void insert(Arena& arena, StringSlice& str, StringSlice to_insert, size_t i) {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT(i <= str.len, "insert position out of bounds");
+
+    arena_push(&arena, to_insert.len, 0);
+
+    size_t old_len = str.len;
+    str.len += to_insert.len;
+
+    memmove(str.data + i + to_insert.len, str.data + i, old_len - i);
+    memcpy(str.data + i, to_insert.data, to_insert.len);
+}
+
+inline void extend(Arena& arena, StringSlice& str, StringSlice to_append) {
+    ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+
+    arena_push(&arena, to_append.len, 0);
+
+    size_t old_len = str.len;
+    str.len += to_append.len;
+    memcpy(str.data + old_len, to_append.data, to_append.len);
+}
+
+// *SECTION: ArraySlice arena functions
+template <typename T>
+inline ArraySlice<T> push_array(Arena& arena, size_t n) {
+    T* data = push<T>(arena, n);
+    return ArraySlice<T>{.data = data, .len = n};
+}
+
+template <typename T>
+inline ArraySlice<T> push_array(Arena& arena, ArraySlice<T> to_copy) {
+    T* data = push<T>(arena, to_copy.len);
+    if constexpr(std::is_trivially_copyable_v<T>) {
+        memcpy(data, to_copy.data, to_copy.len * sizeof(T));
+    } else {
+        for(size_t i = 0; i < to_copy.len; ++i) {
+            data[i] = to_copy.data[i];
+        }
+    }
+    return ArraySlice<T>{.data = data, .len = to_copy.len};
+}
+
+template <class T>
+inline void push_back(Arena& arena, ArraySlice<T>& xs, T value) {
+    ASSERT((void*) xs.data >= (void*) arena.start && (void*) xs.data < arena.end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    arena_push(&arena, sizeof(T), 0);
+    xs.data[xs.len] = value;
+    xs.len += 1;
+}
+
+template <class T, class... Args>
+inline void emplace_back(Arena& arena, ArraySlice<T>& xs, Args&&... args) {
+    ASSERT((void*) xs.data >= (void*) arena.start && (void*) xs.data < arena.end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    arena_push(&arena, sizeof(T), 0);
+    xs.data[xs.len] = T{forward<Args>(args)...};
+    xs.len += 1;
+}
+
+template <typename T>
+inline void pop_back(Arena& arena, ArraySlice<T>& xs) {
+    ASSERT((void*) xs.data >= (void*) arena.start && (void*) xs.data < arena.end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena.start + arena.pos), "cannot pop unless array is at the end");
+    arena_pop_to(&arena, arena.pos - sizeof(xs.data));
+
+    if constexpr(!std::is_trivially_destructible_v<T>) {
+        xs.data[xs.len].~T();
+    }
+    xs.len -= 1;
+}
+
+template <typename T>
+inline void insert(Arena& arena, ArraySlice<T>& xs, ArraySlice<T> to_insert, size_t i) {
+    ASSERT((void*) xs.data >= (void*) arena.start && (void*) xs.data < arena.end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT(i <= xs.len, "insert position out of bounds");
+
+    arena_push(&arena, to_insert.len * sizeof(T), 0);
+
+    size_t old_len = xs.len;
+    xs.len += to_insert.len;
+
+    memmove(xs.data + i + to_insert.len, xs.data + i, (old_len - i) * sizeof(T));
+    memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
+}
+
+template <typename T>
+inline void extend(Arena& arena, ArraySlice<T>& xs, ArraySlice<T> to_append) {
+    ASSERT((void*) xs.data >= (void*) arena.start && (void*) xs.data < arena.end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+
+    arena_push(&arena, to_append.len * sizeof(T), 0);
+
+    size_t old_len = xs.len;
+    xs.len += to_append.len;
+
+    memcpy(xs.data + old_len, to_append.data, to_append.len * sizeof(T));
+}
+
+template <typename T>
+inline void pop_all(Arena& arena, ArraySlice<T>& xs) {
+    ASSERT((void*) xs.data >= (void*) arena.start && (void*) xs.data < arena.end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena.start + arena.pos), "cannot pop unless array is at the end");
+    arena_pop_to(&arena, arena.pos - (sizeof(xs.data) * xs.len));
+    xs.data = nullptr;
+    xs.len = 0;
+}
+
+
 
 // struct ArenaAlloc: Allocator {
 //     Arena();
