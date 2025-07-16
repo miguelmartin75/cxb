@@ -28,7 +28,8 @@ FILES=$(find . -name "*.cpp" -o -name "*.h" -o -name "*.hpp" -o -name "*.c" \
   | grep -v "./build" \
   | grep -v "./.cache" \
   | grep -v "./prototype" \
-  | grep -v "./deps")
+  | grep -v "./deps" \
+  | grep -v "./3rdparty")
 
 if [ -z "$FILES" ]; then
     echo -e "${YELLOW}No C/C++ files found to format${NC}"
@@ -48,7 +49,7 @@ echo
 if [ "$CHECK_ONLY" = true ]; then
     echo -e "${YELLOW}Checking formatting (no changes will be made)...${NC}"
     NEEDS_FORMATTING=false
-    
+
     while IFS= read -r file; do
         if ! clang-format --dry-run --Werror "$file" 2>/dev/null; then
             echo -e "${RED}❌ $file needs formatting${NC}"
@@ -57,7 +58,7 @@ if [ "$CHECK_ONLY" = true ]; then
             echo -e "${GREEN}✅ $file is properly formatted${NC}"
         fi
     done <<< "$FILES"
-    
+
     if [ "$NEEDS_FORMATTING" = true ]; then
         echo
         echo -e "${YELLOW}Some files need formatting. Run ./scripts/format.sh to fix them.${NC}"
@@ -69,12 +70,12 @@ if [ "$CHECK_ONLY" = true ]; then
     fi
 else
     echo -e "${YELLOW}Formatting files...${NC}"
-    
+
     while IFS= read -r file; do
         echo "Formatting $file"
         clang-format -i "$file"
     done <<< "$FILES"
-    
+
     echo
     echo -e "${GREEN}All files have been formatted!${NC}"
 fi

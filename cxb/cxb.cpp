@@ -2,12 +2,72 @@
 
 #include <stdlib.h> // for malloc, free, realloc, calloc
 
-CXB_NS_BEGIN
+#ifdef __APPLE__
+#include <sys/mman.h>
+#include <unistd.h> // for sysconf()
+#endif
+
+/*
+NOTES on Arenas
+
+# mmap
+
+To commit memory read or write to the memory, e.g. memset(base, 0, commit_n_bytes);
+
+To decommite memory, call mprotect:
+
+    size_t decommit = 5 * 1024 * 1024;
+    char* decommit_addr = base - decommit;
+    if (madvise(decommit_addr, decommit, MADV_FREE) != 0) {
+        perror("madvise free failed");
+    }
+    mprotect(decommit_addr, decommit, PROT_NONE);
+*/
+
+CXB_C_EXPORT Arena arena_make(ArenaParams params) {
+    Arena result = {};
+    result.params = params;
+
+    // TODO: can reserve specific regions with PROT_NONE
+    result.start = (char*) mmap(nullptr, params.reserve_bytes, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    if(result.start == MAP_FAILED) {
+        result.start = nullptr;
+        return result;
+    }
+    result.pos = 0;
+    result.end = result.start + params.reserve_bytes;
+    result.n_blocks = 1;
+    return result;
+}
+
+CXB_C_EXPORT Arena arena_make_nbytes(size_t n_bytes) {
+    return arena_make(ArenaParams{.reserve_bytes = n_bytes, .max_n_blocks = 1});
+}
+
+CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
+    ASSERT(align == 0, "TODO support align > 0");
+    void* data = arena->start + arena->pos;
+    ASAN_UNPOISON_MEMORY_REGION(data, size);
+    arena->pos += size;
+    return data;
+}
+
+CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
+    ASSERT(pos >= 0 && pos < arena->pos && pos <= (u64) (arena->end - arena->start), "pop_to pos out of bounds");
+    u64 old_pos = arena->pos;
+    arena->pos = pos;
+    ASAN_POISON_MEMORY_REGION(arena->start + old_pos, old_pos - pos);
+}
+
+CXB_C_EXPORT void arena_clear(Arena* arena) {
+    arena->pos = 0;
+}
 
 Mallocator default_alloc = {};
 
+CXB_NS_BEGIN
+
 // * SECTION: allocators
-size_t mallocator_growth_sug_impl(const Allocator* a, size_t count);
 void* mallocator_alloc_impl(
     Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
 void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes);
