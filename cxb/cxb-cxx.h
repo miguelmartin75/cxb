@@ -1,9 +1,8 @@
 /*
 # cxb: Base library for CX (Orthodox-C++)
 
-This library is my own style (Miguel's) of writing C++
-
 ## Inspiration
+* Odin
 * Zig
 * Python
 * Nim
@@ -79,6 +78,11 @@ memory, "M" stands for "manual"
 #endif
 
 #include "cxb-c.h"
+
+// NOTE: GCC doesn't support _Atomic in C++
+#if defined(__STDC_NO_ATOMICS__) || (defined(__GNUC__) && !defined(__clang__))
+#error "C11 _Atomic is not available, compile with C++23"
+#endif
 
 /* SECTION: configuration */
 // #define CXB_ALLOC_TEMPLATE
@@ -185,7 +189,6 @@ struct Allocator {
     template <typename T>
     CXB_MAYBE_INLINE T* alloc(size_t count = 1) {
         T* result = (T*) this->alloc_impl(this, false, nullptr, sizeof(T) * count, alignof(T), 0);
-        // for(size_t i = 0; i < count; ++i) new(result + i) T{args...};
         return result;
     }
 
@@ -203,10 +206,7 @@ struct Allocator {
     }
 
     template <typename H, typename T, typename... Args>
-    CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header,
-                                                                    size_t old_count,
-                                                                    size_t count,
-                                                                    Args&&... args) {
+    CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header, size_t old_count, size_t count) {
         char* new_header = (char*) this->alloc_impl(this,                             // allocator
                                                     false,                            // fill_zeros
                                                     (void*) header,                   // header
@@ -215,10 +215,6 @@ struct Allocator {
                                                     sizeof(T) * old_count + sizeof(H) // old bytes
         );
         T* data = (T*) (new_header + sizeof(H));
-
-        for(size_t i = old_count; i < count; ++i) {
-            new(data + i) T{forward<Args>(args)...};
-        }
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
 
@@ -240,7 +236,6 @@ struct Allocator {
         this->free_impl(this, (void*) head, sizeof(T) * count);
     }
 
-    // TODO: inconsistent
     template <typename H, typename T>
     CXB_MAYBE_INLINE void free_header_offset(T* offset_from_header, size_t count) {
         this->free_impl(this, (char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H));
@@ -1163,9 +1158,9 @@ struct Optional {
 };
 CXB_NS_END
 
-/* SECTION: C API (continued) */
+/* SECTION: C-compat API (continued) */
 // TODO: implement arena allocator
-// struct Arena : Allocator {
+// struct ArenaAlloc: Allocator {
 //     Arena();
 // };
 
