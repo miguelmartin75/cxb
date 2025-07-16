@@ -1181,18 +1181,15 @@ CXB_C_EXPORT Arena arena_make(ArenaParams params);
 CXB_C_EXPORT Arena arena_make_nbytes(size_t n_bytes);
 CXB_C_EXPORT void arena_destroy(Arena* arena);
 
-
-
 struct ArenaTemp {
     Arena* arena;
     u64 pos;
 };
 
-
 template <typename T>
 inline T* push(Arena& arena, size_t n = 1) {
     const size_t size = sizeof(T) * n;
-    T* data = (T*)arena_push(&arena, size, 0);
+    T* data = (T*) arena_push(&arena, size, 0);
     if constexpr(!std::is_trivially_default_constructible_v<T>) {
         for(size_t i = 0; i < n; ++i) {
             new(data + i) T{};
@@ -1226,12 +1223,14 @@ inline StringSlice push_str(Arena& arena, StringSlice to_copy) {
 
 inline void resize(Arena& arena, StringSlice& str, char fill_char = '\0') {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
 }
 
 inline void push_back(Arena& arena, StringSlice& str, char ch) {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
 
     str.data[str.len] = ch;
     str.len += 1;
@@ -1243,7 +1242,8 @@ inline void push_back(Arena& arena, StringSlice& str, char ch) {
 
 inline void pop_back(Arena& arena, StringSlice& str) {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
 
     str.len -= 1;
     str.data[str.len] = '\0';
@@ -1253,17 +1253,18 @@ inline void pop_back(Arena& arena, StringSlice& str) {
 
 inline void pop_all(Arena& arena, StringSlice& str) {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
 
     arena_pop_to(&arena, arena.pos - str.n_bytes());
     str.len = 0;
     str.data = nullptr;
 }
 
-
 inline void insert(Arena& arena, StringSlice& str, char ch, size_t i) {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
     ASSERT(i <= str.len, "insert position out of bounds");
 
     push_back(arena, str, '\0');
@@ -1273,7 +1274,8 @@ inline void insert(Arena& arena, StringSlice& str, char ch, size_t i) {
 
 inline void insert(Arena& arena, StringSlice& str, StringSlice to_insert, size_t i) {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
     ASSERT(i <= str.len, "insert position out of bounds");
 
     arena_push(&arena, to_insert.len, 0);
@@ -1287,7 +1289,8 @@ inline void insert(Arena& arena, StringSlice& str, StringSlice to_insert, size_t
 
 inline void extend(Arena& arena, StringSlice& str, StringSlice to_append) {
     ASSERT((void*) str.data >= (void*) arena.start && (void*) str.data < arena.end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos), "cannot push unless array is at the end");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena.start + arena.pos),
+           "cannot push unless array is at the end");
 
     arena_push(&arena, to_append.len, 0);
 
@@ -1383,8 +1386,7 @@ inline void pop_all(Arena& arena, ArraySlice<T>& xs) {
     xs.len = 0;
 }
 
-
-
+// TODO
 // struct ArenaAlloc: Allocator {
 //     Arena();
 // };

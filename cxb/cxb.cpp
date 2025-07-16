@@ -53,7 +53,7 @@ CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
 }
 
 CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
-    ASSERT(pos >= 0 && pos < arena->pos && pos <= (u64)(arena->end - arena->start), "pop_to pos out of bounds");
+    ASSERT(pos >= 0 && pos < arena->pos && pos <= (u64) (arena->end - arena->start), "pop_to pos out of bounds");
     u64 old_pos = arena->pos;
     arena->pos = pos;
     ASAN_POISON_MEMORY_REGION(arena->start + old_pos, old_pos - pos);
