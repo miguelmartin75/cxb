@@ -15,7 +15,7 @@ option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 set(CXB_SRCS "cxb/cxb.cpp")
 
 # Add compiler-specific options
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
     add_compile_options(-ftime-trace -Wall -Wextra)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra)

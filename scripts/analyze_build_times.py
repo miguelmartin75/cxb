@@ -66,7 +66,9 @@ def configure_cmake(build_dir: Path, source_dir: Path) -> bool:
         "-DCMAKE_BUILD_TYPE=Debug",
         "-DCMAKE_C_COMPILER=clang",
         "-DCMAKE_CXX_COMPILER=clang++",
-        "-DBUILD_C_API_TESTS=ON"
+        "-DCXB_ENABLE_TESTS=ON",
+        "-DCXB_BUILD_C_API_TESTS=ON",
+        "-DCXB_BUILD_EXAMPLES=ON",
     ]
 
     exit_code, _, e = run_command(cmd)
@@ -78,7 +80,7 @@ def configure_cmake(build_dir: Path, source_dir: Path) -> bool:
 
 
 def build_project(build_dir: Path) -> bool:
-    cmd = ["cmake", "--build", str(build_dir)]
+    cmd = ["cmake", "--build", str(build_dir), "-j"]
     exit_code, _, e = run_command(cmd)
     if exit_code != 0:
         sys.stderr.write(f"Build failed:\n{e}")
