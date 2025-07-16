@@ -16,6 +16,15 @@
 #define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
 #define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
 
+// see: https://github.com/EpicGamesExt/raddebugger/blob/master/src/base/base_core.h
+#define KB(n) ((u64) (n) << 10)
+#define MB(n) ((u64) (n) << 20)
+#define GB(n) ((u64) (n) << 30)
+#define TB(n) ((u64) (n) << 40)
+
+#define MILLIONS(x) (1000000ULL * (x))
+#define BILLIONS(x) (1000000000ULL * (x))
+
 #if defined(__clang__)
 #define BREAKPOINT() __builtin_debugtrap()
 #elif defined(__GNUC__)

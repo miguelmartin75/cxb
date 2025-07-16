@@ -2,12 +2,24 @@
 
 #include <stdlib.h> // for malloc, free, realloc, calloc
 
-CXB_NS_BEGIN
+#ifdef __APPLE__
+#include <sys/mman.h>
+#include <unistd.h> // for sysconf()
+#endif
+
+static i64 page_size = -1;
+
+CXB_C_EXPORT Arena arena_create(ArenaParams params) {}
+
+CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t n) {}
+
+CXB_C_EXPORT void arena_pop(Arena* arena, void* data, size_t n) {}
 
 Mallocator default_alloc = {};
 
+CXB_NS_BEGIN
+
 // * SECTION: allocators
-size_t mallocator_growth_sug_impl(const Allocator* a, size_t count);
 void* mallocator_alloc_impl(
     Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
 void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes);
