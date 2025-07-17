@@ -1148,6 +1148,19 @@ struct AArray : MArray<T> {
 
 /* SECTION: variant types */
 
+template <typename T, typename EC>
+struct Result {
+    T value;
+    EC error;
+
+    // TODO: place on "error" Arena*
+    StringSlice reason;
+
+    inline operator bool() const {
+        return (i64)error == 0;
+    }
+};
+
 template <typename T>
 struct Optional {
     T value;
@@ -1221,10 +1234,16 @@ inline StringSlice push_str(Arena* arena, StringSlice to_copy) {
     return result;
 }
 
-inline void resize(Arena* arena, StringSlice& str, char fill_char = '\0') {
+inline void resize(Arena* arena, StringSlice& str, size_t n, char fill_char = '\0') {
     ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
     ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
+    ASSERT(n > str.size());
+
+    size_t delta = n - str.size();
+    arena_push(arena, delta, 0);
+    memset(str.data + str.len, fill_char, delta);
+    str.len += delta;
 }
 
 inline void push_back(Arena* arena, StringSlice& str, char ch) {

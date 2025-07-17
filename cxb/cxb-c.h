@@ -34,9 +34,9 @@
 #define BREAKPOINT() abort()
 #endif
 
-#define DEBUG_ASSERT(x, msg, ...) \
+#define DEBUG_ASSERT(x, ...) \
     if(!(x)) BREAKPOINT()
-#define ASSERT(x, msg, ...) \
+#define ASSERT(x, ...) \
     if(!(x)) BREAKPOINT()
 #define REQUIRES(x)       \
     if(!(x)) BREAKPOINT()
@@ -46,9 +46,13 @@
 #ifdef __cplusplus
 #define CXB_C_EXPORT extern "C"
 #define CXB_C_IMPORT extern "C"
+#define C_DECL_BEGIN extern "C" {
+#define C_DECL_END }
 #else
 #define CXB_C_EXPORT
 #define CXB_C_IMPORT
+#define C_DECL_BEGIN
+#define C_DECL_END
 #endif
 
 #if defined(_MSC_VER)
@@ -221,6 +225,8 @@ static const Mat33f identity3x3 = {.arr = {
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
 #define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+
+#define RESULT_TYPE(name, value_type, error_type) typedef struct name { value_type value; error_type error; StringSlice msg; } name;
 #endif
 
 #ifndef CXB_C_API_DECL

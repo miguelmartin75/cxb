@@ -41,7 +41,8 @@ function(add_test_exe test_name test_source fsanitize)
     endif()
 endfunction()
 
-function(add_example_exe example_name example_sources fsanitize)
+function(add_example_exe example_name example_sources)
+    message(STATUS "example srcs=${example_sources}")
     add_executable(${example_name} ${example_sources} ${CXB_SRCS})
     target_include_directories(${example_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     # target_compile_options(${example_name} PRIVATE
@@ -49,7 +50,7 @@ function(add_example_exe example_name example_sources fsanitize)
     #   # -nodefaultlibs   # skip linking against default C and C++ runtimes
     # )
 
-    if(${fsanitize} AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+    if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
         target_compile_options(${example_name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
@@ -63,7 +64,8 @@ function(add_example_exe example_name example_sources fsanitize)
 endfunction()
 
 if(CXB_BUILD_EXAMPLES)
-    add_example_exe(interpreter "examples/interpreter.cpp" NO)
+    set(INTERPRETER_SRCS examples/interpreter.cpp examples/parser.cpp)
+    add_example_exe(interpreter "${INTERPRETER_SRCS}")
 endif()
 
 if(CXB_ENABLE_TESTS)
