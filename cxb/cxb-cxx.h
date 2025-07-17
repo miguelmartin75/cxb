@@ -1157,7 +1157,7 @@ struct Result {
     StringSlice reason;
 
     inline operator bool() const {
-        return (i64)error == 0;
+        return (i64) error == 0;
     }
 };
 
@@ -1202,7 +1202,7 @@ struct ArenaTemp {
 template <typename T>
 inline T* push(Arena* arena, size_t n = 1) {
     const size_t size = sizeof(T) * n;
-    T* data = (T*) arena_push(arena, size, 0);
+    T* data = (T*) arena_push(arena, size, alignof(T));
     if constexpr(!std::is_trivially_default_constructible_v<T>) {
         for(size_t i = 0; i < n; ++i) {
             new(data + i) T{};
@@ -1241,7 +1241,7 @@ inline void resize(Arena* arena, StringSlice& str, size_t n, char fill_char = '\
     ASSERT(n > str.size());
 
     size_t delta = n - str.size();
-    arena_push(arena, delta, 0);
+    arena_push(arena, delta, alignof(char));
     memset(str.data + str.len, fill_char, delta);
     str.len += delta;
 }
@@ -1297,7 +1297,7 @@ inline void insert(Arena* arena, StringSlice& str, StringSlice to_insert, size_t
            "cannot push unless array is at the end");
     ASSERT(i <= str.len, "insert position out of bounds");
 
-    arena_push(arena, to_insert.len, 0);
+    arena_push(arena, to_insert.len, alignof(char));
 
     size_t old_len = str.len;
     str.len += to_insert.len;
@@ -1311,7 +1311,7 @@ inline void extend(Arena* arena, StringSlice& str, StringSlice to_append) {
     ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    arena_push(arena, to_append.len, 0);
+    arena_push(arena, to_append.len, alignof(char));
 
     size_t old_len = str.len;
     str.len += to_append.len;
@@ -1342,7 +1342,7 @@ template <class T>
 inline void push_back(Arena* arena, ArraySlice<T>& xs, T value) {
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    arena_push(arena, sizeof(T), 0);
+    arena_push(arena, sizeof(T), alignof(T));
     xs.data[xs.len] = value;
     xs.len += 1;
 }
@@ -1351,7 +1351,7 @@ template <class T, class... Args>
 inline void emplace_back(Arena* arena, ArraySlice<T>& xs, Args&&... args) {
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    arena_push(arena, sizeof(T), 0);
+    arena_push(arena, sizeof(T), alignof(T));
     xs.data[xs.len] = T{forward<Args>(args)...};
     xs.len += 1;
 }
@@ -1374,7 +1374,7 @@ inline void insert(Arena* arena, ArraySlice<T>& xs, ArraySlice<T> to_insert, siz
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
     ASSERT(i <= xs.len, "insert position out of bounds");
 
-    arena_push(arena, to_insert.len * sizeof(T), 0);
+    arena_push(arena, to_insert.len * sizeof(T), alignof(T));
 
     size_t old_len = xs.len;
     xs.len += to_insert.len;
@@ -1388,7 +1388,7 @@ inline void extend(Arena* arena, ArraySlice<T>& xs, ArraySlice<T> to_append) {
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
 
-    arena_push(arena, to_append.len * sizeof(T), 0);
+    arena_push(arena, to_append.len * sizeof(T), alignof(T));
 
     size_t old_len = xs.len;
     xs.len += to_append.len;

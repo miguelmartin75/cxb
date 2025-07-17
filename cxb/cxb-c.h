@@ -36,7 +36,7 @@
 
 #define DEBUG_ASSERT(x, ...) \
     if(!(x)) BREAKPOINT()
-#define ASSERT(x, ...) \
+#define ASSERT(x, ...)    \
     if(!(x)) BREAKPOINT()
 #define REQUIRES(x)       \
     if(!(x)) BREAKPOINT()
@@ -226,7 +226,12 @@ static const Mat33f identity3x3 = {.arr = {
 
 #define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
 
-#define RESULT_TYPE(name, value_type, error_type) typedef struct name { value_type value; error_type error; StringSlice msg; } name;
+#define RESULT_TYPE(name, value_type, error_type) \
+    typedef struct name {                         \
+        value_type value;                         \
+        error_type error;                         \
+        StringSlice msg;                          \
+    } name;
 #endif
 
 #ifndef CXB_C_API_DECL
