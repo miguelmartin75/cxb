@@ -10,12 +10,14 @@ cmake --build build
 # Run tests
 cd build && ctest --output-on-failure
 # OR run test executable directly
-./build/test_seq
+./build/test_arena
 ```
 
 ## Code Formatting
 
 This project uses clang-format for consistent code formatting. See `.clang-format`.
+
+All pull requests must pass formatting checks and tests before merging.
 
 ### Format all files
 ```bash
@@ -41,9 +43,8 @@ This will automatically check formatting before each commit and prevent commits 
 
 ## CI/CD
 
-The project includes GitHub Actions workflows that:
-- Check code formatting on pull requests
-- Build and test the project on multiple configurations (e.g. Debug/Release)
-- Run on both pushes to main and PRs
+NixOS is used for the CI, which enables debugging the CI easier. See [.github/workflows/ci.yml](../.github/workflows/ci.yml) and [scripts/ci/](../scripts/ci)
 
-All pull requests must pass formatting checks and tests before merging.
+Steps performed on CI:
+- Format code
+- Run tests across x86_64, aarch64 on MacOS and Linux (Ubuntu)
