@@ -24,23 +24,28 @@ To decommite memory, call mprotect:
     mprotect(decommit_addr, decommit, PROT_NONE);
 */
 
-CXB_C_EXPORT Arena arena_make(ArenaParams params) {
-    Arena result = {};
-    result.params = params;
+CXB_C_EXPORT Arena* arena_make(ArenaParams params) {
+    ASSERT(params.reserve_bytes > 2 * sizeof(Arena), "need memory to allocate arena");
 
     // TODO: can reserve specific regions with PROT_NONE
-    result.start = (char*) mmap(nullptr, params.reserve_bytes, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-    if(result.start == MAP_FAILED) {
-        result.start = nullptr;
-        return result;
+    void* data = (char*) mmap(nullptr, params.reserve_bytes, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+    if(data == MAP_FAILED) {
+        return nullptr;
     }
-    result.pos = 0;
-    result.end = result.start + params.reserve_bytes;
-    result.n_blocks = 1;
+
+    Arena* result = (Arena*) data;
+    ASAN_UNPOISON_MEMORY_REGION(result, sizeof(Arena));
+    memset(result, 0, sizeof(Arena));
+
+    result->params = params;
+    result->start = (char*) data;
+    result->pos = sizeof(Arena);
+    result->end = result->start + params.reserve_bytes;
+    result->n_blocks = 1;
     return result;
 }
 
-CXB_C_EXPORT Arena arena_make_nbytes(size_t n_bytes) {
+CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes) {
     return arena_make(ArenaParams{.reserve_bytes = n_bytes, .max_n_blocks = 1});
 }
 
