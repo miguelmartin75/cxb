@@ -15,14 +15,15 @@
 - Literal helper macros use descriptive suffixes: `S8_LIT()`, `COUNTOF_LIT()`
 
 ### Types
+- Prefer the `struct` keyword over `class`
 - PascalCase for classes and structs: `Allocator`, `Mallocator`, `Utf8Iterator`
 - Lowercase abbreviations for primitive type aliases: `f32`, `f64`, `i32`, `u64`
 - Descriptive compound names: `Vec2f`, `Color4i`, `Utf8DecodeResult`
 
 ### Functions and Variables
-- snake_case for functions: `utf8_decode()`, `growth_sug()`, `to_c11_order()`
-- snake_case for member variables: `n_active_bytes`, `bytes_consumed`
-- Descriptive names over abbreviations: `codepoint` not `cp`, `allocator` not `alloc`
+- `snake_case` for functions
+- `snake_case` for member variables: `n_active_bytes`, `bytes_consumed`
+- Do not make any variable or function "private", use a leading underscore if a variable is intended to be private, i.e. is an "implementation" detail
 
 ### Constants and Enums
 - PascalCase for enum values: `Relaxed`, `Acquire`, `SeqCst`
@@ -40,50 +41,59 @@
 
 ### Class/Struct Layout
 
-Always use the struct keyword and expose all implementation details. Never use protected or private unless it is strictly necessary for implementation purposes.
+Always use the struct keyword and expose all implementation details. Never use protected or private. Do not make any variable or function "private", use a leading underscore if a variable is intended to be private, i.e. is an "implementation" detail
+
 
 ```cpp
-struct ExampleClass {
-    // Member variables first
+struct Example {
+    // member variables first
     Type member_var;
 
-    // Constructors
-    ExampleClass() = default;
-    ExampleClass(const Type& param) = default;
+    // then ctors & dtors
+    Example() = default;
+    ~Example() = default;
 
-    void public_method();
+    // group assignment operators with the associated ctor
+    Example(const Type& param) = default;
+    Example& operator=(const Example& other);
 
-    // operators
-    ExampleClass& operator=(const ExampleClass& other);
-    bool operator==(const ExampleClass& other);
+    // now member functions
+    void fn1();
+    int fn2();
+
+    // lastly include the operators
+    bool operator==(const Example& other);
 };
 ```
 
-## Memory Management
+## Memory Management & Containers
 
-- Always use `Allocator*` for custom allocation
-- Provide both allocating and non-allocating versions where appropriate
-- RAII with explicit `.destroy()` methods for cleanup
-- Support for headers in allocations: `alloc_with_header()`, `free_with_header()`
+- Prefer using the `Arena` type
+- A container marked with an `M` prefix indicates that manual memory management is mandatory, use `.destroy()` to free memory
+- A container marked with an `A` prefix indicates that the container will automatically call `.destroy()` using RAII mechanisms
+- Use `StableArray<T>` or `AStableArray<T>`
 
 ## Error Handling
 
-- Prefer explicit error states over exceptions
-- Use `Optional<T>` for values that may not exist
-- Assert preconditions with:
-  - `ASSERT()` for debug only builds
-  - `REQUIRES()` for all builds
+- Do not use exceptions
+- Use `Error<T, ErrorType>` to return errors
+  - `Error<T, ErrorType>` contains an error string; allocate the error string on the permanent or passed in arena depending on whether the error can be recovered from
+  - Success in the `ErrorType` must be represented as `0`
+- Use `Optional<T>` for values that may not exist, but not for errors
+- Assert conditions with:
+  - `DEBUG_ASSERT()` for debug-info compatible builds
+  - `ASSERT()` for all builds
 
 ## Templates and Generics
 
 - Minimize template complexity
+- Don't use templates unless it is necessary
 - Use SFINAE sparingly and only when necessary: `std::enable_if_t<std::is_integral_v<T>>`
 - Prefer explicit instantiation over heavy template metaprogramming
 
-## Atomic Operations
-
-- For C compatiable: use the typedef's defined in cxb.h
-- In C++ lang: use the Atomic<T> wrapper
+## Atomics
+- For C compatiable APIs: use `atomic_i64`, `atomic_u64`, etc. typedefs or C11's `_Atomic(T)`
+- In C++: use the Atomic<T> wrapper
 - Use explicit memory ordering: C11 `memory_order` constants directly
 
 ## String Handling
@@ -94,11 +104,10 @@ struct ExampleClass {
 
 ## Performance Guidelines
 
-- Mark trivial functions with `CXB_INLINE`
-- Mark functions to be inlined but have span multiple lines with `CXB_INTERNAL_NODEBUG`
+- Mark functions you truly want inlined with `CXB_INLINE`. This will force an inline when no debug information should be generated.
 - Mark pure functions with `CXB_PURE`
 - Use `LIKELY()`/`UNLIKELY()` for branch prediction hints
-- Compile-time evaluation with `CXB_COMPTIME` where possible
+- Compile-time evaluation with `CXB_COMPTIME` where possible or use C++'s `constexpr`
 
 ## Platform Compatibility
 
