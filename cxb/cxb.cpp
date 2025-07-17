@@ -51,10 +51,14 @@ CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes) {
 
 CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
     ASSERT(UNLIKELY(arena != nullptr), "expected an arena");
-    ASSERT(align == 0, "TODO support align > 0");
-    ASSERT(arena->start + arena->pos + size + align < arena->end, "arena will spill");
+    u64 padding = (-arena->pos) & (align - 1);
+    // ASAN_UNPOISON_MEMORY_REGION(arena->start + arena->pos, padding);
+    arena->pos += padding;
+    ASSERT(arena->start + arena->pos + size < arena->end, "arena will spill");
 
     void* data = arena->start + arena->pos;
+    // data % align == 0, but align = 2^x
+    DEBUG_ASSERT(((u64) data & (align - 1)) == 0);
     ASAN_UNPOISON_MEMORY_REGION(data, size);
     arena->pos += size;
     return data;
