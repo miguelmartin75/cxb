@@ -1,23 +1,10 @@
 #pragma once
 
 #include <cxb/cxb.h>
+#include "examples/memfile.h"
 
 // TODO: CXB_C_EXPORT -> C_EXPORT ?
 #define C_EXPORT CXB_C_EXPORT
-
-struct File {
-    void* data;
-    size_t len;
-
-    StringSlice filepath;
-};
-
-enum class FileOpenErr {
-    Success = 0,
-    IsNotFile = 1,
-    CouldNotOpen = 2,
-    Cnt,
-};
 
 struct SourceLoc {
     unsigned int line;
@@ -174,18 +161,65 @@ enum AstPrimitiveTypes {
 };
 
 struct AstNode;
-struct AstNodeKidArray {
-    struct AstNode* data;
-    size_t len;
+struct AstNodeEdgeList {
+    struct AstNode** data;
+    u64 len;
 };
+
+typedef enum {
+    UNION_KIND_NAMED,
+    UNION_KIND_FLAT,
+} UnionKind;
+
+typedef struct NumeralLiteral {
+    // TODO ?
+    // union {
+    //     uint8_t u8;
+    //     uint16_t u16;
+    //     uint32_t u32;
+    //     uint32_t u64;
+    //     int8_t i8;
+    //     int16_t i16;
+    //     int32_t i32;
+    //     int64_t i64_t;
+    // };
+    int64_t value;
+} NumeralLiteral;
+
+typedef struct VarDecl {
+    // TODO: bitset for modifiers
+    bool is_const;
+    bool is_ref;
+} VarDecl;
+
+typedef struct ParamList {
+    // TODO: bitset for modifiers
+    bool is_template_args;
+} ParamList;
+
+typedef struct FuncDecl {
+    // TODO: bitset for modifiers
+    bool is_template;
+    bool type_ret;
+    bool instance_ret;
+} FuncDecl;
+
+typedef union AstNodeData {
+    NumeralLiteral numeral_literal;
+    UnionKind union_kind;
+    // StringLiteral string_literal;
+    VarDecl var_decl;
+    ParamList param_list;
+    FuncDecl func_decl;
+} AstNodeData;
 
 struct AstNode {
     NodeKind kind; // : 7;
     bool err;      // : 1;
 
     Token tok; // 64
-    // AstNodeData data;  // TODO
-    AstNodeKidArray kids; // 128
+    AstNodeData data;  // TODO
+    AstNodeEdgeList kids; // 128
 
     unsigned int scope : 24;
     unsigned int type_id : 30;
@@ -207,11 +241,11 @@ struct ParseErrorArray {
 struct Parser;
 struct Module {
     StringSlice name;
+    File* file;
 
     AstNode* root;
 
-    File* file;
-    StringSlice input;
+    Parser* parser;
     ParseErrorArray parse_errors;
 
     Arena* arena;
@@ -221,10 +255,11 @@ struct Module {
 struct ParseFileResult {
     i64 num_errors;
     FileOpenErr file_err;
+    StringSlice message;
 
 #ifdef __cplusplus
     inline operator bool() {
-        return num_errors == 0 && file_err == FileOpenErr::Success;
+        return num_errors != 0 || file_err != FileOpenErr::Success;
     }
 #endif
 };
