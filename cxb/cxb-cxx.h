@@ -868,6 +868,11 @@ struct ArraySlice {
     }
 };
 
+template <class T, class O>
+static constexpr ArraySlice<T> array_slice_from_pod(O* o) {
+    return ArraySlice<T>{o->data, o->len};
+}
+
 template <typename T>
 struct MArray {
     T* data;
@@ -1157,7 +1162,7 @@ struct Result {
     StringSlice reason;
 
     inline operator bool() const {
-        return (i64) error == 0;
+        return (i64) error != 0;
     }
 };
 
@@ -1319,6 +1324,14 @@ inline void extend(Arena* arena, StringSlice& str, StringSlice to_append) {
 }
 
 // *SECTION: ArraySlice arena functions
+/*
+template<typename T, typename U>
+concept ArraySliceLike = requires(T x) {
+    { x.data } -> std::same_as<U*>;
+    std::is_integral_v<decltype(x.len)>;
+};
+*/
+
 template <typename T>
 inline ArraySlice<T> push_array(Arena* arena, size_t n) {
     T* data = push<T>(arena, n);
