@@ -23,7 +23,7 @@ struct Parser {
 //     ctx->next_tok.kind = TOK_UNINTIALIZED;
 //     return ctx->curr_tok;
 // }
-// 
+//
 // static inline Token peek_tok(Parser* ctx) {
 //     if(ctx->next_tok.kind == TOK_UNINTIALIZED) {
 //         ctx->next_tok = lex_next(ctx);
@@ -31,11 +31,11 @@ struct Parser {
 //     return ctx->next_tok;
 // }
 
-#include <unistd.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 Result<File*, FileOpenErr> open_file(Arena* arena, StringSlice filepath) {
     Result<File*, FileOpenErr> result = {};
@@ -43,15 +43,15 @@ Result<File*, FileOpenErr> open_file(Arena* arena, StringSlice filepath) {
     int fd = open(filepath.data, O_RDONLY);
     struct stat sb;
     fstat(fd, &sb);
-    
+
     // if (!S_ISREG(sb.st_mode)) {
-    if (S_ISDIR(sb.st_mode)) {
+    if(S_ISDIR(sb.st_mode)) {
         close(fd);
         result.error = FileOpenErr::IsNotFile;
         return result;
     }
 
-    char* data = (char*)mmap((caddr_t)0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    char* data = (char*) mmap((caddr_t) 0, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if(!data) {
         result.error = FileOpenErr::CouldNotOpen;
         return result;
@@ -92,7 +92,7 @@ C_EXPORT ParseFileResult module_parse_file(Module* mod, StringSlice file_path) {
     mod->file = file.value;
     if(mod->tree == nullptr) {
         // TODO: maybe fix this ratio
-        u64 n_bytes = max((u64)mod->file->len, KB(64));
+        u64 n_bytes = max((u64) mod->file->len, KB(64));
         mod->tree = arena_make_nbytes(n_bytes);
     }
     // TODO: parse
