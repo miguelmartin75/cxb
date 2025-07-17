@@ -50,7 +50,10 @@ CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes) {
 }
 
 CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
+    ASSERT(UNLIKELY(arena != nullptr), "expected an arena");
     ASSERT(align == 0, "TODO support align > 0");
+    ASSERT(arena->start + arena->pos + size + align < arena->end, "arena will spill");
+
     void* data = arena->start + arena->pos;
     ASAN_UNPOISON_MEMORY_REGION(data, size);
     arena->pos += size;
@@ -66,6 +69,12 @@ CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
 
 CXB_C_EXPORT void arena_clear(Arena* arena) {
     arena->pos = 0;
+}
+
+CXB_C_EXPORT void arena_destroy(Arena* arena) {
+    ASSERT(arena != nullptr);
+    ASSERT(arena->start != nullptr);
+    munmap(arena->start, arena->end - arena->start);
 }
 
 Mallocator default_alloc = {};
