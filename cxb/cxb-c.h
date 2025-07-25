@@ -1,7 +1,13 @@
 #ifndef CXB_C_H
 #define CXB_C_H
 
+// NOTE: to generate the C header file
+#define CXB_C_COMPAT_BEGIN
+#define CXB_C_COMPAT_END
+
 /* SECTION: includes */
+CXB_C_COMPAT_BEGIN
+
 #include <stdatomic.h> // _Atomic(T)
 #include <stdbool.h>
 #include <stddef.h>
@@ -37,13 +43,8 @@
 #define BREAKPOINT() abort()
 #endif
 
-#define DEBUG_ASSERT(x, ...) \
-    if(!(x)) BREAKPOINT()
-#define ASSERT(x, ...)    \
-    if(!(x)) BREAKPOINT()
-#define INVALID_CODEPATH(msg) \
-    /* TODO: output msg */    \
-    BREAKPOINT()
+CXB_C_COMPAT_BEGIN
+
 #define LIKELY(x) x
 #define UNLIKELY(x) x
 
@@ -103,7 +104,18 @@ CXB_C_IMPORT void __asan_unpoison_memory_region(void const volatile* addr, size_
 #define CXB_INLINE inline
 #endif
 
+CXB_C_COMPAT_END
+
+#define DEBUG_ASSERT(x, ...) \
+    if(!(x)) BREAKPOINT()
+#define ASSERT(x, ...)    \
+    if(!(x)) BREAKPOINT()
+#define INVALID_CODEPATH(msg) \
+    /* TODO: output msg */    \
+    BREAKPOINT()
+
 /* * SECTION: primitives */
+CXB_C_COMPAT_BEGIN
 typedef uint8_t byte8;
 typedef float f32;
 typedef double f64;
@@ -135,75 +147,9 @@ typedef _Atomic(u128) atomic_u128;
 typedef struct Allocator Allocator;
 extern Allocator heap_alloc;
 
-#ifndef __cplusplus
-
-struct StringSlice {
-    char* data;
-    union {
-        struct {
-            size_t len : 63;
-            bool null_term : 1;
-        };
-        size_t metadata;
-    };
-};
-typedef struct StringSlice StringSlice;
-
-struct MString {
-    char* data;
-    union {
-        struct {
-            size_t len : 63;
-            bool null_term : 1;
-        };
-        size_t metadata;
-    };
-    size_t capacity;
-    Allocator* allocator;
-};
-typedef struct MString MString;
-#endif
-
 #define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
 #define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
-#endif
-
-#ifndef CXB_C_API_DECL
-#if !defined(CXB_H) || defined(CXB_C_API)
-#define CXB_C_API_DECL
-// ** SECTION: StringSlice C functions
-CXB_C_EXPORT size_t cxb_ss_size(StringSlice s);
-CXB_C_EXPORT size_t cxb_ss_n_bytes(StringSlice s);
-CXB_C_EXPORT bool cxb_ss_empty(StringSlice s);
-CXB_C_EXPORT const char* cxb_ss_c_str(StringSlice s);
-CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, i64 i, i64 j);
-CXB_C_EXPORT bool cxb_ss_eq(StringSlice a, StringSlice b);
-CXB_C_EXPORT bool cxb_ss_neq(StringSlice a, StringSlice b);
-CXB_C_EXPORT bool cxb_ss_lt(StringSlice a, StringSlice b);
-CXB_C_EXPORT char cxb_ss_back(StringSlice s);
-
-// ** SECTION: MString C functions
-CXB_C_EXPORT size_t cxb_mstring_size(MString s);
-CXB_C_EXPORT size_t cxb_mstring_n_bytes(MString s);
-CXB_C_EXPORT bool cxb_mstring_empty(MString s);
-CXB_C_EXPORT const char* cxb_mstring_c_str(MString s);
-CXB_C_EXPORT bool cxb_mstring_eq(MString a, MString b);
-CXB_C_EXPORT bool cxb_mstring_neq(MString a, MString b);
-CXB_C_EXPORT bool cxb_mstring_lt(MString a, MString b);
-CXB_C_EXPORT char cxb_mstring_back(MString s);
-CXB_C_EXPORT size_t cxb_mstring_capacity(MString s);
-
-CXB_C_EXPORT void cxb_mstring_destroy(MString* s);
-CXB_C_EXPORT void cxb_mstring_ensure_capacity(MString* s, size_t cap);
-CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size);
-CXB_C_EXPORT void cxb_mstring_extend(MString* s, StringSlice slice);
-CXB_C_EXPORT void cxb_mstring_push_back(MString* s, char val);
-CXB_C_EXPORT char* cxb_mstring_push(MString* s);
-CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap);
-CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s);
-CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator);
-#endif
-#endif
+CXB_C_COMPAT_END

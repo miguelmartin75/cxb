@@ -6,10 +6,9 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
-# Options
+option(CXB_BUILD_TOOLS "build tools?" OFF)
+option(CXB_BUILD_TESTS "enable tests?" OFF)
 option(CXB_BUILD_EXAMPLES "enable examples?" OFF)
-
-option(CXB_ENABLE_TESTS "enable tests?" OFF)
 option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 
 set(CXB_SRCS "cxb/cxb.cpp")
@@ -38,22 +37,16 @@ function(add_test_exe test_name test_source fsanitize)
     endif()
 endfunction()
 
-function(add_example_exe example_name example_sources)
-    message(STATUS "example srcs=${example_sources}")
-    add_executable(${example_name} ${example_sources} ${CXB_SRCS} deps/fmt/src/format.cc)
-    target_include_directories(${example_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} deps/fmt/include)
-    # target_compile_options(${example_name} PRIVATE
-    #   -nostdinc++      # skip default C++ include paths
-    #   # -nodefaultlibs   # skip linking against default C and C++ runtimes
-    # )
-
+function(add_exe name sources)
+    add_executable(${name} ${sources} ${CXB_SRCS} deps/fmt/src/format.cc)
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} deps/fmt/include)
     if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-        target_compile_options(${example_name} PRIVATE
+        target_compile_options(${name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
             -fno-omit-frame-pointer
         )
-        target_link_options(${example_name} PRIVATE
+        target_link_options(${name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
         )
@@ -62,10 +55,14 @@ endfunction()
 
 if(CXB_BUILD_EXAMPLES)
     set(INTERPRETER_SRCS examples/interpreter.cpp examples/parser.cpp examples/memfile.cpp)
-    add_example_exe(interpreter "${INTERPRETER_SRCS}")
+    add_exe(interpreter "${INTERPRETER_SRCS}")
 endif()
 
-if(CXB_ENABLE_TESTS)
+if(CXB_BUILD_EXAMPLES)
+    add_exe(extract_capi tools/extract_capi.cpp)
+endif()
+
+if(CXB_BUILD_TESTS)
     add_subdirectory(deps/Catch2)
 
     enable_testing()
