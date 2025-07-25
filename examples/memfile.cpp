@@ -38,5 +38,3 @@ void close_file(File* file) {
     file->data = nullptr;
     file->len = 0;
 }
-
-

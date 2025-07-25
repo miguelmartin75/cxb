@@ -22,9 +22,12 @@
 #define MB(n) ((u64) (n) << 20)
 #define GB(n) ((u64) (n) << 30)
 #define TB(n) ((u64) (n) << 40)
+#define PB(n) ((u64) (n) << 50)
 
-#define MILLIONS(x) (1000000ULL * (x))
-#define BILLIONS(x) (1000000000ULL * (x))
+#define Thousands(x) ((x) * 1000LL)
+#define Millions(x) (Thousands(x) * 1000LL)
+#define Billions(x) (Millions(x) * 1000ULL)
+#define Trillions(x) (Billions(x) * 1000ULL)
 
 #if defined(__clang__)
 #define BREAKPOINT() __builtin_debugtrap()
@@ -38,17 +41,25 @@
     if(!(x)) BREAKPOINT()
 #define ASSERT(x, ...)    \
     if(!(x)) BREAKPOINT()
-#define REQUIRES(x)       \
-    if(!(x)) BREAKPOINT()
+#define INVALID_CODEPATH(msg) \
+    /* TODO: output msg */ \
+    BREAKPOINT()
 #define LIKELY(x) x
 #define UNLIKELY(x) x
 
+#define FN
+#define CPOD
+#define INTERNAL static
+#define GLOBAL static
+
 #ifdef __cplusplus
+#define CFN extern "C"
 #define CXB_C_EXPORT extern "C"
 #define CXB_C_IMPORT extern "C"
 #define C_DECL_BEGIN extern "C" {
 #define C_DECL_END }
 #else
+#define CFN
 #define CXB_C_EXPORT
 #define CXB_C_IMPORT
 #define C_DECL_BEGIN
@@ -74,13 +85,6 @@
 #endif
 
 #if ASAN_ENABLED
-#include <sanitizer/asan_interface.h>
-#else
-#define ASAN_POISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
-#define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
-#endif
-/*
-#if ASAN_ENABLED
 CXB_C_IMPORT void __asan_poison_memory_region(void const volatile* addr, size_t size);
 CXB_C_IMPORT void __asan_unpoison_memory_region(void const volatile* addr, size_t size);
 #define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region((addr), (size))
@@ -89,7 +93,6 @@ CXB_C_IMPORT void __asan_unpoison_memory_region(void const volatile* addr, size_
 #define ASAN_POISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
 #define ASAN_UNPOISON_MEMORY_REGION(addr, size) ((void) (addr), (void) (size))
 #endif
-*/
 
 #define CXB_MAYBE_INLINE inline
 #if defined(__GNUC__)
@@ -130,11 +133,12 @@ typedef _Atomic(u128) atomic_u128;
 
 /* SECTION: types */
 typedef struct Allocator Allocator;
-typedef struct Mallocator Mallocator;
-extern Mallocator default_alloc;
+typedef struct HeapAllocator HeapAllocator;
+extern HeapAllocator heap_alloc;
 
 #ifndef __cplusplus
-typedef struct StringSlice {
+
+struct StringSlice {
     char* data;
     union {
         struct {
@@ -143,9 +147,10 @@ typedef struct StringSlice {
         };
         size_t metadata;
     };
-} StringSlice;
+};
+typedef struct StringSlice StringSlice;
 
-typedef struct MString {
+struct MString {
     char* data;
     union {
         struct {
@@ -156,83 +161,15 @@ typedef struct MString {
     };
     size_t capacity;
     Allocator* allocator;
-} MString;
-
-/* SECTION: math types */
-typedef struct Vec2f {
-    f32 x, y;
-} Vec2f;
-
-typedef struct Vec2i {
-    i32 x, y;
-} Vec2i;
-
-typedef struct Size2i {
-    i32 w, h;
-} Size2i;
-
-typedef struct Vec3f {
-    f32 x, y, z;
-} Vec3f;
-
-typedef struct Vec3i {
-    i32 x, y, z;
-} Vec3i;
-
-typedef struct Rect2f {
-    f32 x, y;
-    f32 w, h;
-} Rect2f;
-
-typedef struct Rect2ui {
-    u32 x, y;
-    u32 w, h;
-} Rect2ui;
-
-typedef struct Color4f {
-    f32 r, g, b, a;
-} Color4f;
-
-typedef struct Color4i {
-    byte8 r, g, b, a;
-} Color4i;
-
-typedef struct Mat33f {
-    f32 arr[9];
-} Mat33f;
-
-typedef struct Mat44f {
-    f32 arr[16];
-} Mat44f;
-
-static const Mat44f identity4x4 = {.arr = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
-static const Mat33f identity3x3 = {.arr = {
-                                       1,
-                                       0,
-                                       0,
-                                       0,
-                                       1,
-                                       0,
-                                       0,
-                                       0,
-                                       1,
-                                   }};
-
-#endif /* !__cplusplus */
+};
+typedef struct MString MString;
+#endif
 
 #define S8_LIT(s) (StringSlice{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
 #define S8_DATA(c, l) (StringSlice{.data = (char*) &(c)[0], .len = (l), .null_term = false})
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
 #define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
-
-#define RESULT_TYPE(name, value_type, error_type) \
-    typedef struct name {                         \
-        value_type value;                         \
-        error_type error;                         \
-        StringSlice msg;                          \
-    } name;
-#endif
 
 #ifndef CXB_C_API_DECL
 #if !defined(CXB_H) || defined(CXB_C_API)

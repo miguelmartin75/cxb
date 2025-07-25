@@ -5,8 +5,6 @@
 #include <cxb/cxb.h>
 #include <random>
 
-CXB_USE_NS;
-
 CXB_INLINE bool string_less_than_forloop(const StringSlice& a, const StringSlice& b) {
     size_t n = a.len < b.len ? a.len : b.len;
     for(size_t i = 0; i < n; ++i) {

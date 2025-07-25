@@ -81,29 +81,36 @@ CXB_C_EXPORT void arena_destroy(Arena* arena) {
     munmap(arena->start, arena->end - arena->start);
 }
 
-Mallocator default_alloc = {};
-
-CXB_NS_BEGIN
 
 // * SECTION: allocators
-void* mallocator_alloc_impl(
-    Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
-void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes);
+void* heap_alloc_proc(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data);
+void heap_free_proc(void* head, size_t n_bytes, void* data);
+void heap_free_all_proc(void* data);
 
-Mallocator::Mallocator() : Allocator{mallocator_alloc_impl, malloctor_free_impl} {}
+Allocator heap_alloc = {
+    .alloc_proc = heap_alloc_proc,
+    .free_proc = heap_free_proc,
+    .free_all_proc = heap_free_all_proc,
+    .data = (void*)&heap_alloc_data
+};
 
-void* mallocator_alloc_impl(
-    Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes) {
+void* heap_alloc_proc(
+    void* head, 
+    size_t n_bytes,
+    size_t alignment,
+    size_t old_n_bytes,
+    bool fill_zeros, 
+    void* data
+) {
     (void) alignment;
 
-    Mallocator* ma = static_cast<Mallocator*>(a);
-    ma->n_active_bytes += (n_bytes - old_n_bytes);
-    ma->n_allocated_bytes += (n_bytes - old_n_bytes);
+    HeapAllocData* heap_data = (HeapAllocData*)data;
+    heap_data->n_active_bytes += (n_bytes - old_n_bytes);
+    heap_data->n_allocated_bytes += (n_bytes - old_n_bytes);
 
-    // TODO: alignment
     if(old_n_bytes > 0) {
-        REQUIRES(head != nullptr);
-        REQUIRES(n_bytes > old_n_bytes);
+        ASSERT(head != nullptr);
+        ASSERT(n_bytes > old_n_bytes);
 
         void* data = realloc(head, n_bytes);
         if(fill_zeros) {
@@ -117,13 +124,13 @@ void* mallocator_alloc_impl(
         } else if(!data) {
             data = malloc(n_bytes);
             memcpy(data, head, old_n_bytes);
-            ma->n_freed_bytes += old_n_bytes;
+            heap_data->n_freed_bytes += old_n_bytes;
             free(head);
         }
 
         return data;
     } else {
-        REQUIRES(head == nullptr);
+        ASSERT(head == nullptr);
 
         if(fill_zeros) {
             return calloc(n_bytes, 1);
@@ -132,17 +139,18 @@ void* mallocator_alloc_impl(
     }
 }
 
-void malloctor_free_impl(Allocator* a, void* head, size_t n_bytes) {
-    Mallocator* ma = static_cast<Mallocator*>(a);
-    ma->n_active_bytes += -static_cast<i64>(n_bytes);
-    ma->n_freed_bytes += n_bytes;
+void heap_free_proc(void* head, size_t n_bytes, void* data) {
+    HeapAllocData* heap_data = (HeapAllocData*)data;
     free(head);
+    heap_data->n_active_bytes -= n_bytes;
+    heap_data->n_freed_bytes += n_bytes;
 }
 
-// TODO
-// Arena::Arena() {}
+void heap_free_all_proc(void* data) {
+    (void)data;
+    INVALID_CODEPATH("heap allocator does not support free all");
+}
 
-CXB_NS_END
 
 CXB_C_EXPORT void cxb_mstring_destroy(MString* s) {
     s->destroy();

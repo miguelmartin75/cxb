@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cxb/cxb.h>
 #include "examples/memfile.h"
+
+#include <cxb/cxb.h>
 
 // TODO: CXB_C_EXPORT -> C_EXPORT ?
 #define C_EXPORT CXB_C_EXPORT
@@ -96,7 +97,7 @@ struct Token {
     }
 
     inline StringSlice ss(const StringSlice& sv) const {
-        REQUIRES(n < sv.len);
+        DEBUG_ASSERT(n < sv.len);
         return StringSlice{.data = (char*) (sv.data + idx), .len = (size_t) n, .null_term = false};
     }
 };
@@ -164,6 +165,12 @@ struct AstNode;
 struct AstNodeEdgeList {
     struct AstNode** data;
     u64 len;
+
+#ifdef __cplusplus
+    inline AstNode* operator[](size_t idx) const {
+        return data[idx];
+    }
+#endif
 };
 
 typedef enum {
@@ -217,8 +224,8 @@ struct AstNode {
     NodeKind kind; // : 7;
     bool err;      // : 1;
 
-    Token tok; // 64
-    AstNodeData data;  // TODO
+    Token tok;            // 64
+    AstNodeData data;     // TODO
     AstNodeEdgeList kids; // 128
 
     unsigned int scope : 24;
@@ -259,7 +266,7 @@ struct ParseFileResult {
 
 #ifdef __cplusplus
     inline operator bool() {
-        return num_errors != 0 || file_err != FileOpenErr::Success;
+        return !(num_errors == 0 && file_err == FileOpenErr::Success);
     }
 #endif
 };

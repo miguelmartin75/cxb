@@ -6,7 +6,7 @@
 A C++ utility library with focus on performance and simplicity.
 
 Current Header Compile Times:
-* `cxb-cxx.h`: 77±36ms on Apple M1 Max
+* `cxb-cxx.h`: 68±39ms on Apple M1 Max
 
 ## Development
 

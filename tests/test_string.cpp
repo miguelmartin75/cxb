@@ -3,8 +3,6 @@
 #include <cxb/cxb-unicode.h>
 #include <cxb/cxb.h>
 
-CXB_USE_NS;
-
 TEST_CASE("StringSlice default constructor", "[StringSlice]") {
     StringSlice s = {};
     REQUIRE(s.size() == 0);
@@ -66,10 +64,10 @@ TEST_CASE("String push_back", "[String]") {
         REQUIRE(s[1] == 'i');
         REQUIRE(s.null_term);
 
-        allocated_bytes = default_alloc.n_allocated_bytes;
+        allocated_bytes = heap_alloc_data.n_allocated_bytes;
     }
-    REQUIRE(default_alloc.n_active_bytes == 0);
-    REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
+    REQUIRE(heap_alloc_data.n_active_bytes == 0);
+    REQUIRE(heap_alloc_data.n_allocated_bytes == allocated_bytes);
 }
 
 TEST_CASE("StringSlice push_back with null termination", "[String]") {
@@ -308,52 +306,52 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
 }
 
 TEST_CASE("MString manual cleanup", "[MString]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        MString s = MSTRING_NT(&default_alloc);
+        MString s = MSTRING_NT(&heap_alloc);
         s.extend("Hello, World!");
         REQUIRE(s.len == 13);
-        REQUIRE(s.allocator == &default_alloc);
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+        REQUIRE(s.allocator == &heap_alloc);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_bytes_before);
+        REQUIRE(heap_alloc_data.n_allocated_bytes > allocated_bytes_before);
         s.destroy();
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
 TEST_CASE("MString -> String", "[MString]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        MString m = MSTRING_NT(&default_alloc);
+        MString m = MSTRING_NT(&heap_alloc);
         m.extend("Hello, World!");
         AString s = m;
 
         REQUIRE(s.len == 13);
-        REQUIRE(s.allocator == &default_alloc);
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+        REQUIRE(s.allocator == &heap_alloc);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_bytes_before);
+        REQUIRE(heap_alloc_data.n_allocated_bytes > allocated_bytes_before);
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
 TEST_CASE("String -> MString", "[MString]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AString s;
         s.extend("Hello, World!");
         MString m = s.release();
 
         REQUIRE(m.len == 13);
-        REQUIRE(m.allocator == &default_alloc);
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
-        REQUIRE(default_alloc.n_allocated_bytes > allocated_bytes_before);
+        REQUIRE(m.allocator == &heap_alloc);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_bytes_before);
+        REQUIRE(heap_alloc_data.n_allocated_bytes > allocated_bytes_before);
         m.destroy();
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AArray<AString> strings;
         REQUIRE(strings.len == 0);
@@ -413,35 +411,10 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
         REQUIRE(strings[11].empty());
 
         // Verify memory is actively being used
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_bytes_before);
     }
 
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
-}
-
-TEST_CASE("StringSlice free functions (C API)", "[StringSlice][CAPI]") {
-    StringSlice s = S8_LIT("Hello");
-    REQUIRE(cxb_ss_size(s) == 5);
-    REQUIRE_FALSE(cxb_ss_empty(s));
-    REQUIRE(cxb_ss_n_bytes(s) == 6); // includes null terminator
-    REQUIRE(strcmp(cxb_ss_c_str(s), "Hello") == 0);
-
-    StringSlice slice = cxb_ss_slice(s, 1, 3); // "ell"
-    REQUIRE(cxb_ss_size(slice) == 3);
-    REQUIRE(!cxb_ss_empty(slice));
-    REQUIRE(cxb_ss_c_str(slice) == nullptr); // not null-terminated
-}
-
-TEST_CASE("MString free function destroy (C API)", "[MString][CAPI]") {
-    i64 mem_before = default_alloc.n_active_bytes;
-    {
-        MString ms = MSTRING_NT(&default_alloc);
-        ms.extend("Hello, World!");
-        REQUIRE(cxb_mstring_size(ms) == 13);
-        cxb_mstring_destroy(&ms);
-        REQUIRE(ms.data == nullptr);
-    }
-    REQUIRE(default_alloc.n_active_bytes == mem_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
 TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {

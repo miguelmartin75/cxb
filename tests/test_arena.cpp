@@ -2,8 +2,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
 
-CXB_USE_NS;
-
 struct Foo {
     int x, y;
 };

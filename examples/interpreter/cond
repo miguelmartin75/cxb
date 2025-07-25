@@ -1,0 +1,12 @@
+func mul(x: int, y: int) {
+    return x * -y
+}
+func cond(x: int) {
+    if(x >= 5) { 
+        return mul(42, 2)
+    } else { 
+        return mul(73, 4) 
+    }
+}
+
+cond(2);

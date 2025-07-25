@@ -84,11 +84,11 @@ memory, "M" stands for "manual"
 
 /* SECTION: configuration */
 // #define CXB_ALLOC_TEMPLATE
-// #define CXB_NAMESPACE
+#define CXB_USE_CXX_CONCEPTS
 #define CXB_SEQ_MIN_CAP 32
-#define CXB_SEQ_GROW_FN(x) (x) + (x) / 2 /* 3/2 without overflow */
+#define CXB_SEQ_GROW_FN(x) (x) + (x) / 2 /* 3/2, reducing chance to overflow */
 #define CXB_STR_MIN_CAP 32
-#define CXB_STR_GROW_FN(x) (x) + (x) / 2 /* 3/2 without overflow */
+#define CXB_STR_GROW_FN(x) (x) + (x) / 2 /* 3/2, reducing chance to overflow  */
 
 #ifdef CXB_ALLOC_TEMPLATE
 #error "CXB_ALLOC_TEMPLATE unsupported"
@@ -107,29 +107,15 @@ memory, "M" stands for "manual"
 #define CXB_INLINE inline
 #endif
 
-#if defined(CXB_NAMESPACE) && defined(__cplusplus)
-#define CXB_NS_BEGIN namespace cxb {
-#define CXB_NS_END }
-#define CXB_USE_NS using namespace cxb
-#else
-#define CXB_NS_BEGIN
-#define CXB_NS_END
-#define CXB_USE_NS
-#endif
-
-#define CXB_COMPTIME constexpr CXB_INLINE
-#define CXB_COMPTIME_INLINE constexpr CXB_INLINE
-
 #if defined(__clang_major__) && __clang_major__ >= 6
-#define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
+#define CXB_PURE constexpr __attribute__((__pure__))
 #elif defined(__GNUC__) && __GNUC__ >= 6
-#define CXB_PURE CXB_COMPTIME __attribute__((__pure__))
+#define CXB_PURE constexpr __attribute__((__pure__))
 #else
-#define CXB_PURE CXB_COMPTIME
+#define CXB_PURE constexpr
 #endif
 
-CXB_NS_BEGIN
-
+// TODO: moveme
 template <typename T>
 static inline const T& min(const T& a, const T& b) {
     return a < b ? a : b;
@@ -159,24 +145,29 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 /* SECTION: primitive functions */
 template <typename T>
 CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
-    REQUIRES(a < b);
+    ASSERT(a < b);
     return max(min(b, x), a);
 }
 
 template <typename T>
-CXB_COMPTIME_INLINE void swap(T& t1, T& t2) noexcept {
+constexpr CXB_INLINE void swap(T& t1, T& t2) noexcept {
     T temp(move(t1));
     t1 = move(t2);
     t2 = move(temp);
 }
 
-CXB_NS_END
-
 /* SECTION: C API compatible types */
+enum AllocCmd {
+    ALLOC_CMD_ALLOC,
+    ALLOC_CMD_FREE,
+    ALLOC_CMD_FREE_ALL,
+};
+
 struct Allocator {
-    void* (*alloc_impl)(
-        struct Allocator* a, bool fill_zeros, void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes);
-    void (*free_impl)(struct Allocator* a, void* head, size_t n_bytes);
+    void* (*alloc_proc)(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data);
+    void (*free_proc)(void* head, size_t n_bytes, void* data);
+    void (*free_all_proc)(void* data);
+    void* data;
 
     template <typename T, typename H>
     struct AllocationWithHeader {
@@ -184,33 +175,38 @@ struct Allocator {
         H* header;
     };
 
+    void free_all() {
+        this->free_all_proc(data);
+    }
+
     template <typename T>
     CXB_MAYBE_INLINE T* alloc(size_t count = 1) {
-        T* result = (T*) this->alloc_impl(this, false, nullptr, sizeof(T) * count, alignof(T), 0);
+        T* result = (T*) this->alloc_proc(nullptr, sizeof(T) * count, alignof(T), 0, false, data);
         return result;
     }
 
     template <typename T>
     CXB_MAYBE_INLINE T* calloc(size_t old_count, size_t count = 1) {
-        T* result = (T*) this->alloc_impl(this, true, nullptr, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
+        T* result = (T*) this->alloc_proc(nullptr, sizeof(T) * count, alignof(T), sizeof(T) * old_count, true, data);
         return result;
     }
 
     template <typename T>
     CXB_MAYBE_INLINE T* realloc(T* head, size_t old_count, bool fill_zeros, size_t count) {
         T* result =
-            (T*) this->alloc_impl(this, fill_zeros, (void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count);
+            (T*) this->alloc_proc((void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count, fill_zeros, data);
         return result;
     }
 
     template <typename H, typename T>
     CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header, size_t old_count, size_t count) {
-        char* new_header = (char*) this->alloc_impl(this,                             // allocator
-                                                    false,                            // fill_zeros
-                                                    (void*) header,                   // header
-                                                    sizeof(T) * count + sizeof(H),    // n_bytes
-                                                    alignof(T) + sizeof(H),           // alignment
-                                                    sizeof(T) * old_count + sizeof(H) // old bytes
+        char* new_header = (char*) this->alloc_proc(
+            (void*) header,                   // header
+            sizeof(T) * count + sizeof(H),    // n_bytes
+            alignof(T) + sizeof(H),           // alignment
+            sizeof(T) * old_count + sizeof(H), // old bytes
+            false,                            // fill_zeros
+            this->data
         );
         T* data = (T*) (new_header + sizeof(H));
         return AllocationWithHeader<T, H>{data, (H*) new_header};
@@ -218,211 +214,74 @@ struct Allocator {
 
     template <typename H, typename T>
     CXB_MAYBE_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
-        char* new_header = (char*) this->alloc_impl(this,                                               // allocator
-                                                    true,                                               // fill_zeros
-                                                    (void*) header,                                     // header
-                                                    sizeof(T) * count + sizeof(H),                      // n_bytes
-                                                    alignof(T) + sizeof(H),                             // alignment
-                                                    sizeof(T) * old_count + sizeof(H) * (old_count > 0) // old bytes
+        char* new_header = (char*) this->alloc_proc(
+            (void*) header,                                     // header
+            sizeof(T) * count + sizeof(H),                      // n_bytes
+            alignof(T) + sizeof(H),                             // alignment
+            sizeof(T) * old_count + sizeof(H) * (old_count > 0), // old bytes
+            true,                                               // fill_zeros
+            this->data
         );
         T* data = (T*) (new_header + sizeof(H));
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
 
-    template <typename T>
-    CXB_MAYBE_INLINE void free(T* head, size_t count) {
-        this->free_impl(this, (void*) head, sizeof(T) * count);
-    }
-
     template <typename H, typename T>
     CXB_MAYBE_INLINE void free_header_offset(T* offset_from_header, size_t count) {
-        this->free_impl(this, (char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H));
+        this->free_proc((char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H), this->data);
+    }
+
+    template <typename T>
+    CXB_MAYBE_INLINE void free(T* head, size_t count) {
+        this->free_proc((void*) head, sizeof(T) * count, this->data);
     }
 };
 
-CXB_NS_BEGIN
-
-template <typename T>
-struct Atomic {
-    static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
-                  "Atomic wrapper only supports integral and pointer types");
-
-    _Atomic(T) value;
-
-    CXB_COMPTIME Atomic(T desired = T{}) noexcept : value(desired) {}
-
-    CXB_COMPTIME Atomic(_Atomic(T) desired) noexcept : value(desired) {}
-
-    Atomic(const Atomic&) = delete;
-    Atomic& operator=(const Atomic&) = delete;
-    Atomic(Atomic&&) = delete;
-    Atomic& operator=(Atomic&&) = delete;
-
-    CXB_INLINE void store(T desired, memory_order order = memory_order_seq_cst) noexcept {
-        atomic_store_explicit(&value, desired, order);
-    }
-
-    CXB_INLINE T load(memory_order order = memory_order_seq_cst) const noexcept {
-        return atomic_load_explicit(&value, order);
-    }
-
-    CXB_INLINE T exchange(T desired, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_exchange_explicit(&value, desired, order);
-    }
-
-    CXB_INLINE bool compare_exchange_weak(T& expected,
-                                          T desired,
-                                          memory_order success = memory_order_seq_cst,
-                                          memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_weak_explicit(&value, &expected, desired, success, failure);
-    }
-
-    CXB_INLINE bool compare_exchange_strong(T& expected,
-                                            T desired,
-                                            memory_order success = memory_order_seq_cst,
-                                            memory_order failure = memory_order_seq_cst) noexcept {
-        return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
-    }
-
-    // Arithmetic operations (only for integral types)
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_add_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_sub_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_and_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_or_explicit(&value, arg, order);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
-        T arg, memory_order order = memory_order_seq_cst) noexcept {
-        return atomic_fetch_xor_explicit(&value, arg, order);
-    }
-
-    CXB_INLINE operator T() const noexcept {
-        return load();
-    }
-
-    CXB_INLINE T operator=(T desired) noexcept {
-        store(desired);
-        return desired;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++() noexcept {
-        return fetch_add(1) + 1;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++(int) noexcept {
-        return fetch_add(1);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--() noexcept {
-        return fetch_sub(1) - 1;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--(int) noexcept {
-        return fetch_sub(1);
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator+=(T arg) noexcept {
-        return fetch_add(arg) + arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator-=(T arg) noexcept {
-        return fetch_sub(arg) - arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator&=(T arg) noexcept {
-        return fetch_and(arg) & arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator|=(T arg) noexcept {
-        return fetch_or(arg) | arg;
-    }
-
-    template <typename U = T>
-    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator^=(T arg) noexcept {
-        return fetch_xor(arg) ^ arg;
-    }
-
-    bool is_lock_free() const noexcept {
-        return atomic_is_lock_free(&value);
-    }
-
-    static constexpr bool is_always_lock_free = true;
-};
-
-CXB_NS_END
-
-typedef struct Vec2f {
+struct Vec2f {
     f32 x, y;
-} Vec2f;
+};
 
-typedef struct Vec2i {
+struct Vec2i {
     i32 x, y;
-} Vec2i;
+};
 
-typedef struct Size2i {
+struct Size2i {
     i32 w, h;
-} Size2i;
+};
 
-typedef struct Vec3f {
+struct Vec3f {
     f32 x, y, z;
-} Vec3f;
+};
 
-typedef struct Vec3i {
+struct Vec3i {
     i32 x, y, z;
-} Vec3i;
+};
 
-typedef struct Rect2f {
+struct Rect2f {
     f32 x, y;
     f32 w, h;
-} Rect2f;
+};
 
-typedef struct Rect2ui {
+struct Rect2ui {
     u32 x, y;
     u32 w, h;
-} Rect2ui;
+};
 
-typedef struct Color4f {
+struct Color4f {
     f32 r, g, b, a;
-} Color4f;
+};
 
-typedef struct Color4i {
+struct Color4i {
     byte8 r, g, b, a;
-} Color4i;
+};
 
-typedef struct Mat33f {
+struct Mat33f {
     f32 arr[9];
-} Mat33f;
+};
 
-typedef struct Mat44f {
+struct Mat44f {
     f32 arr[16];
-} Mat44f;
+};
 
 static const Mat44f identity4x4 = {.arr = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
 static const Mat33f identity3x3 = {.arr = {
@@ -436,14 +295,6 @@ static const Mat33f identity3x3 = {.arr = {
                                        0,
                                        1,
                                    }};
-
-struct Mallocator : Allocator {
-    Mallocator();
-
-    Atomic<i64> n_active_bytes;
-    Atomic<i64> n_allocated_bytes;
-    Atomic<i64> n_freed_bytes;
-};
 
 struct StringSlice {
     char* data;
@@ -587,7 +438,7 @@ struct MString {
     }
 
     // ** SECTION: allocator-related methods - delegate to UString
-    CXB_MAYBE_INLINE MString& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_MAYBE_INLINE MString& copy_(Allocator* to_allocator = &heap_alloc) {
         MString temp = *this;
         *this = move(this->copy(to_allocator));
         temp.destroy();
@@ -596,7 +447,7 @@ struct MString {
 
     CXB_MAYBE_INLINE MString copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
-        REQUIRES(to_allocator != nullptr);
+        ASSERT(to_allocator != nullptr);
 
         MString result{.data = nullptr, .len = len, .null_term = null_term, .capacity = 0, .allocator = to_allocator};
         if(len > 0) {
@@ -625,7 +476,7 @@ struct MString {
     }
 
     void reserve(size_t cap) {
-        REQUIRES(allocator != nullptr);
+        ASSERT(allocator != nullptr);
 
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
@@ -636,7 +487,7 @@ struct MString {
     }
 
     void resize(size_t new_len, char fill_char = '\0') {
-        REQUIRES(UNLIKELY(allocator != nullptr));
+        ASSERT(UNLIKELY(allocator != nullptr));
 
         size_t reserve_size = new_len + null_term;
         if(capacity < reserve_size) {
@@ -671,7 +522,7 @@ struct MString {
     }
 
     CXB_MAYBE_INLINE char pop_back() {
-        REQUIRES(len > 0);
+        ASSERT(len > 0);
         char ret = data[len - 1];
         len--;
         data[len] = '\0';
@@ -704,7 +555,7 @@ struct MString {
     CXB_MAYBE_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
         if(null_term) return;
 
-        REQUIRES(allocator != nullptr || copy_alloc_if_not != nullptr);
+        ASSERT(allocator != nullptr || copy_alloc_if_not != nullptr);
         if(allocator == nullptr) {
             *this = move(this->copy(copy_alloc_if_not));
         } else {
@@ -713,16 +564,155 @@ struct MString {
         }
     }
 };
-
 /* SECTION: C++-only API */
-CXB_NS_BEGIN
+
+template <typename T>
+struct Atomic {
+    static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
+                  "Atomic wrapper only supports integral and pointer types");
+
+    _Atomic(T) value;
+
+    constexpr Atomic(T desired = T{}) noexcept : value(desired) {}
+
+    constexpr Atomic(_Atomic(T) desired) noexcept : value(desired) {}
+
+    Atomic(const Atomic&) = delete;
+    Atomic& operator=(const Atomic&) = delete;
+    Atomic(Atomic&&) = delete;
+    Atomic& operator=(Atomic&&) = delete;
+
+    CXB_INLINE void store(T desired, memory_order order = memory_order_seq_cst) noexcept {
+        atomic_store_explicit(&value, desired, order);
+    }
+
+    CXB_INLINE T load(memory_order order = memory_order_seq_cst) const noexcept {
+        return atomic_load_explicit(&value, order);
+    }
+
+    CXB_INLINE T exchange(T desired, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_exchange_explicit(&value, desired, order);
+    }
+
+    CXB_INLINE bool compare_exchange_weak(T& expected,
+                                          T desired,
+                                          memory_order success = memory_order_seq_cst,
+                                          memory_order failure = memory_order_seq_cst) noexcept {
+        return atomic_compare_exchange_weak_explicit(&value, &expected, desired, success, failure);
+    }
+
+    CXB_INLINE bool compare_exchange_strong(T& expected,
+                                            T desired,
+                                            memory_order success = memory_order_seq_cst,
+                                            memory_order failure = memory_order_seq_cst) noexcept {
+        return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
+    }
+
+    // Arithmetic operations (only for integral types)
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_add_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_sub(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_sub_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_and(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_and_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_or(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_or_explicit(&value, arg, order);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_xor(
+        T arg, memory_order order = memory_order_seq_cst) noexcept {
+        return atomic_fetch_xor_explicit(&value, arg, order);
+    }
+
+    CXB_INLINE operator T() const noexcept {
+        return load();
+    }
+
+    CXB_INLINE T operator=(T desired) noexcept {
+        store(desired);
+        return desired;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++() noexcept {
+        return fetch_add(1) + 1;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator++(int) noexcept {
+        return fetch_add(1);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--() noexcept {
+        return fetch_sub(1) - 1;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator--(int) noexcept {
+        return fetch_sub(1);
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator+=(T arg) noexcept {
+        return fetch_add(arg) + arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator-=(T arg) noexcept {
+        return fetch_sub(arg) - arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator&=(T arg) noexcept {
+        return fetch_and(arg) & arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator|=(T arg) noexcept {
+        return fetch_or(arg) | arg;
+    }
+
+    template <typename U = T>
+    CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> operator^=(T arg) noexcept {
+        return fetch_xor(arg) ^ arg;
+    }
+
+    bool is_lock_free() const noexcept {
+        return atomic_is_lock_free(&value);
+    }
+
+    static constexpr bool is_always_lock_free = true;
+};
+
+struct HeapAllocData {
+    Atomic<i64> n_active_bytes;
+    Atomic<i64> n_allocated_bytes;
+    Atomic<i64> n_freed_bytes;
+};
+GLOBAL HeapAllocData heap_alloc_data;
 
 // TODO: placement new?
 // inline void *operator new(size_t, void *p) noexcept { return p; }
 
 /* SECTION: containers */
 struct AString : MString {
-    AString(Allocator* allocator = &default_alloc)
+    AString(Allocator* allocator = &heap_alloc)
         : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = allocator} {}
 
     AString(const MString& m)
@@ -732,7 +722,7 @@ struct AString : MString {
                   .capacity = m.capacity,
                   .allocator = m.allocator} {}
 
-    AString(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &default_alloc)
+    AString(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &heap_alloc)
         : MString{.data = nullptr,
                   .len = n == SIZE_MAX ? strlen(cstr) : n,
                   .null_term = null_term,
@@ -773,14 +763,14 @@ struct AString : MString {
         destroy();
     }
 
-    CXB_MAYBE_INLINE AString& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_MAYBE_INLINE AString& copy_(Allocator* to_allocator = &heap_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
 
     CXB_MAYBE_INLINE AString copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
-        REQUIRES(to_allocator != nullptr);
+        ASSERT(to_allocator != nullptr);
 
         AString result{data, len, null_term, to_allocator};
         return result;
@@ -880,8 +870,8 @@ struct MArray {
     size_t capacity;
     Allocator* allocator;
 
-    MArray(Allocator* allocator = &default_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {}
-    MArray(T* data, size_t len, Allocator* allocator = &default_alloc)
+    MArray(Allocator* allocator = &heap_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {}
+    MArray(T* data, size_t len, Allocator* allocator = &heap_alloc)
         : data{data}, len{len}, capacity{0}, allocator{allocator} {}
     MArray(T* data, size_t len, size_t capacity, Allocator* allocator)
         : data{data}, len{len}, capacity{capacity}, allocator{allocator} {}
@@ -964,14 +954,14 @@ struct MArray {
     }
 
     // ** SECTION: allocator-related methods
-    CXB_MAYBE_INLINE MArray<T>& copy_(Allocator* to_allocator = &default_alloc) {
+    CXB_MAYBE_INLINE MArray<T>& copy_(Allocator* to_allocator = &heap_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
 
     CXB_MAYBE_INLINE MArray<T> copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
-        REQUIRES(to_allocator != nullptr);
+        ASSERT(to_allocator != nullptr);
 
         MArray<T> result{nullptr, 0, to_allocator};
         result.reserve(len);
@@ -1001,7 +991,7 @@ struct MArray {
     }
 
     CXB_MAYBE_INLINE void reserve(size_t cap) {
-        REQUIRES(allocator != nullptr);
+        ASSERT(allocator != nullptr);
 
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
@@ -1012,7 +1002,7 @@ struct MArray {
     }
 
     CXB_MAYBE_INLINE void resize(size_t new_len) {
-        REQUIRES(UNLIKELY(allocator != nullptr));
+        ASSERT(UNLIKELY(allocator != nullptr));
 
         if(capacity < new_len) {
             reserve(new_len);
@@ -1028,7 +1018,7 @@ struct MArray {
     }
 
     CXB_MAYBE_INLINE void resize(size_t new_len, T value) {
-        REQUIRES(UNLIKELY(allocator != nullptr));
+        ASSERT(UNLIKELY(allocator != nullptr));
 
         if(capacity < new_len) {
             reserve(new_len);
@@ -1042,7 +1032,7 @@ struct MArray {
     }
 
     CXB_MAYBE_INLINE void push_back(T value) {
-        REQUIRES(UNLIKELY(allocator != nullptr));
+        ASSERT(UNLIKELY(allocator != nullptr));
         size_t c = capacity;
         if(len + 1 >= c) {
             c = CXB_SEQ_GROW_FN(c);
@@ -1059,7 +1049,7 @@ struct MArray {
     }
 
     CXB_MAYBE_INLINE T pop_back() {
-        REQUIRES(len > 0);
+        ASSERT(len > 0);
         T ret = move(data[len - 1]);
         data[len - 1].~T();
         len--;
@@ -1111,8 +1101,8 @@ static constexpr MArray<T> marray_from_pod(O* o, Allocator* allocator) {
 
 template <typename T>
 struct AArray : MArray<T> {
-    AArray(Allocator* allocator = &default_alloc) : MArray<T>(allocator) {}
-    AArray(T* data, size_t len, Allocator* allocator = &default_alloc) : MArray<T>(data, len, allocator) {}
+    AArray(Allocator* allocator = &heap_alloc) : MArray<T>(allocator) {}
+    AArray(T* data, size_t len, Allocator* allocator = &heap_alloc) : MArray<T>(data, len, allocator) {}
     AArray(T* data, size_t len, size_t capacity, Allocator* allocator) : MArray<T>(data, len, capacity, allocator) {}
     AArray(const AArray<T>& o) = delete;
     AArray<T>& operator=(const AArray<T>& o) = delete;
@@ -1157,8 +1147,6 @@ template <typename T, typename EC>
 struct Result {
     T value;
     EC error;
-
-    // TODO: place on "error" Arena*
     StringSlice reason;
 
     inline operator bool() const {
@@ -1170,42 +1158,46 @@ template <typename T>
 struct Optional {
     T value;
     bool exists;
+
+    inline operator bool() const {
+        return exists;
+    }
 };
-CXB_NS_END
 
 /* SECTION: C-compat API (continued) */
 // TODO: move to cxb-c.h ?
-struct Arena;
-CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align);
-CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos);
-CXB_C_EXPORT void arena_clear(Arena* arena);
-
-struct ArenaParams {
+CPOD struct ArenaParams {
     size_t reserve_bytes;
     size_t max_n_blocks;
 };
 
-struct Arena {
+CPOD struct Arena {
     char* start;
     char* end;
     size_t pos;
+    ArenaParams params;
+
+    // chaining
     Arena* next;
     Arena* prev;
     size_t n_blocks;
-    ArenaParams params;
 };
 
 CXB_C_EXPORT Arena* arena_make(ArenaParams params);
 CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes);
 CXB_C_EXPORT void arena_destroy(Arena* arena);
 
-struct ArenaTemp {
+CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align);
+CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos);
+CXB_C_EXPORT void arena_clear(Arena* arena);
+
+
+CPOD struct ArenaTemp {
     Arena* arena;
     u64 pos;
 };
 
-template <typename T>
-inline T* push(Arena* arena, size_t n = 1) {
+template <typename T> inline T* push(Arena* arena, size_t n = 1) {
     const size_t size = sizeof(T) * n;
     T* data = (T*) arena_push(arena, size, alignof(T));
     if constexpr(!std::is_trivially_default_constructible_v<T>) {
@@ -1218,8 +1210,22 @@ inline T* push(Arena* arena, size_t n = 1) {
     return data;
 }
 
-template <typename T>
-inline void pop(Arena* arena, T* x) {
+template <typename T> inline T* push(Arena* arena, T value, size_t n = 1) {
+    const size_t size = sizeof(T);
+    T* data = (T*) arena_push(arena, size, alignof(T));
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < n; ++i) {
+            new(data + i) T{value};
+        }
+    } else {
+        for(size_t i = 0; i < n; ++i) {
+            memcpy((void*) (data + i), (void*) (&value), sizeof(T));
+        }
+    }
+    return data;
+}
+
+template <typename T> inline void pop(Arena* arena, T* x) {
     ASSERT((void*) (x) >= (void*) arena->start && (void*) (x) < arena->end, "array not allocated on arena");
     ASSERT((void*) (x + 1) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
     arena->pos -= sizeof(T);
@@ -1227,7 +1233,7 @@ inline void pop(Arena* arena, T* x) {
 
 // *SECTION: StringSlice arena functions
 inline StringSlice push_str(Arena* arena, size_t n = 1) {
-    REQUIRES(n > 0);
+    ASSERT(n > 0);
     char* data = push<char>(arena, n);
     return StringSlice{.data = data, .len = n - 1, .null_term = true};
 }
@@ -1252,16 +1258,18 @@ inline void resize(Arena* arena, StringSlice& str, size_t n, char fill_char = '\
 }
 
 inline void push_back(Arena* arena, StringSlice& str, char ch) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+           "string not allocated on arena");
+    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
+    void* data = arena_push(arena, sizeof(char), alignof(char));
+    str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
     if(str.null_term) {
         str.data[str.len] = '\0';
     }
-    arena->pos += sizeof(char);
 }
 
 inline void pop_back(Arena* arena, StringSlice& str) {
@@ -1269,10 +1277,10 @@ inline void pop_back(Arena* arena, StringSlice& str) {
     ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
+    arena_pop_to(arena, arena->pos - 1);
     str.len -= 1;
     str.data[str.len] = '\0';
     str.null_term = true;
-    arena_pop_to(arena, arena->pos - 1);
 }
 
 inline void pop_all(Arena* arena, StringSlice& str) {
@@ -1324,13 +1332,20 @@ inline void extend(Arena* arena, StringSlice& str, StringSlice to_append) {
 }
 
 // *SECTION: ArraySlice arena functions
-/*
-template<typename T, typename U>
-concept ArraySliceLike = requires(T x) {
-    { x.data } -> std::same_as<U*>;
-    std::is_integral_v<decltype(x.len)>;
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename T>
+concept ArrayLike = requires(A x) {
+    { x.data } -> std::convertible_to<T*>;
+    { x.len } -> std::convertible_to<u64>;
 };
-*/
+
+template <typename A>
+concept ArrayLikeNoT = requires(A x) {
+    { x.data };
+    requires std::is_pointer_v<decltype(x.data)>;
+    { x.len } -> std::convertible_to<u64>;
+};
+#endif
 
 template <typename T>
 inline ArraySlice<T> push_array(Arena* arena, size_t n) {
@@ -1351,17 +1366,34 @@ inline ArraySlice<T> push_array(Arena* arena, ArraySlice<T> to_copy) {
     return ArraySlice<T>{.data = data, .len = to_copy.len};
 }
 
-template <class T>
-inline void push_back(Arena* arena, ArraySlice<T>& xs, T value) {
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    arena_push(arena, sizeof(T), alignof(T));
+template <typename A, typename T>
+inline void push_back(Arena* arena, A& xs, T value)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+    ASSERT(UNLIKELY(xs.data == nullptr) || (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+           "array not allocated on arena");
+    ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+    void* data = arena_push(arena, sizeof(T), alignof(T));
+    xs.data = UNLIKELY(xs.data == nullptr) ? (T*) data : xs.data;
     xs.data[xs.len] = value;
     xs.len += 1;
 }
 
-template <class T, class... Args>
-inline void emplace_back(Arena* arena, ArraySlice<T>& xs, Args&&... args) {
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename T, typename... Args>
+#else
+template <typename A, typename... Args>
+#endif
+inline void emplace_back(Arena* arena, A& xs, Args&&... args)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+    // using T = decltype(xs.data[0]);
+
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
     arena_push(arena, sizeof(T), alignof(T));
@@ -1369,8 +1401,19 @@ inline void emplace_back(Arena* arena, ArraySlice<T>& xs, Args&&... args) {
     xs.len += 1;
 }
 
-template <typename T>
-inline void pop_back(Arena* arena, ArraySlice<T>& xs) {
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename T>
+#else
+template <typename A>
+#endif
+inline void pop_back(Arena* arena, A& xs)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = decltype(xs.data[0]);
+#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
     arena_pop_to(arena, arena->pos - sizeof(xs.data));
@@ -1381,8 +1424,12 @@ inline void pop_back(Arena* arena, ArraySlice<T>& xs) {
     xs.len -= 1;
 }
 
-template <typename T>
-inline void insert(Arena* arena, ArraySlice<T>& xs, ArraySlice<T> to_insert, size_t i) {
+ template <typename A, typename B, typename T>
+// template <typename A, typename B>
+inline void insert(Arena* arena, A& xs, B to_insert, size_t i)
+    requires ArrayLike<A, T> && ArrayLike<B, T>
+{
+    // using T = decltype(xs.data[0]);
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
     ASSERT(i <= xs.len, "insert position out of bounds");
@@ -1396,8 +1443,17 @@ inline void insert(Arena* arena, ArraySlice<T>& xs, ArraySlice<T> to_insert, siz
     memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
 }
 
-template <typename T>
-inline void extend(Arena* arena, ArraySlice<T>& xs, ArraySlice<T> to_append) {
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename B, typename T>
+#else
+template <typename A, typename B>
+#endif
+inline void extend(Arena* arena, A& xs, B to_append)
+     requires ArrayLike<A, T> && ArrayLike<B, T>
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = decltype(xs.data[0]);
+#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
 
@@ -1409,19 +1465,18 @@ inline void extend(Arena* arena, ArraySlice<T>& xs, ArraySlice<T> to_append) {
     memcpy(xs.data + old_len, to_append.data, to_append.len * sizeof(T));
 }
 
-template <typename T>
-inline void pop_all(Arena* arena, ArraySlice<T>& xs) {
+template <typename A>
+inline void pop_all(Arena* arena, A& xs)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A>
+#endif
+{
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
-    arena_pop_to(arena, arena->pos - (sizeof(xs.data) * xs.len));
+    arena_pop_to(arena, arena->pos - (sizeof(xs.data[0]) * xs.len));
     xs.data = nullptr;
     xs.len = 0;
 }
-
-// TODO
-// struct ArenaAlloc: Allocator {
-//     Arena();
-// };
 
 #define S8_STR(s) (StringSlice{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
 
