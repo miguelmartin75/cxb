@@ -21,9 +21,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra)
 endif()
 
-# add_library(cxb SHARED ${CXB_SRCS})
-# target_include_directories(cxb PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-
 function(add_test_exe test_name test_source fsanitize)
     add_executable(${test_name} ${test_source} ${CXB_SRCS})
     target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -43,8 +40,8 @@ endfunction()
 
 function(add_example_exe example_name example_sources)
     message(STATUS "example srcs=${example_sources}")
-    add_executable(${example_name} ${example_sources} ${CXB_SRCS})
-    target_include_directories(${example_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    add_executable(${example_name} ${example_sources} ${CXB_SRCS} deps/fmt/src/format.cc)
+    target_include_directories(${example_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} deps/fmt/include)
     # target_compile_options(${example_name} PRIVATE
     #   -nostdinc++      # skip default C++ include paths
     #   # -nodefaultlibs   # skip linking against default C and C++ runtimes

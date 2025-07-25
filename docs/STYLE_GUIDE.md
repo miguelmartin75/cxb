@@ -1,18 +1,110 @@
 # CXB Style Guide
+- Provide C compatible code where it is possible
 
-## General Principles
+## Functions
+- Mark pure functions with `CXB_PURE`
+- Mark functions you truly want inlined with `CXB_INLINE`. This will force an inline when no debug information should be generated.
+- Prefer free form functions over member functions
+- When performing an operation (verb) on a type instance (noun), free form functions should have the namking convention `<noun>_<verb>` 
+- The exception to the above is for:
+    - common operations performed across many different types, e.g. `make_<type>`,
+    - overloaded functions such as `serialize(TypeA&)` and `serialize(TypeB&)`
+- If the function operates on a C-compatible POD type, do not use overloading (obviously)
 
-- Prioritize clarity and consistency over brevity
-- Use modern C++ features sparingly while maintaining C compatibility where possible
-- Favor explicit over implicit behavior
-- Keep the API surface minimal and composable
+## Control Flow
+- Use `LIKELY()`/`UNLIKELY()` for branch prediction hints
 
-## Naming Conventions
+## Assertions, Errors
+- Assert conditions with:
+  - `DEBUG_ASSERT()` for debug-info compatible builds
+  - `ASSERT()` for all builds
+- In C++-land 
+    - Do not use exceptions
+    - Use `Result<T, ErrorType>` to return errors
+        - `Result<T, ErrorType>` contains an error string; allocate the error string on the permanent, or an passed in if the error can be recovered
+        - Success in the `ErrorType` must be represented by the integer `0`
+    - Use `Optional<T>` for values that may not exist, but not for errors
+- For C compatible APIs, you can declare a struct:
+    - For Result:
+        ```cpp
+        DECALRE_RESULT_TYPE(ResultFoo, Foo, ErrorCode);
+
+        // equivalent to:
+        struct ResultFoo { 
+            Foo f; 
+            ErrorCode error; 
+            StringSlice reason; 
+
+            #ifdef __cplusplus
+            inline operator bool() const {
+                return (i64) error != 0;
+            }
+            #endif // __cplusplus
+        };
+        ```
+    - For Optional:
+        ```cpp
+        DECLARE_OPTIONAL_TYPE(OptionalFoo, Foo);
+
+        // equivalent to:
+        struct OptionalFoo { 
+            Foo value;
+            bool exists;
+
+            #ifdef __cplusplus
+            inline operator bool() const {
+                return exists;
+            }
+            #endif // __cplusplus
+        };
+        ```
+    - TODO: should I always do it this way?
+
+## Primitive Types
+
+- Prefer typedef's with explicit bit size over builtin primitives, such as u8, i32, i64, etc.
+
+## Composite Types
+
+- Design around Zero Is Initialization (ZII), if possible
+- Prefer POD types (no ctors or dtors), if possible
+- Do not use `private` or `protected`, ever. `private` and `protected` is a lie.
+- Implement member functions as free form functions when possible. Exceptions include ctors/dtors, assignment/move operators, etc.
+    - Use `tools/metadecls.cpp` to automatically generate member functions that call the free form functions to emulate UFCS
+    - Include the member functions in the type with `#include src/<type>.members"
+
+## Memory Management & Containers
+
+Memory is managed with either an arena or the general heap.
+
+- Prefer allocating memory with an `Arena`
+    - access `perm_arena` to get the permanent arena, call `setup_perm_arena` at the start of your program
+    - call `get_scratch()` to get access to a temporary arena
+- Container naming convention:
+    - `M` prefix indicates that manual memory management is mandatory, use `.destroy()` to free memory
+    - `A` prefix indicates that the container will automatically call `.destroy()` using RAII
+- Containers utilizing an owned (or existing) arena
+    - `MStableArray<T>`, `AStableArray<T>`:
+    - `MPool<T>`, `APool<T>`
+
+## Templates and Generics
+
+- Minimize template complexity
+- Don't use templates unless it is necessary
+- Use SFINAE sparingly and only when necessary: `std::enable_if_t<std::is_integral_v<T>>`
+- Prefer explicit instantiation over heavy template metaprogramming
+
+## Parallel Code 
+- Atomics
+    - For C compatible APIs: use `atomic_i64`, `atomic_u64`, etc. typedefs or C11's `_Atomic(T)`
+    - In C++: use the Atomic<T> wrapper
+    - Use explicit memory ordering: C11 `memory_order` constants directly
+
+## Names, Keywords
 
 ### Macros
 - All uppercase with underscores: `CXB_INLINE`, `ASSERT`, `BREAKPOINT`
 - Library-specific macros prefixed with `CXB_`: `CXB_EXPORT`, `CXB_INTERNAL`
-- Literal helper macros use descriptive suffixes: `S8_LIT()`, `COUNTOF_LIT()`
 
 ### Types
 - Prefer the `struct` keyword over `class`
@@ -23,95 +115,7 @@
 ### Functions and Variables
 - `snake_case` for functions
 - `snake_case` for member variables: `n_active_bytes`, `bytes_consumed`
-- Do not make any variable or function "private", use a leading underscore if a variable is intended to be private, i.e. is an "implementation" detail
 
 ### Constants and Enums
 - PascalCase for enum values: `Relaxed`, `Acquire`, `SeqCst`
 - snake_case for static constants: `identity4x4`, `identity3x3`
-
-## Code Organization
-
-### Header Structure
-1. Preprocessor definitions and feature detection
-2. Macro definitions (general purpose first, then library-specific)
-3. Type aliases for primitives
-4. Core utility functions and classes
-5. Data structures (simple to complex)
-6. Specialized utilities and helpers
-
-### Class/Struct Layout
-
-Always use the struct keyword and expose all implementation details. Never use protected or private. Do not make any variable or function "private", use a leading underscore if a variable is intended to be private, i.e. is an "implementation" detail
-
-
-```cpp
-struct Example {
-    // member variables first
-    Type member_var;
-
-    // then ctors & dtors
-    Example() = default;
-    ~Example() = default;
-
-    // group assignment operators with the associated ctor
-    Example(const Type& param) = default;
-    Example& operator=(const Example& other);
-
-    // now member functions
-    void fn1();
-    int fn2();
-
-    // lastly include the operators
-    bool operator==(const Example& other);
-};
-```
-
-## Memory Management & Containers
-
-- Prefer using the `Arena` type
-- A container marked with an `M` prefix indicates that manual memory management is mandatory, use `.destroy()` to free memory
-- A container marked with an `A` prefix indicates that the container will automatically call `.destroy()` using RAII mechanisms
-- Use `StableArray<T>` or `AStableArray<T>`
-
-## Error Handling
-
-- Do not use exceptions
-- Use `Error<T, ErrorType>` to return errors
-  - `Error<T, ErrorType>` contains an error string; allocate the error string on the permanent or passed in arena depending on whether the error can be recovered from
-  - Success in the `ErrorType` must be represented as `0`
-- Use `Optional<T>` for values that may not exist, but not for errors
-- Assert conditions with:
-  - `DEBUG_ASSERT()` for debug-info compatible builds
-  - `ASSERT()` for all builds
-
-## Templates and Generics
-
-- Minimize template complexity
-- Don't use templates unless it is necessary
-- Use SFINAE sparingly and only when necessary: `std::enable_if_t<std::is_integral_v<T>>`
-- Prefer explicit instantiation over heavy template metaprogramming
-
-## Atomics
-- For C compatiable APIs: use `atomic_i64`, `atomic_u64`, etc. typedefs or C11's `_Atomic(T)`
-- In C++: use the Atomic<T> wrapper
-- Use explicit memory ordering: C11 `memory_order` constants directly
-
-## String Handling
-
-- UTF-8 by default with explicit conversion utilities
-- Null-termination as optional feature, not requirement
-- Slice operations return views, copy operations allocate
-
-## Performance Guidelines
-
-- Mark functions you truly want inlined with `CXB_INLINE`. This will force an inline when no debug information should be generated.
-- Mark pure functions with `CXB_PURE`
-- Use `LIKELY()`/`UNLIKELY()` for branch prediction hints
-- Compile-time evaluation with `CXB_COMPTIME` where possible or use C++'s `constexpr`
-
-## Platform Compatibility
-
-- Use feature detection macros for platform-specific code
-- Provide fallbacks for missing features
-- Support both C and C++ compilation modes
-- Use standard integer types with explicit sizes: `u32`, `i64`
