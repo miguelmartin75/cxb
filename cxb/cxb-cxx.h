@@ -72,7 +72,7 @@ memory, "M" stands for "manual"
 #define CXB_H
 
 #ifndef __cplusplus
-#error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb.h> is C++-only."
+#error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb-cxx.h> is C++-only."
 #endif
 
 #include "cxb-c.h"
@@ -560,8 +560,8 @@ struct MString {
         }
     }
 };
-/* SECTION: C++-only API */
 
+/* SECTION: C++-only API */
 template <typename T>
 struct Atomic {
     static_assert(std::is_integral_v<T> || std::is_pointer_v<T>,
@@ -695,16 +695,6 @@ struct Atomic {
 
     static constexpr bool is_always_lock_free = true;
 };
-
-struct HeapAllocData {
-    Atomic<i64> n_active_bytes;
-    Atomic<i64> n_allocated_bytes;
-    Atomic<i64> n_freed_bytes;
-};
-GLOBAL HeapAllocData heap_alloc_data;
-
-// TODO: placement new?
-// inline void *operator new(size_t, void *p) noexcept { return p; }
 
 /* SECTION: containers */
 struct AString : MString {
@@ -853,11 +843,6 @@ struct ArraySlice {
         return data + len;
     }
 };
-
-template <class T, class O>
-static constexpr ArraySlice<T> array_slice_from_pod(O* o) {
-    return ArraySlice<T>{o->data, o->len};
-}
 
 template <typename T>
 struct MArray {
@@ -1318,11 +1303,12 @@ inline void insert(Arena* arena, StringSlice& str, StringSlice to_insert, size_t
 }
 
 inline void extend(Arena* arena, StringSlice& str, StringSlice to_append) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    arena_push(arena, to_append.len, alignof(char));
+    void* data = arena_push(arena, to_append.len, alignof(char));
+    str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
 
     size_t old_len = str.len;
     str.len += to_append.len;

@@ -86,10 +86,19 @@ void* heap_alloc_proc(void* head, size_t n_bytes, size_t alignment, size_t old_n
 void heap_free_proc(void* head, size_t n_bytes, void* data);
 void heap_free_all_proc(void* data);
 
-Allocator heap_alloc = {.alloc_proc = heap_alloc_proc,
-                        .free_proc = heap_free_proc,
-                        .free_all_proc = heap_free_all_proc,
-                        .data = (void*) &heap_alloc_data};
+struct HeapAllocData {
+    Atomic<i64> n_active_bytes;
+    Atomic<i64> n_allocated_bytes;
+    Atomic<i64> n_freed_bytes;
+};
+static HeapAllocData heap_alloc_data = {};
+
+Allocator heap_alloc = {
+    .alloc_proc = heap_alloc_proc,
+    .free_proc = heap_free_proc,
+    .free_all_proc = heap_free_all_proc,
+    .data = (void*) &heap_alloc_data
+};
 
 void* heap_alloc_proc(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data) {
     (void) alignment;
