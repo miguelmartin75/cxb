@@ -133,8 +133,7 @@ typedef _Atomic(u128) atomic_u128;
 
 /* SECTION: types */
 typedef struct Allocator Allocator;
-typedef struct HeapAllocator HeapAllocator;
-extern HeapAllocator heap_alloc;
+extern Allocator heap_alloc;
 
 #ifndef __cplusplus
 
@@ -170,11 +169,11 @@ typedef struct MString MString;
 #define S8_CSTR(s) (StringSlice{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
 
 #define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#endif
 
 #ifndef CXB_C_API_DECL
 #if !defined(CXB_H) || defined(CXB_C_API)
 #define CXB_C_API_DECL
-
 // ** SECTION: StringSlice C functions
 CXB_C_EXPORT size_t cxb_ss_size(StringSlice s);
 CXB_C_EXPORT size_t cxb_ss_n_bytes(StringSlice s);
