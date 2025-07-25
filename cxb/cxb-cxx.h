@@ -200,28 +200,24 @@ struct Allocator {
 
     template <typename H, typename T>
     CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header, size_t old_count, size_t count) {
-        char* new_header = (char*) this->alloc_proc(
-            (void*) header,                   // header
-            sizeof(T) * count + sizeof(H),    // n_bytes
-            alignof(T) + sizeof(H),           // alignment
-            sizeof(T) * old_count + sizeof(H), // old bytes
-            false,                            // fill_zeros
-            this->data
-        );
+        char* new_header = (char*) this->alloc_proc((void*) header,                    // header
+                                                    sizeof(T) * count + sizeof(H),     // n_bytes
+                                                    alignof(T) + sizeof(H),            // alignment
+                                                    sizeof(T) * old_count + sizeof(H), // old bytes
+                                                    false,                             // fill_zeros
+                                                    this->data);
         T* data = (T*) (new_header + sizeof(H));
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
 
     template <typename H, typename T>
     CXB_MAYBE_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
-        char* new_header = (char*) this->alloc_proc(
-            (void*) header,                                     // header
-            sizeof(T) * count + sizeof(H),                      // n_bytes
-            alignof(T) + sizeof(H),                             // alignment
-            sizeof(T) * old_count + sizeof(H) * (old_count > 0), // old bytes
-            true,                                               // fill_zeros
-            this->data
-        );
+        char* new_header = (char*) this->alloc_proc((void*) header,                                      // header
+                                                    sizeof(T) * count + sizeof(H),                       // n_bytes
+                                                    alignof(T) + sizeof(H),                              // alignment
+                                                    sizeof(T) * old_count + sizeof(H) * (old_count > 0), // old bytes
+                                                    true,                                                // fill_zeros
+                                                    this->data);
         T* data = (T*) (new_header + sizeof(H));
         return AllocationWithHeader<T, H>{data, (H*) new_header};
     }
@@ -1191,13 +1187,13 @@ CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align);
 CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos);
 CXB_C_EXPORT void arena_clear(Arena* arena);
 
-
 CPOD struct ArenaTemp {
     Arena* arena;
     u64 pos;
 };
 
-template <typename T> inline T* push(Arena* arena, size_t n = 1) {
+template <typename T>
+inline T* push(Arena* arena, size_t n = 1) {
     const size_t size = sizeof(T) * n;
     T* data = (T*) arena_push(arena, size, alignof(T));
     if constexpr(!std::is_trivially_default_constructible_v<T>) {
@@ -1210,7 +1206,8 @@ template <typename T> inline T* push(Arena* arena, size_t n = 1) {
     return data;
 }
 
-template <typename T> inline T* push(Arena* arena, T value, size_t n = 1) {
+template <typename T>
+inline T* push(Arena* arena, T value, size_t n = 1) {
     const size_t size = sizeof(T);
     T* data = (T*) arena_push(arena, size, alignof(T));
     if constexpr(!std::is_trivially_default_constructible_v<T>) {
@@ -1225,7 +1222,8 @@ template <typename T> inline T* push(Arena* arena, T value, size_t n = 1) {
     return data;
 }
 
-template <typename T> inline void pop(Arena* arena, T* x) {
+template <typename T>
+inline void pop(Arena* arena, T* x) {
     ASSERT((void*) (x) >= (void*) arena->start && (void*) (x) < arena->end, "array not allocated on arena");
     ASSERT((void*) (x + 1) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
     arena->pos -= sizeof(T);
@@ -1424,7 +1422,7 @@ inline void pop_back(Arena* arena, A& xs)
     xs.len -= 1;
 }
 
- template <typename A, typename B, typename T>
+template <typename A, typename B, typename T>
 // template <typename A, typename B>
 inline void insert(Arena* arena, A& xs, B to_insert, size_t i)
     requires ArrayLike<A, T> && ArrayLike<B, T>
@@ -1449,7 +1447,7 @@ template <typename A, typename B, typename T>
 template <typename A, typename B>
 #endif
 inline void extend(Arena* arena, A& xs, B to_append)
-     requires ArrayLike<A, T> && ArrayLike<B, T>
+    requires ArrayLike<A, T> && ArrayLike<B, T>
 {
 #ifndef CXB_USE_CXX_CONCEPTS
     using T = decltype(xs.data[0]);

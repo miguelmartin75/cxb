@@ -42,7 +42,7 @@
 #define ASSERT(x, ...)    \
     if(!(x)) BREAKPOINT()
 #define INVALID_CODEPATH(msg) \
-    /* TODO: output msg */ \
+    /* TODO: output msg */    \
     BREAKPOINT()
 #define LIKELY(x) x
 #define UNLIKELY(x) x

@@ -1,9 +1,8 @@
 #include "examples/parser.h"
 
+#include <map> // TODO: removeme
 #include <print>
 #include <stdio.h>
-
-#include <map> // TODO: removeme
 
 struct Interpreter {
     std::map<std::string, AstNode*> funcs;
@@ -11,28 +10,23 @@ struct Interpreter {
 
 int dfs(Interpreter* ctx, Module* mod, AstNode* node) {
     switch(node->kind) {
-        case NODE_MODULE: 
-            {
-                for(size_t i = 0; i < node->kids.len; ++i) {
-                    int tmp = dfs(ctx, mod, node->kids[i]);
-                    std::println("node[{}] = {}", i, tmp);
-                    if(i == node->kids.len - 1) {
-                        return tmp;
-                    }
+        case NODE_MODULE: {
+            for(size_t i = 0; i < node->kids.len; ++i) {
+                int tmp = dfs(ctx, mod, node->kids[i]);
+                std::println("node[{}] = {}", i, tmp);
+                if(i == node->kids.len - 1) {
+                    return tmp;
                 }
             }
-            break;
+        } break;
         case NODE_FUNC_DECL: {
             // TODO
-        }
-            break;
+        } break;
         case NODE_FUNC_CALL: {
             // TODO
-        }
-            break;
+        } break;
         case NODE_IF: {
-        }
-            break;
+        } break;
         case NODE_BIN_OP: {
             auto lhs = dfs(ctx, mod, node->kids[0]);
             auto rhs = dfs(ctx, mod, node->kids[1]);
@@ -46,18 +40,16 @@ int dfs(Interpreter* ctx, Module* mod, AstNode* node) {
                 case TOK_MINUS_OP:
                     return lhs - rhs;
                 default:
-                    std::println("invalid bin op: {}", (int)node->tok.kind);
+                    std::println("invalid bin op: {}", (int) node->tok.kind);
                     break;
             }
         }
         case NODE_BOOL_LIT: {
             return node->data.numeral_literal.value;
-        }
-            break;
+        } break;
         case NODE_INT_LIT: {
             return node->data.numeral_literal.value;
-        }
-            break;
+        } break;
         case NODE_ELIF: {
             std::println("unexpected elif");
             exit(1);
@@ -67,11 +59,9 @@ int dfs(Interpreter* ctx, Module* mod, AstNode* node) {
             exit(1);
         }
         default: {
-            std::println("invalid node kind: {}", (int)node->kind);
-        }
-            break;
+            std::println("invalid node kind: {}", (int) node->kind);
+        } break;
     }
-
 }
 
 int eval(Interpreter* ctx, Module* mod) {

@@ -3,7 +3,6 @@
 
 // TODO(lowpri): remove fmtlib dependencies
 #include <cxb/cxb.h>
-
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
@@ -32,18 +31,17 @@ void println_nf(fmt::format_string<T...> fmt, T&&... args) {
     print("{}\n", str);
 }
 
-template<>
-struct fmt::formatter<StringSlice>
-{
-  template<typename ParseContext>
-  constexpr auto parse(ParseContext& ctx) {
-      return ctx.begin();
-  }
+template <>
+struct fmt::formatter<StringSlice> {
+    template <typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) {
+        return ctx.begin();
+    }
 
-  template<typename FormatContext>
-  auto format(const StringSlice& x, FormatContext& ctx) const {
-      return fmt::format_to(ctx.out(), "StringSlice(\"{:.{}}\", n={})", x.data, x.len, x.len);
-  }
+    template <typename FormatContext>
+    auto format(const StringSlice& x, FormatContext& ctx) const {
+        return fmt::format_to(ctx.out(), "StringSlice(\"{:.{}}\", n={})", x.data, x.len, x.len);
+    }
 };
 
 #endif
