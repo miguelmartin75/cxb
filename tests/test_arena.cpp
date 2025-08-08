@@ -30,7 +30,7 @@ TEST_CASE("string push/pop", "[Arena*]") {
     Arena* arena = arena_make_nbytes(KB(4));
     REQUIRE(arena->end - arena->start == KB(4));
 
-    StringSlice str = push_str(arena);
+    String8 str = push_str(arena);
     push_back(arena, str, 'a');
     insert(arena, str, 'b', 0);
     REQUIRE(str == S8_LIT("ba"));
@@ -42,7 +42,7 @@ TEST_CASE("string insert", "[Arena*]") {
     Arena* arena = arena_make_nbytes(KB(4));
     REQUIRE(arena->end - arena->start == KB(4));
 
-    StringSlice str = push_str(arena);
+    String8 str = push_str(arena);
     push_back(arena, str, 'a');
     insert(arena, str, 'b', 0);
     REQUIRE(str == S8_LIT("ba"));
@@ -57,7 +57,7 @@ TEST_CASE("string extend", "[Arena*]") {
     Arena* arena = arena_make_nbytes(KB(4));
     REQUIRE(arena->end - arena->start == KB(4));
 
-    StringSlice str = push_str(arena, S8_LIT("abc"));
+    String8 str = push_str(arena, S8_LIT("abc"));
     extend(arena, str, S8_LIT("def"));
     REQUIRE(str == S8_LIT("abcdef"));
     REQUIRE(str.n_bytes() == 7);

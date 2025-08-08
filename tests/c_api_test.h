@@ -15,7 +15,7 @@ typedef struct IntArray {
 
 CXB_C_EXPORT void extend_elements(IntArray* in_array);
 
-CXB_C_EXPORT MString join_paths(StringSlice p1, StringSlice p2, Allocator* alloc);
+CXB_C_EXPORT MString join_paths(String8 p1, String8 p2, Allocator* alloc);
 
 #ifdef __cplusplus
 } // extern "C"

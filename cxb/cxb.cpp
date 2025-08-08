@@ -164,7 +164,7 @@ CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size) {
     s->resize(size);
 }
 
-CXB_C_EXPORT void cxb_mstring_extend(MString* s, StringSlice slice) {
+CXB_C_EXPORT void cxb_mstring_extend(MString* s, String8 slice) {
     if(!s) return;
     s->extend(slice);
 }
@@ -188,40 +188,40 @@ CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator) {
     return s.copy(to_allocator);
 }
 
-// ** SECTION: StringSlice C functions
-CXB_C_EXPORT size_t cxb_ss_size(StringSlice s) {
+// ** SECTION: String8 C functions
+CXB_C_EXPORT size_t cxb_ss_size(String8 s) {
     return s.size();
 }
 
-CXB_C_EXPORT size_t cxb_ss_n_bytes(StringSlice s) {
+CXB_C_EXPORT size_t cxb_ss_n_bytes(String8 s) {
     return s.n_bytes();
 }
 
-CXB_C_EXPORT bool cxb_ss_empty(StringSlice s) {
+CXB_C_EXPORT bool cxb_ss_empty(String8 s) {
     return s.empty();
 }
 
-CXB_C_EXPORT const char* cxb_ss_c_str(StringSlice s) {
+CXB_C_EXPORT const char* cxb_ss_c_str(String8 s) {
     return s.c_str();
 }
 
-CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, i64 i, i64 j) {
+CXB_C_EXPORT String8 cxb_ss_slice(String8 s, i64 i, i64 j) {
     return s.slice(i, j);
 }
 
-CXB_C_EXPORT bool cxb_ss_eq(StringSlice a, StringSlice b) {
+CXB_C_EXPORT bool cxb_ss_eq(String8 a, String8 b) {
     return a == b;
 }
 
-CXB_C_EXPORT bool cxb_ss_neq(StringSlice a, StringSlice b) {
+CXB_C_EXPORT bool cxb_ss_neq(String8 a, String8 b) {
     return a != b;
 }
 
-CXB_C_EXPORT bool cxb_ss_lt(StringSlice a, StringSlice b) {
+CXB_C_EXPORT bool cxb_ss_lt(String8 a, String8 b) {
     return a < b;
 }
 
-CXB_C_EXPORT char cxb_ss_back(StringSlice s) {
+CXB_C_EXPORT char cxb_ss_back(String8 s) {
     return s.back();
 }
 
