@@ -4,7 +4,7 @@ struct File {
     void* data;
     size_t len;
 
-    StringSlice filepath;
+    String8 filepath;
 };
 
 enum class FileOpenErr {
@@ -14,5 +14,5 @@ enum class FileOpenErr {
     Cnt,
 };
 
-Result<File*, FileOpenErr> open_file(Arena* arena, StringSlice filepath);
+Result<File*, FileOpenErr> open_file(Arena* arena, String8 filepath);
 void close_file(File* file);

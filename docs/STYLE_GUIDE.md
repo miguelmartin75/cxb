@@ -33,7 +33,7 @@
         struct ResultFoo { 
             Foo f; 
             ErrorCode error; 
-            StringSlice reason; 
+            String8 reason; 
 
             #ifdef __cplusplus
             inline operator bool() const {

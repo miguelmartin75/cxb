@@ -92,13 +92,13 @@ struct Token {
     u64 col : 31;
     u64 err : 1;
 
-    inline StringSlice ss(const char* buffer) const {
-        return StringSlice{.data = (char*) (buffer + idx), .len = (size_t) n, .null_term = false};
+    inline String8 ss(const char* buffer) const {
+        return String8{.data = (char*) (buffer + idx), .len = (size_t) n, .null_term = false};
     }
 
-    inline StringSlice ss(const StringSlice& sv) const {
+    inline String8 ss(const String8& sv) const {
         DEBUG_ASSERT(n < sv.len);
-        return StringSlice{.data = (char*) (sv.data + idx), .len = (size_t) n, .null_term = false};
+        return String8{.data = (char*) (sv.data + idx), .len = (size_t) n, .null_term = false};
     }
 };
 
@@ -237,7 +237,7 @@ struct AstNode {
 
 struct ParseError {
     AstNode* root;
-    StringSlice message;
+    String8 message;
 };
 
 struct ParseErrorArray {
@@ -247,7 +247,7 @@ struct ParseErrorArray {
 
 struct Parser;
 struct Module {
-    StringSlice name;
+    String8 name;
     File* file;
 
     AstNode* root;
@@ -262,7 +262,7 @@ struct Module {
 struct ParseFileResult {
     i64 num_errors;
     FileOpenErr file_err;
-    StringSlice message;
+    String8 message;
 
 #ifdef __cplusplus
     inline operator bool() {
@@ -271,6 +271,6 @@ struct ParseFileResult {
 #endif
 };
 
-C_EXPORT Module* module_make(StringSlice name, Arena* arena, Arena* tree);
-C_EXPORT ParseFileResult module_parse_file(Module* mod, StringSlice file_path);
+C_EXPORT Module* module_make(String8 name, Arena* arena, Arena* tree);
+C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path);
 C_EXPORT void module_destroy(Module* module);
