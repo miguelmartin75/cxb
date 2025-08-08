@@ -42,11 +42,11 @@ C_EXPORT Module* module_make(String8 name, Arena* arena, Arena* tree) {
         // 256KiB for errors
         arena = arena_make_nbytes(sizeof(Module) + MB(256));
     }
-    Module* result = push<Module>(arena);
+    Module* result = arena_push<Module>(arena);
     result->arena = arena;
     result->tree = tree;
-    result->name = push_str(arena, name);
-    result->parser = push<Parser>(arena);
+    result->name = arena_push_string8(arena, name);
+    result->parser = arena_push<Parser>(arena);
     return result;
 }
 
@@ -88,18 +88,18 @@ C_EXPORT void module_destroy(Module* module) {
 #define NODE(x) (*x)
 #define LHS(x) NODE(NODE(x).kids.data[0])
 #define RHS(x) NODE(NODE(x).kids.data[1])
-#define ADD_KID(x, k) push_back(ctx->tree, (x)->kids, static_cast<AstNode*>(k))
-#define ADD_KID_A(x, k, a) push_back(a, (x)->kids, static_cast<AstNode*>(k))
+#define ADD_KID(x, k) array_push_back((x)->kids, ctx->tree, static_cast<AstNode*>(k))
+#define ADD_KID_A(x, k, a) array_push_back((x)->kids, a, static_cast<AstNode*>(k))
 #define INVALID_NODE nullptr
 
 #define ADD_ERR(node, err_msg, ...)                                            \
     {                                                                          \
         node->err = 1;                                                         \
-        push_back(ctx->error_arena, ctx->errors, ParseError{(node), err_msg}); \
+        array_push_back(ctx->errors, ctx->error_arena, ParseError{(node), err_msg}); \
     }
 
 #define ADD_ERR_NO_NODE(err_msg, ...)                                           \
-    { push_back(ctx->error_arena, ctx->errors, ParseError{nullptr, err_msg}); }
+    { array_push_back(ctx->errors, ctx->error_arena, ParseError{nullptr, err_msg}); }
 
 #define TO_STR(x) #x
 #define STR_CONCAT(a, b) (a b)
@@ -131,7 +131,7 @@ static inline bool is_unary_op(TokenKind type) {
 }
 
 static inline AstNode* add_node(Parser* ctx, NodeKind kind, AstNodeData data, Token tok = Token{}, bool err = false) {
-    AstNode* result = push(ctx->tree,
+    AstNode* result = arena_push(ctx->tree,
                            AstNode{.kind = kind,
                                    .err = err,
                                    .tok = tok,

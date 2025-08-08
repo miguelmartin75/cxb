@@ -36,11 +36,11 @@ block of memory
         - This type is a `std::string` alternative, but requires manual memory management
         - Think of this type as a `String8` that is optionally attached to an allocator
         - Compatible with `String8`
-        - In C-land: free functions are provided, such as `cxb_mstring_destroy`,
-          `cxb_mstring_c_str`, `cxb_mstring_empty`, `cxb_mstring_n_bytes`, etc.
+        - In C-land: free functions are provided, such as `cxb_mstring8_destroy`,
+          `cxb_mstring8_c_str`, `cxb_mstring8_empty`, `cxb_mstring8_n_bytes`, etc.
         - In C++-land: there are methods the same operations the C free functions
           support plus operator overloads for convenience, e.g. `operator[]`, `c_str`, `empty`, `size`, `n_bytes`, etc.
-        - Call `.destroy()` (in C++) or `cxb_mstring_destroy` (in C) to free the memory
+        - Call `.destroy()` (in C++) or `cxb_mstring8_destroy` (in C) to free the memory
         - Destructor does not call `.destroy()`, see `String` for this functionality
 * C++ only types: use these types when when defining C++ APIs or in implementation files
     * `AString: an automatically managed string using RAII, compatible with MString
@@ -292,9 +292,10 @@ void swap(T& t1, T& t2) noexcept {
     t2 = move(temp);
 }
 
-/* SECTION: memory & containers */
+/* SECTION: arena */
 struct Arena;
 struct String8;
+template <typename T> struct Array;
 
 #ifdef CXB_USE_CXX_CONCEPTS
 template <typename A, typename T>
@@ -312,72 +313,18 @@ concept ArrayLikeNoT = requires(A x) {
 #endif
 
 // TODO: forward decl
-String8 push_string(Arena* arena, size_t n = 1);
-String8 push_string(Arena* arena, String8 to_copy);
-void string_resize(String8& str, Arena* arena, size_t n, char fill_char = '\0');
-void string_push_back(String8& str, Arena* arena, char ch);
-void string_pop_back(String8& str, Arena* arena);
-void string_pop_all(String8& str, Arena* arena);
-void string_insert(String8& str, Arena* arena, char ch, size_t i);
-void string_insert(String8& str, Arena* arena, String8 to_insert, size_t i);
-void string_extend(String8& str, Arena* arena, String8 to_append);
+String8 arena_push_string8(Arena* arena, size_t n = 1);
+String8 arena_push_string8(Arena* arena, String8 to_copy);
+void string8_resize(String8& str, Arena* arena, size_t n, char fill_char = '\0');
+void string8_push_back(String8& str, Arena* arena, char ch);
+void string8_pop_back(String8& str, Arena* arena);
+void string8_pop_all(String8& str, Arena* arena);
+void string8_insert(String8& str, Arena* arena, char ch, size_t i);
+void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i);
+void string8_extend(String8& str, Arena* arena, String8 to_append);
 
 template <typename T> Array<T> push_array(Arena* arena, size_t n);
 template <typename T> Array<T> push_array(Arena* arena, Array<T> to_copy);
-
-template <typename A, typename T>
-void array_push_back(A& xs, Arena* arena, T value)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
-#endif
-;
-
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T, typename... Args>
-#else
-template <typename A, typename... Args>
-#endif
-void array_emplace_back(A& xs, Arena* arena, Args&&... args)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
-#endif
-;
-
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T>
-#else
-template <typename A>
-#endif
-void array_pop_back(A& xs, Arena* arena)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
-#endif
-;
-
-template <typename A, typename B, typename T>
-void array_insert(A& xs, Arena* arena, B to_insert, size_t i)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T> && ArrayLike<B, T>
-#endif
-;
-
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename B, typename T>
-#else
-template <typename A, typename B>
-#endif
-inline void array_extend(A& xs, Arena* arena, B to_append)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T> && ArrayLike<B, T>
-#endif
-;
-
-template <typename A>
-inline void pop_all(A& xs, Arena* arena)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A>
-#endif
-;
 
 CXB_C_TYPE struct ArenaParams {
 CXB_C_COMPAT_BEGIN
@@ -406,7 +353,7 @@ CXB_C_EXPORT Arena* arena_make(ArenaParams params);
 CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes);
 CXB_C_EXPORT void arena_destroy(Arena* arena);
 
-CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align);
+CXB_C_EXPORT void* arena_push_bytes(Arena* arena, size_t size, size_t align);
 CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos);
 CXB_C_EXPORT void arena_clear(Arena* arena);
 
@@ -416,6 +363,335 @@ CXB_C_COMPAT_BEGIN
     u64 pos;
 CXB_C_COMPAT_END
 };
+
+// *SECTION: Arena free functions
+template <typename T> inline T* arena_push(Arena* arena, size_t n = 1) {
+    const size_t size = sizeof(T) * n;
+    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < n; ++i) {
+            new(data + i) T{};
+        }
+    } else {
+        memset(data, 0, size);
+    }
+    return data;
+}
+
+template <typename T>
+inline T* arena_push(Arena* arena, T value, size_t n = 1) {
+    const size_t size = sizeof(T);
+    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < n; ++i) {
+            new(data + i) T{value};
+        }
+    } else {
+        for(size_t i = 0; i < n; ++i) {
+            memcpy((void*) (data + i), (void*) (&value), sizeof(T));
+        }
+    }
+    return data;
+}
+
+template <typename T>
+inline void arena_pop(Arena* arena, T* x) {
+    ASSERT((void*) (x) >= (void*) arena->start && (void*) (x) < arena->end, "array not allocated on arena");
+    ASSERT((void*) (x + 1) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
+    arena->pos -= sizeof(T);
+}
+
+// *SECTION: Array<T> functions
+template <typename T>
+inline Array<T> arena_push_array(Arena* arena, size_t n) {
+    T* data = push<T>(arena, n);
+    return Array<T>{.data = data, .len = n};
+}
+
+template <typename T>
+inline Array<T> arena_push_array(Arena* arena, Array<T> to_copy) {
+    T* data = push<T>(arena, to_copy.len);
+    if constexpr(std::is_trivially_copyable_v<T>) {
+        memcpy(data, to_copy.data, to_copy.len * sizeof(T));
+    } else {
+        for(size_t i = 0; i < to_copy.len; ++i) {
+            data[i] = to_copy.data[i];
+        }
+    }
+    return Array<T>{.data = data, .len = to_copy.len};
+}
+
+template <typename A, typename T>
+inline void array_push_back(A& xs, Arena* arena, T value)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+           "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+    void* data = arena_push_bytes(arena, sizeof(T), alignof(T));
+    xs.data = UNLIKELY(xs.data == nullptr) ? (T*) data : xs.data;
+    xs.data[xs.len] = value;
+    xs.len += 1;
+}
+
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename T, typename... Args>
+#else
+template <typename A, typename... Args>
+#endif
+inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = decltype(xs.data[0]);
+#endif
+
+    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
+    arena_push_bytes(arena, sizeof(T), alignof(T));
+    xs.data[xs.len] = T{forward<Args>(args)...};
+    xs.len += 1;
+}
+
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename T>
+#else
+template <typename A>
+#endif
+inline void array_pop_back(Arena* arena, A& xs)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = decltype(xs.data[0]);
+#endif
+    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
+    arena_pop_to(arena, arena->pos - sizeof(xs.data));
+
+    if constexpr(!std::is_trivially_destructible_v<T>) {
+        xs.data[xs.len].~T();
+    }
+    xs.len -= 1;
+}
+
+template <typename A, typename B, typename T>
+inline void array_insert(Arena* arena, A& xs, B to_insert, size_t i)
+    requires ArrayLike<A, T> && ArrayLike<B, T>
+{
+    // using T = decltype(xs.data[0]);
+    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
+    ASSERT(i <= xs.len, "insert position out of bounds");
+
+    arena_push_bytes(arena, to_insert.len * sizeof(T), alignof(T));
+
+    size_t old_len = xs.len;
+    xs.len += to_insert.len;
+
+    memmove(xs.data + i + to_insert.len, xs.data + i, (old_len - i) * sizeof(T));
+    memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
+}
+
+#ifdef CXB_USE_CXX_CONCEPTS
+template <typename A, typename B, typename T>
+#else
+template <typename A, typename B>
+#endif
+inline void array_extend(Arena* arena, A& xs, B to_append)
+    requires ArrayLike<A, T> && ArrayLike<B, T>
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = decltype(xs.data[0]);
+#endif
+    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
+
+    arena_push_bytes(arena, to_append.len * sizeof(T), alignof(T));
+
+    size_t old_len = xs.len;
+    xs.len += to_append.len;
+
+    memcpy(xs.data + old_len, to_append.data, to_append.len * sizeof(T));
+}
+
+template <typename A>
+inline void array_pop_all(Arena* arena, A& xs)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A>
+#endif
+{
+    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
+    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
+    arena_pop_to(arena, arena->pos - (sizeof(xs.data[0]) * xs.len));
+    xs.data = nullptr;
+    xs.len = 0;
+}
+
+/* SECTION: basic types */
+CXB_C_TYPE struct String8 {
+CXB_C_COMPAT_BEGIN
+    char* data;
+    union {
+        struct {
+            size_t len : 63;
+            bool null_term : 1;
+        };
+        size_t metadata;
+    };
+CXB_C_COMPAT_END
+
+    // ** SECTION: slice compatible methods
+    CXB_MAYBE_INLINE size_t n_bytes() const {
+        return len + null_term;
+    }
+    CXB_MAYBE_INLINE size_t size() const {
+        return len;
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_MAYBE_INLINE char& operator[](size_t idx) {
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE char& back() {
+        return data[len - 1];
+    }
+    CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
+        i64 ii = i < 0 ? len + i : i;
+        i64 jj = j < 0 ? len + j : j;
+        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
+        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+
+        String8 c = *this;
+        c.data = c.data + ii;
+        c.len = jj - ii + 1;
+        c.null_term = ii + c.len == len ? this->null_term : false;
+        return c;
+    }
+
+    CXB_MAYBE_INLINE const char* c_str() const {
+        return null_term ? data : nullptr;
+    }
+
+    CXB_MAYBE_INLINE int compare(const String8& o) const {
+        int result = memcmp(data, o.data, len < o.len ? len : o.len);
+        if(result == 0) {
+            return len - o.len;
+        }
+        return result;
+    }
+
+    CXB_MAYBE_INLINE bool operator==(const String8& o) const {
+        return compare(o) == 0;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const String8& o) const {
+        return !(*this == o);
+    }
+
+    CXB_MAYBE_INLINE bool operator<(const String8& o) const {
+        size_t n = len < o.len ? len : o.len;
+        int cmp = memcmp(data, o.data, n);
+        if(cmp < 0) return true;
+        if(cmp > 0) return false;
+        return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const String8& o) const {
+        return o < *this;
+    }
+
+    // ** SECTION: arena compatible
+    // TODO
+};
+
+
+template <typename T>
+struct Array {
+    T* data;
+    size_t len;
+
+    CXB_MAYBE_INLINE size_t size() const {
+        return len;
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_MAYBE_INLINE T& operator[](size_t idx) {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE const T& operator[](size_t idx) const {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE T& back() {
+        return data[len - 1];
+    }
+    CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
+        i64 ii = i < 0 ? len + i : i;
+        i64 jj = j < 0 ? len + j : j;
+        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
+        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+
+        Array<T> c = *this;
+        c.data = c.data + ii;
+        c.len = jj - ii + 1;
+        return c;
+    }
+
+    CXB_MAYBE_INLINE bool operator<(const Array<T>& o) const {
+        size_t n = len < o.len ? len : o.len;
+        for(size_t i = 0; i < n; ++i) {
+            if(o.data[i] < data[i])
+                return false;
+            else if(data[i] < o.data[i])
+                return true;
+        }
+        return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator==(const Array<T>& o) const {
+        if(len != o.len) return false;
+        for(size_t i = 0; i < len; ++i) {
+            if(!(data[i] == o.data[i])) return false;
+        }
+        return true;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const Array<T>& o) const {
+        return !(*this == o);
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const Array<T>& o) const {
+        return o < *this;
+    }
+
+    CXB_MAYBE_INLINE T* begin() {
+        return data;
+    }
+    CXB_MAYBE_INLINE T* end() {
+        return data + len;
+    }
+    CXB_MAYBE_INLINE const T* begin() const {
+        return data;
+    }
+    CXB_MAYBE_INLINE const T* end() const {
+        return data + len;
+    }
+};
+
+
 
 /* SECTION: general allocation */
 CXB_C_TYPE enum AllocCmd {
@@ -496,6 +772,10 @@ CXB_C_COMPAT_END
     }
 };
 
+CXB_C_COMPAT_BEGIN
+extern Allocator heap_alloc;
+CXB_C_COMPAT_END
+
 CXB_C_TYPE struct Vec2f {
 CXB_C_COMPAT_BEGIN
     f32 x, y;
@@ -515,7 +795,7 @@ CXB_C_COMPAT_END
 };
 
 CXB_C_TYPE struct Vec3f {
-CXB_C_COMAT_BEGIN
+CXB_C_COMPAT_BEGIN
     f32 x, y, z;
 CXB_C_COMPAT_END
 };
@@ -576,83 +856,6 @@ static const Mat33f identity3x3 = {.arr = {
                                        0,
                                        1,
                                    }};
-
-CXB_C_TYPE struct String8 {
-CXB_C_COMPAT_BEGIN
-    char* data;
-    union {
-        struct {
-            size_t len : 63;
-            bool null_term : 1;
-        };
-        size_t metadata;
-    };
-CXB_C_COMPAT_END
-
-    // ** SECTION: slice compatible methods
-    CXB_MAYBE_INLINE size_t n_bytes() const {
-        return len + null_term;
-    }
-    CXB_MAYBE_INLINE size_t size() const {
-        return len;
-    }
-    CXB_MAYBE_INLINE bool empty() const {
-        return len == 0;
-    }
-    CXB_MAYBE_INLINE char& operator[](size_t idx) {
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE char& back() {
-        return data[len - 1];
-    }
-    CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
-
-        String8 c = *this;
-        c.data = c.data + ii;
-        c.len = jj - ii + 1;
-        c.null_term = ii + c.len == len ? this->null_term : false;
-        return c;
-    }
-
-    CXB_MAYBE_INLINE const char* c_str() const {
-        return null_term ? data : nullptr;
-    }
-
-    CXB_MAYBE_INLINE int compare(const String8& o) const {
-        int result = memcmp(data, o.data, len < o.len ? len : o.len);
-        if(result == 0) {
-            return len - o.len;
-        }
-        return result;
-    }
-
-    CXB_MAYBE_INLINE bool operator==(const String8& o) const {
-        return compare(o) == 0;
-    }
-
-    CXB_MAYBE_INLINE bool operator!=(const String8& o) const {
-        return !(*this == o);
-    }
-
-    CXB_MAYBE_INLINE bool operator<(const String8& o) const {
-        size_t n = len < o.len ? len : o.len;
-        int cmp = memcmp(data, o.data, n);
-        if(cmp < 0) return true;
-        if(cmp > 0) return false;
-        return len < o.len;
-    }
-
-    CXB_MAYBE_INLINE bool operator>(const String8& o) const {
-        return o < *this;
-    }
-};
 
 CXB_C_TYPE struct MString {
 CXB_C_COMPAT_BEGIN
@@ -1059,81 +1262,6 @@ struct AString : MString {
 };
 
 template <typename T>
-struct Array {
-    T* data;
-    size_t len;
-
-    CXB_MAYBE_INLINE size_t size() const {
-        return len;
-    }
-    CXB_MAYBE_INLINE bool empty() const {
-        return len == 0;
-    }
-    CXB_MAYBE_INLINE T& operator[](size_t idx) {
-        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE const T& operator[](size_t idx) const {
-        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE T& back() {
-        return data[len - 1];
-    }
-    CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
-
-        Array<T> c = *this;
-        c.data = c.data + ii;
-        c.len = jj - ii + 1;
-        return c;
-    }
-
-    CXB_MAYBE_INLINE bool operator<(const Array<T>& o) const {
-        size_t n = len < o.len ? len : o.len;
-        for(size_t i = 0; i < n; ++i) {
-            if(o.data[i] < data[i])
-                return false;
-            else if(data[i] < o.data[i])
-                return true;
-        }
-        return len < o.len;
-    }
-
-    CXB_MAYBE_INLINE bool operator==(const Array<T>& o) const {
-        if(len != o.len) return false;
-        for(size_t i = 0; i < len; ++i) {
-            if(!(data[i] == o.data[i])) return false;
-        }
-        return true;
-    }
-
-    CXB_MAYBE_INLINE bool operator!=(const Array<T>& o) const {
-        return !(*this == o);
-    }
-
-    CXB_MAYBE_INLINE bool operator>(const Array<T>& o) const {
-        return o < *this;
-    }
-
-    CXB_MAYBE_INLINE T* begin() {
-        return data;
-    }
-    CXB_MAYBE_INLINE T* end() {
-        return data + len;
-    }
-    CXB_MAYBE_INLINE const T* begin() const {
-        return data;
-    }
-    CXB_MAYBE_INLINE const T* end() const {
-        return data + len;
-    }
-};
-
-template <typename T>
 struct MArray {
     T* data;
     size_t len;
@@ -1434,282 +1562,15 @@ struct Optional {
     }
 };
 
-// *SECTION: Arena free functions
-template <typename T>
-inline T* push(Arena* arena, size_t n = 1) {
-    const size_t size = sizeof(T) * n;
-    T* data = (T*) arena_push(arena, size, alignof(T));
-    if constexpr(!std::is_trivially_default_constructible_v<T>) {
-        for(size_t i = 0; i < n; ++i) {
-            new(data + i) T{};
-        }
-    } else {
-        memset(data, 0, size);
-    }
-    return data;
-}
-
-template <typename T>
-inline T* push(Arena* arena, T value, size_t n = 1) {
-    const size_t size = sizeof(T);
-    T* data = (T*) arena_push(arena, size, alignof(T));
-    if constexpr(!std::is_trivially_default_constructible_v<T>) {
-        for(size_t i = 0; i < n; ++i) {
-            new(data + i) T{value};
-        }
-    } else {
-        for(size_t i = 0; i < n; ++i) {
-            memcpy((void*) (data + i), (void*) (&value), sizeof(T));
-        }
-    }
-    return data;
-}
-
-template <typename T>
-inline void pop(Arena* arena, T* x) {
-    ASSERT((void*) (x) >= (void*) arena->start && (void*) (x) < arena->end, "array not allocated on arena");
-    ASSERT((void*) (x + 1) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
-    arena->pos -= sizeof(T);
-}
-
-// *SECTION: String8 arena functions
-inline String8 push_str(Arena* arena, size_t n = 1) {
-    ASSERT(n > 0);
-    char* data = push<char>(arena, n);
-    return String8{.data = data, .len = n - 1, .null_term = true};
-}
-
-inline String8 push_str(Arena* arena, String8 to_copy) {
-    char* data = push<char>(arena, to_copy.n_bytes());
-    String8 result = String8{.data = data, .len = to_copy.len, .null_term = to_copy.null_term};
-    memccpy(result.data, to_copy.data, sizeof(char), to_copy.n_bytes());
-    return result;
-}
-
-inline void resize(Arena* arena, String8& str, size_t n, char fill_char = '\0') {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-    ASSERT(n > str.size());
-
-    size_t delta = n - str.size();
-    arena_push(arena, delta, alignof(char));
-    memset(str.data + str.len, fill_char, delta);
-    str.len += delta;
-}
-
-inline void push_back(Arena* arena, String8& str, char ch) {
-    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
-           "string not allocated on arena");
-    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-
-    void* data = arena_push(arena, sizeof(char), alignof(char));
-    str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
-    str.data[str.len] = ch;
-    str.len += 1;
-    if(str.null_term) {
-        str.data[str.len] = '\0';
-    }
-}
-
-inline void pop_back(Arena* arena, String8& str) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-
-    arena_pop_to(arena, arena->pos - 1);
-    str.len -= 1;
-    str.data[str.len] = '\0';
-    str.null_term = true;
-}
-
-inline void pop_all(Arena* arena, String8& str) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-
-    arena_pop_to(arena, arena->pos - str.n_bytes());
-    str.len = 0;
-    str.data = nullptr;
-}
-
-inline void insert(Arena* arena, String8& str, char ch, size_t i) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-    ASSERT(i <= str.len, "insert position out of bounds");
-
-    push_back(arena, str, '\0');
-    memmove(str.data + i + 1, str.data + i, str.len - i - 1);
-    str.data[i] = ch;
-}
-
-inline void insert(Arena* arena, String8& str, String8 to_insert, size_t i) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-    ASSERT(i <= str.len, "insert position out of bounds");
-
-    arena_push(arena, to_insert.len, alignof(char));
-
-    size_t old_len = str.len;
-    str.len += to_insert.len;
-
-    memmove(str.data + i + to_insert.len, str.data + i, old_len - i);
-    memcpy(str.data + i, to_insert.data, to_insert.len);
-}
-
-inline void extend(Arena* arena, String8& str, String8 to_append) {
-    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-
-    void* data = arena_push(arena, to_append.len, alignof(char));
-    str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
-
-    size_t old_len = str.len;
-    str.len += to_append.len;
-    memcpy(str.data + old_len, to_append.data, to_append.len);
-}
-
-template <typename T>
-inline Array<T> push_array(Arena* arena, size_t n) {
-    T* data = push<T>(arena, n);
-    return Array<T>{.data = data, .len = n};
-}
-
-template <typename T>
-inline Array<T> push_array(Arena* arena, Array<T> to_copy) {
-    T* data = push<T>(arena, to_copy.len);
-    if constexpr(std::is_trivially_copyable_v<T>) {
-        memcpy(data, to_copy.data, to_copy.len * sizeof(T));
-    } else {
-        for(size_t i = 0; i < to_copy.len; ++i) {
-            data[i] = to_copy.data[i];
-        }
-    }
-    return Array<T>{.data = data, .len = to_copy.len};
-}
-
-template <typename A, typename T>
-inline void push_back(Arena* arena, A& xs, T value)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
-#endif
-{
-    ASSERT(UNLIKELY(xs.data == nullptr) || (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
-           "array not allocated on arena");
-    ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-    void* data = arena_push(arena, sizeof(T), alignof(T));
-    xs.data = UNLIKELY(xs.data == nullptr) ? (T*) data : xs.data;
-    xs.data[xs.len] = value;
-    xs.len += 1;
-}
-
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T, typename... Args>
-#else
-template <typename A, typename... Args>
-#endif
-inline void emplace_back(Arena* arena, A& xs, Args&&... args)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
-#endif
-{
-    // using T = decltype(xs.data[0]);
-
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    arena_push(arena, sizeof(T), alignof(T));
-    xs.data[xs.len] = T{forward<Args>(args)...};
-    xs.len += 1;
-}
-
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T>
-#else
-template <typename A>
-#endif
-inline void pop_back(Arena* arena, A& xs)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
-#endif
-{
-#ifndef CXB_USE_CXX_CONCEPTS
-    using T = decltype(xs.data[0]);
-#endif
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
-    arena_pop_to(arena, arena->pos - sizeof(xs.data));
-
-    if constexpr(!std::is_trivially_destructible_v<T>) {
-        xs.data[xs.len].~T();
-    }
-    xs.len -= 1;
-}
-
-template <typename A, typename B, typename T>
-// template <typename A, typename B>
-inline void insert(Arena* arena, A& xs, B to_insert, size_t i)
-    requires ArrayLike<A, T> && ArrayLike<B, T>
-{
-    // using T = decltype(xs.data[0]);
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    ASSERT(i <= xs.len, "insert position out of bounds");
-
-    arena_push(arena, to_insert.len * sizeof(T), alignof(T));
-
-    size_t old_len = xs.len;
-    xs.len += to_insert.len;
-
-    memmove(xs.data + i + to_insert.len, xs.data + i, (old_len - i) * sizeof(T));
-    memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
-}
-
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename B, typename T>
-#else
-template <typename A, typename B>
-#endif
-inline void extend(Arena* arena, A& xs, B to_append)
-    requires ArrayLike<A, T> && ArrayLike<B, T>
-{
-#ifndef CXB_USE_CXX_CONCEPTS
-    using T = decltype(xs.data[0]);
-#endif
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-
-    arena_push(arena, to_append.len * sizeof(T), alignof(T));
-
-    size_t old_len = xs.len;
-    xs.len += to_append.len;
-
-    memcpy(xs.data + old_len, to_append.data, to_append.len * sizeof(T));
-}
-
-template <typename A>
-inline void pop_all(Arena* arena, A& xs)
-#ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A>
-#endif
-{
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
-    arena_pop_to(arena, arena->pos - (sizeof(xs.data[0]) * xs.len));
-    xs.data = nullptr;
-    xs.len = 0;
-}
-
+CXB_C_COMPAT_BEGIN
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
 #define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .null_term = false})
 #define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
+CXB_C_COMPAT_END
+
 #define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
 
-#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#define MSTR_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
