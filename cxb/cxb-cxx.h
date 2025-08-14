@@ -75,7 +75,10 @@ memory, "M" stands for "manual"
 
 /* SECTION: configuration */
 // #define CXB_ALLOC_TEMPLATE
+#ifdef __cpp_concepts
 #define CXB_USE_CXX_CONCEPTS
+#endif
+
 #define CXB_SEQ_MIN_CAP 32
 #define CXB_SEQ_GROW_FN(x) (x) + (x) / 2 /* 3/2, reducing chance to overflow */
 #define CXB_STR_MIN_CAP 32
