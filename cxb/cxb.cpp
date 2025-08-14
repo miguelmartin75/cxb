@@ -52,7 +52,6 @@ CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes) {
 CXB_C_EXPORT void* arena_push_bytes(Arena* arena, size_t size, size_t align) {
     ASSERT(UNLIKELY(arena != nullptr), "expected an arena");
     u64 padding = (-arena->pos) & (align - 1);
-    // ASAN_UNPOISON_MEMORY_REGION(arena->start + arena->pos, padding);
     arena->pos += padding;
     ASSERT(arena->start + arena->pos + size < arena->end, "arena will spill");
 
@@ -181,80 +180,7 @@ CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator) {
     return s.copy(to_allocator);
 }
 
-// ** SECTION: String8 C functions
-CXB_C_EXPORT size_t cxb_ss_size(String8 s) {
-    return s.size();
-}
-
-CXB_C_EXPORT size_t cxb_ss_n_bytes(String8 s) {
-    return s.n_bytes();
-}
-
-CXB_C_EXPORT bool cxb_ss_empty(String8 s) {
-    return s.empty();
-}
-
-CXB_C_EXPORT const char* cxb_ss_c_str(String8 s) {
-    return s.c_str();
-}
-
-CXB_C_EXPORT String8 cxb_ss_slice(String8 s, i64 i, i64 j) {
-    return s.slice(i, j);
-}
-
-CXB_C_EXPORT bool cxb_ss_eq(String8 a, String8 b) {
-    return a == b;
-}
-
-CXB_C_EXPORT bool cxb_ss_neq(String8 a, String8 b) {
-    return a != b;
-}
-
-CXB_C_EXPORT bool cxb_ss_lt(String8 a, String8 b) {
-    return a < b;
-}
-
-CXB_C_EXPORT char cxb_ss_back(String8 s) {
-    return s.back();
-}
-
 // ** SECTION: MString C functions (inline ones)
-CXB_C_EXPORT size_t cxb_mstring_size(MString s) {
-    return s.size();
-}
-
-CXB_C_EXPORT size_t cxb_mstring_n_bytes(MString s) {
-    return s.n_bytes();
-}
-
-CXB_C_EXPORT bool cxb_mstring_empty(MString s) {
-    return s.empty();
-}
-
-CXB_C_EXPORT const char* cxb_mstring_c_str(MString s) {
-    return s.c_str();
-}
-
-CXB_C_EXPORT bool cxb_mstring_eq(MString a, MString b) {
-    return a == b;
-}
-
-CXB_C_EXPORT bool cxb_mstring_neq(MString a, MString b) {
-    return a != b;
-}
-
-CXB_C_EXPORT bool cxb_mstring_lt(MString a, MString b) {
-    return a < b;
-}
-
-CXB_C_EXPORT char cxb_mstring_back(MString s) {
-    return s.back();
-}
-
-CXB_C_EXPORT size_t cxb_mstring_capacity(MString s) {
-    return s.capacity;
-}
-
 String8 arena_push_string8(Arena* arena, size_t n) {
     ASSERT(n > 0);
     char* data = arena_push<char>(arena, n);
@@ -286,8 +212,8 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    void* data = arena_push(arena, sizeof(char), alignof(char));
-    str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
+    char* data = arena_push<char>(arena, 1);
+    str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
     if(str.null_term) {
@@ -322,8 +248,9 @@ void string8_insert(String8& str, Arena* arena, char ch, size_t i) {
            "cannot push unless array is at the end");
     ASSERT(i <= str.len, "insert position out of bounds");
 
-    string8_push_back(str, arena, '\0');
-    memmove(str.data + i + 1, str.data + i, str.len - i - 1);
+    arena_push<char>(arena, 1);
+    str.len += 1;
+    memcpy(str.data + i + 1, str.data + i, str.len - i - 1);
     str.data[i] = ch;
 }
 
@@ -333,12 +260,12 @@ void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i) {
            "cannot push unless array is at the end");
     ASSERT(i <= str.len, "insert position out of bounds");
 
-    arena_push(arena, to_insert.len, alignof(char));
+    arena_push<char>(arena, to_insert.len);
 
     size_t old_len = str.len;
     str.len += to_insert.len;
 
-    memmove(str.data + i + to_insert.len, str.data + i, old_len - i);
+    memcpy(str.data + i + to_insert.len, str.data + i, old_len - i);
     memcpy(str.data + i, to_insert.data, to_insert.len);
 }
 
@@ -348,7 +275,7 @@ void string8_extend(String8& str, Arena* arena, String8 to_append) {
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    void* data = arena_push(arena, to_append.len, alignof(char));
+    void* data = arena_push<char>(arena, to_append.len);
     str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
 
     size_t old_len = str.len;

@@ -77,6 +77,7 @@ if(CXB_BUILD_TESTS)
 
     add_test(NAME test_array COMMAND test_array)
     add_test(NAME test_string COMMAND test_string)
+    add_test(NAME test_arena COMMAND test_arena)
 
     # if(CXB_BUILD_C_API_TESTS)
     if(0)  # TODO
