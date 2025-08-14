@@ -142,45 +142,6 @@ void heap_free_all_proc(void* data) {
     INVALID_CODEPATH("heap allocator does not support free all");
 }
 
-CXB_C_EXPORT void cxb_mstring_destroy(MString* s) {
-    s->destroy();
-}
-
-CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap) {
-    if(!s) return;
-    s->reserve(cap);
-}
-
-CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size) {
-    if(!s) return;
-    s->resize(size);
-}
-
-CXB_C_EXPORT void cxb_mstring_extend(MString* s, String8 slice) {
-    if(!s) return;
-    s->extend(slice);
-}
-
-CXB_C_EXPORT void cxb_mstring_push_back(MString* s, char val) {
-    if(!s) return;
-    s->push_back(val);
-}
-
-CXB_C_EXPORT char* cxb_mstring_push(MString* s) {
-    if(!s) return nullptr;
-    return &s->push();
-}
-
-CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s) {
-    if(!s) return;
-    s->ensure_null_terminated();
-}
-
-CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator) {
-    return s.copy(to_allocator);
-}
-
-// ** SECTION: MString C functions (inline ones)
 String8 arena_push_string8(Arena* arena, size_t n) {
     ASSERT(n > 0);
     char* data = arena_push<char>(arena, n);
