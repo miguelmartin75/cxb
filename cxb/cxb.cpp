@@ -88,12 +88,10 @@ void heap_free_all_proc(void* data);
 
 HeapAllocData heap_alloc_data = {};
 
-Allocator heap_alloc = {
-    .alloc_proc = heap_alloc_proc,
-    .free_proc = heap_free_proc,
-    .free_all_proc = heap_free_all_proc,
-    .data = (void*) &heap_alloc_data
-};
+Allocator heap_alloc = {.alloc_proc = heap_alloc_proc,
+                        .free_proc = heap_free_proc,
+                        .free_all_proc = heap_free_all_proc,
+                        .data = (void*) &heap_alloc_data};
 
 void* heap_alloc_proc(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data) {
     (void) alignment;
@@ -257,7 +255,6 @@ CXB_C_EXPORT size_t cxb_mstring_capacity(MString s) {
     return s.capacity;
 }
 
-
 String8 arena_push_string8(Arena* arena, size_t n) {
     ASSERT(n > 0);
     char* data = arena_push<char>(arena, n);
@@ -346,7 +343,8 @@ void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i) {
 }
 
 void string8_extend(String8& str, Arena* arena, String8 to_append) {
-    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+           "string not allocated on arena");
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 

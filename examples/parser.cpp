@@ -92,13 +92,13 @@ C_EXPORT void module_destroy(Module* module) {
 #define ADD_KID_A(x, k, a) array_push_back((x)->kids, a, static_cast<AstNode*>(k))
 #define INVALID_NODE nullptr
 
-#define ADD_ERR(node, err_msg, ...)                                            \
-    {                                                                          \
-        node->err = 1;                                                         \
+#define ADD_ERR(node, err_msg, ...)                                                  \
+    {                                                                                \
+        node->err = 1;                                                               \
         array_push_back(ctx->errors, ctx->error_arena, ParseError{(node), err_msg}); \
     }
 
-#define ADD_ERR_NO_NODE(err_msg, ...)                                           \
+#define ADD_ERR_NO_NODE(err_msg, ...)                                                 \
     { array_push_back(ctx->errors, ctx->error_arena, ParseError{nullptr, err_msg}); }
 
 #define TO_STR(x) #x
@@ -132,15 +132,15 @@ static inline bool is_unary_op(TokenKind type) {
 
 static inline AstNode* add_node(Parser* ctx, NodeKind kind, AstNodeData data, Token tok = Token{}, bool err = false) {
     AstNode* result = arena_push(ctx->tree,
-                           AstNode{.kind = kind,
-                                   .err = err,
-                                   .tok = tok,
-                                   .data = data,
-                                   .kids = {}, // empty arr
-                                   .scope = 0, // TODO
-                                   .type_id = 0,
-                                   .comp_time = 0,
-                                   .statement = false});
+                                 AstNode{.kind = kind,
+                                         .err = err,
+                                         .tok = tok,
+                                         .data = data,
+                                         .kids = {}, // empty arr
+                                         .scope = 0, // TODO
+                                         .type_id = 0,
+                                         .comp_time = 0,
+                                         .statement = false});
     return result;
 }
 
