@@ -262,7 +262,7 @@ static inline const T& max(const T& a, const T& b) {
     return a > b ? a : b;
 }
 
-/* NOTE: #include <utility>  // 98ms */
+/* NOTE: #include <utility>  // takes 98ms */
 template <typename T>
 static inline typename std::remove_reference<T>::type&& move(T&& v) noexcept {
     return static_cast<typename std::remove_reference<T>::type&&>(v);
@@ -286,7 +286,7 @@ CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
 }
 
 template <typename T>
-void swap(T& t1, T& t2) noexcept {
+static inline void swap(T& t1, T& t2) noexcept {
     T temp(move(t1));
     t1 = move(t2);
     t2 = move(temp);
@@ -323,8 +323,8 @@ void string8_insert(String8& str, Arena* arena, char ch, size_t i);
 void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i);
 void string8_extend(String8& str, Arena* arena, String8 to_append);
 
-template <typename T> Array<T> push_array(Arena* arena, size_t n);
-template <typename T> Array<T> push_array(Arena* arena, Array<T> to_copy);
+template <typename T> Array<T> arena_push_array(Arena* arena, size_t n);
+template <typename T> Array<T> arena_push_array(Arena* arena, Array<T> to_copy);
 
 CXB_C_TYPE struct ArenaParams {
 CXB_C_COMPAT_BEGIN
@@ -404,13 +404,13 @@ inline void arena_pop(Arena* arena, T* x) {
 // *SECTION: Array<T> functions
 template <typename T>
 inline Array<T> arena_push_array(Arena* arena, size_t n) {
-    T* data = push<T>(arena, n);
+    T* data = arena_push<T>(arena, n);
     return Array<T>{.data = data, .len = n};
 }
 
 template <typename T>
 inline Array<T> arena_push_array(Arena* arena, Array<T> to_copy) {
-    T* data = push<T>(arena, to_copy.len);
+    T* data = arena_push<T>(arena, to_copy.len);
     if constexpr(std::is_trivially_copyable_v<T>) {
         memcpy(data, to_copy.data, to_copy.len * sizeof(T));
     } else {
@@ -481,11 +481,17 @@ inline void array_pop_back(Arena* arena, A& xs)
     xs.len -= 1;
 }
 
+#ifdef CXB_USE_CXX_CONCEPTS
 template <typename A, typename B, typename T>
+#else
+template <typename A, typename B>
+#endif
 inline void array_insert(Arena* arena, A& xs, B to_insert, size_t i)
     requires ArrayLike<A, T> && ArrayLike<B, T>
 {
-    // using T = decltype(xs.data[0]);
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = decltype(xs.data[0]);
+#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
     ASSERT(i <= xs.len, "insert position out of bounds");
@@ -495,6 +501,7 @@ inline void array_insert(Arena* arena, A& xs, B to_insert, size_t i)
     size_t old_len = xs.len;
     xs.len += to_insert.len;
 
+    // TODO: checkme
     memmove(xs.data + i + to_insert.len, xs.data + i, (old_len - i) * sizeof(T));
     memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
 }
@@ -611,8 +618,14 @@ CXB_C_COMPAT_END
         return o < *this;
     }
 
-    // ** SECTION: arena compatible
-    // TODO
+    // ** SECTION: arena UFCS
+    CXB_INLINE void resize(Arena* arena, size_t n, char fill_char = '\0') { string8_resize(*this, arena, n, fill_char); }
+    CXB_INLINE void push_back(Arena* arena, char ch) { string8_push_back(*this, arena, ch); }
+    CXB_INLINE void pop_back(Arena* arena) { string8_pop_back(*this, arena); }
+    CXB_INLINE void pop_all(Arena* arena) { string8_pop_all(*this, arena); }
+    CXB_INLINE void insert(Arena* arena, char ch, size_t i) { string8_insert(*this, arena, ch, i); }
+    CXB_INLINE void insert(Arena* arena, String8 to_insert, size_t i) { string8_insert(*this, arena, to_insert, i); }
+    CXB_INLINE void extend(Arena* arena, String8 to_append) { string8_extend(*this, arena, to_append); }
 };
 
 
@@ -689,17 +702,20 @@ struct Array {
     CXB_MAYBE_INLINE const T* end() const {
         return data + len;
     }
+
+    // ** SECTION: arena UFCS
+    CXB_INLINE void resize(Arena* arena, size_t n, char fill_char = '\0') { array_resize(*this, arena, n, fill_char); }
+    CXB_INLINE void push_back(Arena* arena, char ch) { array_push_back(*this, arena, ch); }
+    CXB_INLINE void pop_back(Arena* arena) { array_pop_back(*this, arena); }
+    CXB_INLINE void pop_all(Arena* arena) { array_pop_all(*this, arena); }
+    CXB_INLINE void insert(Arena* arena, char ch, size_t i) { array_insert(*this, arena, ch, i); }
+    CXB_INLINE void insert(Arena* arena, String8 to_insert, size_t i) { array_insert(*this, arena, to_insert, i); }
+    CXB_INLINE void extend(Arena* arena, String8 to_append) { array_extend(*this, arena, to_append); }
 };
 
 
 
 /* SECTION: general allocation */
-CXB_C_TYPE enum AllocCmd {
-    ALLOC_CMD_ALLOC,
-    ALLOC_CMD_FREE,
-    ALLOC_CMD_FREE_ALL,
-};
-
 CXB_C_TYPE struct Allocator {
 CXB_C_COMPAT_BEGIN
     void* (*alloc_proc)(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data);
@@ -1188,6 +1204,13 @@ struct Atomic {
     static constexpr bool is_always_lock_free = true;
 };
 
+struct HeapAllocData {
+    Atomic<i64> n_active_bytes;
+    Atomic<i64> n_allocated_bytes;
+    Atomic<i64> n_freed_bytes;
+};
+extern HeapAllocData heap_alloc_data;
+
 /* SECTION: containers */
 struct AString : MString {
     AString(Allocator* allocator = &heap_alloc)
@@ -1570,7 +1593,7 @@ CXB_C_COMPAT_END
 
 #define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
 
-#define MSTR_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"

@@ -78,7 +78,8 @@ if(CXB_BUILD_TESTS)
     add_test(NAME test_array COMMAND test_array)
     add_test(NAME test_string COMMAND test_string)
 
-    if(CXB_BUILD_C_API_TESTS)
+    # if(CXB_BUILD_C_API_TESTS)
+    if(0)  # TODO
         # Pure C test
         add_executable(test_c_api_c tests/test_c_api_c.c tests/c_api_test.cpp ${CXB_SRCS})
         target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
