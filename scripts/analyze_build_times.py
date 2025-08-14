@@ -16,11 +16,6 @@ from pathlib import Path
 from collections import defaultdict
 from typing import Dict, List, Optional, Tuple
 
-
-# --------------------------------------------------------------------------------------
-# Constants
-# --------------------------------------------------------------------------------------
-
 # Sub-set of C++23 standard library headers. Extend as desired.
 STD_HEADERS: List[str] = [
     "algorithm", "array", "atomic", "bitset", "chrono", "condition_variable",
@@ -66,7 +61,7 @@ def configure_cmake(build_dir: Path, source_dir: Path) -> bool:
         "-DCMAKE_BUILD_TYPE=Debug",
         "-DCMAKE_C_COMPILER=clang",
         "-DCMAKE_CXX_COMPILER=clang++",
-        "-DCXB_ENABLE_TESTS=ON",
+        "-DCXB_BUILD_TESTS=ON",
         "-DCXB_BUILD_C_API_TESTS=ON",
         "-DCXB_BUILD_EXAMPLES=ON",
     ]

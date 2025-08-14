@@ -27,8 +27,7 @@
 is null-terminated
         - `String8` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
 block of memory
-        - In C-land: free functions are provided, such as `cxb_ss_destroy`,
-          `cxb_ss_c_str`, `cxb_ss_empty`, `cxb_ss_n_bytes`, etc.
+        - In C-land: free functions are provided, such as TODO
         - In C++-land: there are methods the same operations the C free functions
           support plus operator overloads for convenience, e.g. `operator[]`,
           `slice`, `c_str`, `empty`, `size`, `n_bytes`, etc.
@@ -36,8 +35,7 @@ block of memory
         - This type is a `std::string` alternative, but requires manual memory management
         - Think of this type as a `String8` that is optionally attached to an allocator
         - Compatible with `String8`
-        - In C-land: free functions are provided, such as `cxb_mstring8_destroy`,
-          `cxb_mstring8_c_str`, `cxb_mstring8_empty`, `cxb_mstring8_n_bytes`, etc.
+        - In C-land: free functions are provided, such as TODO
         - In C++-land: there are methods the same operations the C free functions
           support plus operator overloads for convenience, e.g. `operator[]`, `c_str`, `empty`, `size`, `n_bytes`, etc.
         - Call `.destroy()` (in C++) or `cxb_mstring8_destroy` (in C) to free the memory
@@ -47,23 +45,23 @@ block of memory
         - This type is a `std::string` alternative, with RAII semantics but requires manual copies
         - This type is an extension of `MString`, which automatically calls `destroy()` on destruction
         - This type is compatible with `String8`
-        - Copies must be done maually via `copy()`, i.e. the copy contructor and assignement operator are deleted
+        - Copies must be done manually via `copy()`, i.e. the copy contractor and assignment operator are deleted
         - Moves are supported
         - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
     * `Array<T>`: similar to String8 but for any type
-    * `MSeq<T>`: a manually memory managed expandable sequence of elements where elements are stored contiguously in
+    * `MArray<T>`: a manually memory managed expandable sequence of elements where elements are stored contiguously in
 memory, "M" stands for "manual"
         - Provides an interface similar to `MString`, but for any type; "null terminated" is not supported
         - This type is a `std::vector<T>` alternative, but requires manual memory management
         - This type is compatible with `Array<T>`
         - Call `.destroy()` to free memory
-        - Destructor does not call `.destroy()`, see `Seq<T>` for this functionality
-    * `Seq<T>`: an automatically managed sequence container using RAII, compatible with `MSeq<T>`
+        - Destructor does not call `.destroy()`, see `AArray<T>` for this functionality
+    * `AArray<T>`: an automatically managed sequence container using RAII, compatible with `MArray<T>`
         - Provides an interface similar to `String`, but for any type; "null terminated" is not supported
         - This type is a `std::vector<T>` alternative, with RAII semantics but requires manual copies
-        - This type is an extension of `MSeq<T>`, which automatically calls `destroy()` on destruction
+        - This type is an extension of `MArray<T>`, which automatically calls `destroy()` on destruction
         - This type is compatible with `Array<T>`
-        - Copies must be done maually via `copy()`, i.e. the copy contructor and assignement operator are deleted
+        - Copies must be done manually via `copy()`, i.e. the copy contractor and assignment operator are deleted
         - Moves are supported
         - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
 */
@@ -306,8 +304,7 @@ concept ArrayLike = requires(A x) {
 
 template <typename A>
 concept ArrayLikeNoT = requires(A x) {
-    { x.data };
-    requires std::is_pointer_v<decltype(x.data)>;
+    { x.data } -> std::convertible_to<void*>;
     { x.len } -> std::convertible_to<u64>;
 };
 #endif
@@ -467,7 +464,7 @@ template <typename A, typename T>
 #else
 template <typename A>
 #endif
-inline void array_pop_back(Arena* arena, A& xs)
+inline void array_pop_back(A& xs, Arena* arena)
 #ifdef CXB_USE_CXX_CONCEPTS
     requires ArrayLike<A, T>
 #endif
@@ -485,17 +482,11 @@ inline void array_pop_back(Arena* arena, A& xs)
     xs.len -= 1;
 }
 
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename B, typename T>
-#else
 template <typename A, typename B>
-#endif
-inline void array_insert(Arena* arena, A& xs, B to_insert, size_t i)
-    requires ArrayLike<A, T> && ArrayLike<B, T>
+inline void array_insert(A& xs, Arena* arena, const B& to_insert, size_t i)
+    requires ArrayLikeNoT<A> && ArrayLikeNoT<B>
 {
-#ifndef CXB_USE_CXX_CONCEPTS
     using T = decltype(xs.data[0]);
-#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
     ASSERT(i <= xs.len, "insert position out of bounds");
@@ -505,22 +496,17 @@ inline void array_insert(Arena* arena, A& xs, B to_insert, size_t i)
     size_t old_len = xs.len;
     xs.len += to_insert.len;
 
-    // TODO: checkme
     memmove(xs.data + i + to_insert.len, xs.data + i, (old_len - i) * sizeof(T));
     memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
 }
 
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename B, typename T>
-#else
 template <typename A, typename B>
+inline void array_extend(A& xs, Arena* arena, const B& to_append)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A> && ArrayLikeNoT<B>
 #endif
-inline void array_extend(Arena* arena, A& xs, B to_append)
-    requires ArrayLike<A, T> && ArrayLike<B, T>
 {
-#ifndef CXB_USE_CXX_CONCEPTS
     using T = decltype(xs.data[0]);
-#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
 
@@ -533,7 +519,7 @@ inline void array_extend(Arena* arena, A& xs, B to_append)
 }
 
 template <typename A>
-inline void array_pop_all(Arena* arena, A& xs)
+inline void array_pop_all(A& xs, Arena* arena)
 #ifdef CXB_USE_CXX_CONCEPTS
     requires ArrayLikeNoT<A>
 #endif
@@ -721,11 +707,14 @@ struct Array {
     }
 
     // ** SECTION: arena UFCS
-    CXB_INLINE void resize(Arena* arena, size_t n, char fill_char = '\0') {
-        array_resize(*this, arena, n, fill_char);
+    CXB_INLINE void resize(Arena* arena, size_t n) {
+        array_resize(*this, arena, n);
     }
-    CXB_INLINE void push_back(Arena* arena, char ch) {
-        array_push_back(*this, arena, ch);
+    CXB_INLINE void resize(Arena* arena, size_t n, T value) {
+        array_resize(*this, arena, n, value);
+    }
+    CXB_INLINE void push_back(Arena* arena, T x) {
+        array_push_back(*this, arena, x);
     }
     CXB_INLINE void pop_back(Arena* arena) {
         array_pop_back(*this, arena);
@@ -733,13 +722,13 @@ struct Array {
     CXB_INLINE void pop_all(Arena* arena) {
         array_pop_all(*this, arena);
     }
-    CXB_INLINE void insert(Arena* arena, char ch, size_t i) {
-        array_insert(*this, arena, ch, i);
+    CXB_INLINE void insert(Arena* arena, T value, size_t i) {
+        array_insert(*this, arena, value, i);
     }
-    CXB_INLINE void insert(Arena* arena, String8 to_insert, size_t i) {
+    CXB_INLINE void insert(Arena* arena, Array<T> to_insert, size_t i) {
         array_insert(*this, arena, to_insert, i);
     }
-    CXB_INLINE void extend(Arena* arena, String8 to_append) {
+    CXB_INLINE void extend(Arena* arena, Array<T> to_append) {
         array_extend(*this, arena, to_append);
     }
 };
