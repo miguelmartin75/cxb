@@ -2,74 +2,97 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
 
-CXB_USE_NS;
-
 struct Foo {
     int x, y;
 };
 
 TEST_CASE("push and pop", "[Arena]") {
-    Arena arena = arena_make_nbytes(KB(4));
-    REQUIRE(arena.end - arena.start == KB(4));
+    Arena* arena = arena_make_nbytes(KB(4));
+    REQUIRE(arena->end - arena->start == KB(4));
 
-    Foo* foo = push<Foo>(arena, 1);
-    pop(arena, foo);
-    REQUIRE(arena.pos == 0);
+    Foo* foo = arena_push<Foo>(arena, 1);
+    arena_pop(arena, foo);
+    REQUIRE(arena->pos == sizeof(Arena) + 0);
 
-    auto foos = push_array<Foo>(arena, 10);
+    auto foos = arena_push_array<Foo>(arena, 10);
     REQUIRE(foos.len == 10);
-    push_back(arena, foos, Foo{3, 5});
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (foos.data + foos.len));
+    array_push_back(foos, arena, Foo{3, 5});
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (foos.data + foos.len));
 
     REQUIRE(foos.len == 11);
     REQUIRE(foos.back().x == 3);
     REQUIRE(foos.back().y == 5);
 
-    pop_all(arena, foos);
-    REQUIRE(arena.pos == 0);
+    array_pop_all(foos, arena);
+    REQUIRE(arena->pos == sizeof(Arena) + 0);
 }
 
 TEST_CASE("string push/pop", "[Arena]") {
-    Arena arena = arena_make_nbytes(KB(4));
-    REQUIRE(arena.end - arena.start == KB(4));
+    Arena* arena = arena_make_nbytes(KB(4));
+    REQUIRE(arena->end - arena->start == KB(4));
 
-    StringSlice str = push_str(arena);
-    push_back(arena, str, 'a');
-    insert(arena, str, 'b', 0);
+    String8 str = arena_push_string8(arena);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+    string8_push_back(str, arena, 'a');
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+    string8_insert(str, arena, 'b', 0);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
     REQUIRE(str == S8_LIT("ba"));
     REQUIRE(str.n_bytes() == 3);
-    REQUIRE(arena.pos == str.n_bytes());
 }
 
 TEST_CASE("string insert", "[Arena]") {
-    Arena arena = arena_make_nbytes(KB(4));
-    REQUIRE(arena.end - arena.start == KB(4));
+    Arena* arena = arena_make_nbytes(KB(4));
+    REQUIRE(arena->end - arena->start == KB(4));
 
-    StringSlice str = push_str(arena);
-    push_back(arena, str, 'a');
-    insert(arena, str, 'b', 0);
+    String8 str = arena_push_string8(arena);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+    string8_push_back(str, arena, 'a');
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+    string8_insert(str, arena, 'b', 0);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+
     REQUIRE(str == S8_LIT("ba"));
     REQUIRE(str.n_bytes() == 3);
-    REQUIRE(arena.pos == str.n_bytes());
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
 
-    pop_all(arena, str);
-    REQUIRE(arena.pos == 0);
+    string8_pop_all(str, arena);
+    REQUIRE(arena->pos == sizeof(Arena) + 0);
 }
 
 TEST_CASE("string extend", "[Arena]") {
-    Arena arena = arena_make_nbytes(KB(4));
-    REQUIRE(arena.end - arena.start == KB(4));
+    Arena* arena = arena_make_nbytes(KB(4));
+    REQUIRE(arena->end - arena->start == KB(4));
 
-    StringSlice str = push_str(arena, S8_LIT("abc"));
-    extend(arena, str, S8_LIT("def"));
+    String8 str = arena_push_string8(arena, S8_LIT("abc"));
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+    string8_extend(str, arena, S8_LIT("def"));
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+
     REQUIRE(str == S8_LIT("abcdef"));
     REQUIRE(str.n_bytes() == 7);
-    REQUIRE(arena.pos == str.n_bytes());
 
-    insert(arena, str, S8_LIT("middle"), 2);
+    string8_insert(str, arena, S8_LIT("middle"), 2);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
     REQUIRE(str == S8_LIT("abmiddlecdef"));
     REQUIRE(str.n_bytes() == 13);
-    REQUIRE(arena.pos == 13);
 
-    pop_all(arena, str);
-    REQUIRE(arena.pos == 0);
+    string8_pop_all(str, arena);
+    REQUIRE(arena->pos == sizeof(Arena) + 0);
+}
+
+TEST_CASE("array insert", "[Arena]") {
+    Arena* arena = arena_make_nbytes(KB(4));
+    REQUIRE(arena->end - arena->start == KB(4));
+
+    Array<int> xs = {};
+    xs.push_back(arena, 10);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
+
+    int ys[] = {20, 30, 50, 80};
+    xs.extend(arena, Array<int>(ys, 4));
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
+
+    REQUIRE(xs.len == 5);
 }
