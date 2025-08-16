@@ -3,16 +3,16 @@
 #include <cxb/cxb-unicode.h>
 #include <cxb/cxb.h>
 
-TEST_CASE("StringSlice default constructor", "[StringSlice]") {
-    StringSlice s = {};
+TEST_CASE("String8 default constructor", "[String8]") {
+    String8 s = {};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.null_term);
 }
 
-TEST_CASE("StringSlice from C string", "[StringSlice]") {
+TEST_CASE("String8 from C string", "[String8]") {
     const char* test_str = "Hello, World!";
-    StringSlice s{.data = const_cast<char*>(test_str), .len = 13, .null_term = true};
+    String8 s{.data = const_cast<char*>(test_str), .len = 13, .null_term = true};
 
     REQUIRE(s.size() == 13);
     REQUIRE_FALSE(s.empty());
@@ -24,24 +24,24 @@ TEST_CASE("StringSlice from C string", "[StringSlice]") {
     }
 }
 
-TEST_CASE("StringSlice from empty C string", "[StringSlice]") {
-    StringSlice s = S8_LIT("");
+TEST_CASE("String8 from empty C string", "[String8]") {
+    String8 s = S8_LIT("");
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
     REQUIRE(s == S8_LIT(""));
 }
 
-TEST_CASE("StringSlice from null pointer", "[StringSlice]") {
-    StringSlice s{.data = nullptr, .len = 0, .null_term = true};
+TEST_CASE("String8 from null pointer", "[String8]") {
+    String8 s{.data = nullptr, .len = 0, .null_term = true};
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE(s.null_term);
 }
 
-TEST_CASE("StringSlice from raw data", "[StringSlice]") {
+TEST_CASE("String8 from raw data", "[String8]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    StringSlice s{.data = data, .len = 5, .null_term = false};
+    String8 s{.data = data, .len = 5, .null_term = false};
 
     REQUIRE(s.size() == 5);
     REQUIRE(!s.null_term);
@@ -70,7 +70,7 @@ TEST_CASE("String push_back", "[String]") {
     REQUIRE(heap_alloc_data.n_allocated_bytes == allocated_bytes);
 }
 
-TEST_CASE("StringSlice push_back with null termination", "[String]") {
+TEST_CASE("String8 push_back with null termination", "[String]") {
     AString s("Hello");
     REQUIRE(s.null_term);
     REQUIRE(s.allocator);
@@ -81,7 +81,7 @@ TEST_CASE("StringSlice push_back with null termination", "[String]") {
     REQUIRE(s.size() == 6);
     REQUIRE(s.null_term);
 
-    StringSlice cmp = S8_LIT("Hello!");
+    String8 cmp = S8_LIT("Hello!");
     for(u64 i = 0; i < s.size(); ++i) {
         REQUIRE(s[i] == cmp[i]);
     }
@@ -89,7 +89,7 @@ TEST_CASE("StringSlice push_back with null termination", "[String]") {
     REQUIRE(strcmp(s.c_str(), "Hello!") == 0);
 }
 
-TEST_CASE("StringSlice append C string", "[StringSlice]") {
+TEST_CASE("String8 append C string", "[String8]") {
     AString s("Hello");
     s.extend(", World!");
 
@@ -99,9 +99,9 @@ TEST_CASE("StringSlice append C string", "[StringSlice]") {
     REQUIRE(strcmp(s.c_str(), "Hello, World!") == 0);
 }
 
-TEST_CASE("StringSlice append other StringSlice", "[StringSlice]") {
+TEST_CASE("String8 append other String8", "[String8]") {
     AString s1("Hello");
-    StringSlice s2 = S8_LIT(", World!");
+    String8 s2 = S8_LIT(", World!");
     s1.extend(s2);
 
     REQUIRE(s1.len == 13);
@@ -109,7 +109,7 @@ TEST_CASE("StringSlice append other StringSlice", "[StringSlice]") {
     REQUIRE(s1 == S8_LIT("Hello, World!"));
 }
 
-TEST_CASE("StringSlice append to non-null-terminated", "[StringSlice]") {
+TEST_CASE("String8 append to non-null-terminated", "[String8]") {
     AString s;
     s.push_back('H');
     s.push_back('i');
@@ -126,7 +126,7 @@ TEST_CASE("StringSlice append to non-null-terminated", "[StringSlice]") {
     REQUIRE(s == S8_LIT("Hi there"));
 }
 
-TEST_CASE("StringSlice resize", "[StringSlice]") {
+TEST_CASE("String8 resize", "[String8]") {
     AString s("Hello");
     s.resize(10, 'X');
 
@@ -136,7 +136,7 @@ TEST_CASE("StringSlice resize", "[StringSlice]") {
     REQUIRE(s == S8_LIT("HelloXXXXX"));
 }
 
-TEST_CASE("StringSlice resize shrinking", "[StringSlice]") {
+TEST_CASE("String8 resize shrinking", "[String8]") {
     AString s("Hello, World!");
     s.resize(5);
 
@@ -145,7 +145,7 @@ TEST_CASE("StringSlice resize shrinking", "[StringSlice]") {
     REQUIRE(s == S8_LIT("Hello"));
 }
 
-TEST_CASE("StringSlice pop_back", "[StringSlice]") {
+TEST_CASE("String8 pop_back", "[String8]") {
     AString s("Hello");
     char c = s.pop_back();
 
@@ -155,10 +155,10 @@ TEST_CASE("StringSlice pop_back", "[StringSlice]") {
     REQUIRE(s == S8_LIT("Hell"));
 }
 
-TEST_CASE("StringSlice slice", "[StringSlice]") {
-    StringSlice s = S8_LIT("Hello, World!");
-    StringSlice slice1 = s.slice(7);    // "World!"
-    StringSlice slice2 = s.slice(0, 4); // "Hello"
+TEST_CASE("String8 slice", "[String8]") {
+    String8 s = S8_LIT("Hello, World!");
+    String8 slice1 = s.slice(7);    // "World!"
+    String8 slice2 = s.slice(0, 4); // "Hello"
 
     REQUIRE(slice1.size() == 6);
     REQUIRE(slice1.null_term);
@@ -176,7 +176,7 @@ TEST_CASE("StringSlice slice", "[StringSlice]") {
     }
 }
 
-TEST_CASE("StringSlice copy", "[StringSlice]") {
+TEST_CASE("String8 copy", "[String8]") {
     AString original("Hello, World!");
     AString copy = original.copy();
 
@@ -187,7 +187,7 @@ TEST_CASE("StringSlice copy", "[StringSlice]") {
     REQUIRE(original == copy);
 }
 
-TEST_CASE("StringSlice ensure_null_terminated", "[StringSlice]") {
+TEST_CASE("String8 ensure_null_terminated", "[String8]") {
     AString s;
     s.push_back('H');
     s.push_back('i');
@@ -200,7 +200,7 @@ TEST_CASE("StringSlice ensure_null_terminated", "[StringSlice]") {
 }
 
 TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
-    StringSlice s = S8_LIT("Hello World");
+    String8 s = S8_LIT("Hello World");
     Utf8Iterator iter(s);
 
     // Check that we can iterate through all ASCII characters
@@ -243,7 +243,7 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     // String with mixed ASCII and emojis: "Hi 👋 🌍!"
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
-    StringSlice s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
     Utf8Iterator iter(s);
 
     // Test ASCII 'H'
@@ -385,10 +385,10 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
             REQUIRE(strings[i].null_term);
             REQUIRE(strings[i].allocator);
 
-            StringSlice prefix = strings[i].slice(0, 7);
+            String8 prefix = strings[i].slice(0, 7);
             REQUIRE(prefix == S8_LIT("String #"));
 
-            StringSlice suffix = strings[i].slice(-10);
+            String8 suffix = strings[i].slice(-10);
             REQUIRE(suffix == S8_LIT(" - Content"));
         }
 
@@ -417,13 +417,13 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
-    // Test StringSlice operator<
-    StringSlice s1 = S8_LIT("apple");
-    StringSlice s2 = S8_LIT("banana");
-    StringSlice s3 = S8_LIT("app");
-    StringSlice s4 = S8_LIT("apple");
-    StringSlice s5 = S8_LIT("application");
+TEST_CASE("String8 and String operator<", "[String8][String]") {
+    // Test String8 operator<
+    String8 s1 = S8_LIT("apple");
+    String8 s2 = S8_LIT("banana");
+    String8 s3 = S8_LIT("app");
+    String8 s4 = S8_LIT("apple");
+    String8 s5 = S8_LIT("application");
 
     // Basic lexicographic comparison
     REQUIRE(s1 < s2);    // "apple" < "banana"
@@ -442,30 +442,30 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     REQUIRE(!(s5 < s1)); // "application" not < "apple"
 
     // Test with empty strings
-    StringSlice empty1 = S8_LIT("");
-    StringSlice empty2 = S8_LIT("");
-    StringSlice non_empty = S8_LIT("a");
+    String8 empty1 = S8_LIT("");
+    String8 empty2 = S8_LIT("");
+    String8 non_empty = S8_LIT("a");
 
     REQUIRE(!(empty1 < empty2));    // empty not < empty
     REQUIRE(empty1 < non_empty);    // empty < non-empty
     REQUIRE(!(non_empty < empty1)); // non-empty not < empty
 
     // Test case sensitivity
-    StringSlice lower = S8_LIT("apple");
-    StringSlice upper = S8_LIT("APPLE");
+    String8 lower = S8_LIT("apple");
+    String8 upper = S8_LIT("APPLE");
 
     REQUIRE(upper < lower); // "APPLE" < "apple" (ASCII values)
     REQUIRE(!(lower < upper));
 
     // Test with special characters
-    StringSlice alpha = S8_LIT("abc");
-    StringSlice numeric = S8_LIT("123");
-    StringSlice special = S8_LIT("!@#");
+    String8 alpha = S8_LIT("abc");
+    String8 numeric = S8_LIT("123");
+    String8 special = S8_LIT("!@#");
 
     REQUIRE(special < numeric); // "!@#" < "123" (ASCII values)
     REQUIRE(numeric < alpha);   // "123" < "abc" (ASCII values)
 
-    // Test String operator< (should behave the same as StringSlice)
+    // Test String operator< (should behave the same as String8)
     AString str1("apple");
     AString str2("banana");
     AString str3("app");
@@ -478,11 +478,11 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     REQUIRE(!(str1 < str4)); // "apple" not < "apple"
     REQUIRE(!(str4 < str1)); // "apple" not < "apple"
 
-    // Test mixed String and StringSlice comparison
-    REQUIRE(str1 < s2); // String("apple") < StringSlice("banana")
-    REQUIRE(s3 < str1); // StringSlice("app") < String("apple")
+    // Test mixed String and String8 comparison
+    REQUIRE(str1 < s2); // String("apple") < String8("banana")
+    REQUIRE(s3 < str1); // String8("app") < String("apple")
 
-    // Test operator> for StringSlice
+    // Test operator> for String8
     REQUIRE(s2 > s1);               // "banana" > "apple"
     REQUIRE(!(s1 > s2));            // "apple" not > "banana"
     REQUIRE(s1 > s3);               // "apple" > "app"
@@ -502,9 +502,9 @@ TEST_CASE("StringSlice and String operator<", "[StringSlice][String]") {
     REQUIRE(str1 > str3);    // "apple" > "app"
     REQUIRE(!(str3 > str1)); // "app" not > "apple"
 
-    // Test mixed String and StringSlice operator> comparison
-    REQUIRE(s2 > str1); // StringSlice("banana") > String("apple")
-    REQUIRE(str1 > s3); // String("apple") > StringSlice("app")
+    // Test mixed String and String8 operator> comparison
+    REQUIRE(s2 > str1); // String8("banana") > String("apple")
+    REQUIRE(str1 > s3); // String("apple") > String8("app")
 
     // Test that equal strings are not greater than each other
     REQUIRE(!(s1 > s4));         // "apple" not > "apple"

@@ -4,7 +4,7 @@
 // #define TOKENIZER_PREFILL
 
 struct Parser {
-    StringSlice buffer;
+    String8 buffer;
     size_t idx; // lexer idx
     SourceLoc loc;
     Token tok;
@@ -17,7 +17,7 @@ struct Parser {
 };
 
 static Token lex_next(Parser* ctx);
-static Optional<i128> atoi128(StringSlice str);
+static Optional<i128> atoi128(String8 str);
 static AstNode* parse_module(Parser* ctx);
 
 static inline Token next_tok(Parser* ctx) {
@@ -37,20 +37,20 @@ static inline Token peek_tok(Parser* ctx) {
     return ctx->next_tok;
 }
 
-C_EXPORT Module* module_make(StringSlice name, Arena* arena, Arena* tree) {
+C_EXPORT Module* module_make(String8 name, Arena* arena, Arena* tree) {
     if(arena == nullptr) {
         // 256KiB for errors
         arena = arena_make_nbytes(sizeof(Module) + MB(256));
     }
-    Module* result = push<Module>(arena);
+    Module* result = arena_push<Module>(arena);
     result->arena = arena;
     result->tree = tree;
-    result->name = push_str(arena, name);
-    result->parser = push<Parser>(arena);
+    result->name = arena_push_string8(arena, name);
+    result->parser = arena_push<Parser>(arena);
     return result;
 }
 
-C_EXPORT ParseFileResult module_parse_file(Module* mod, StringSlice file_path) {
+C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path) {
     ParseFileResult res = {};
     auto file = open_file(mod->arena, file_path);
     if(file) {
@@ -88,18 +88,18 @@ C_EXPORT void module_destroy(Module* module) {
 #define NODE(x) (*x)
 #define LHS(x) NODE(NODE(x).kids.data[0])
 #define RHS(x) NODE(NODE(x).kids.data[1])
-#define ADD_KID(x, k) push_back(ctx->tree, (x)->kids, static_cast<AstNode*>(k))
-#define ADD_KID_A(x, k, a) push_back(a, (x)->kids, static_cast<AstNode*>(k))
+#define ADD_KID(x, k) array_push_back((x)->kids, ctx->tree, static_cast<AstNode*>(k))
+#define ADD_KID_A(x, k, a) array_push_back((x)->kids, a, static_cast<AstNode*>(k))
 #define INVALID_NODE nullptr
 
-#define ADD_ERR(node, err_msg, ...)                                            \
-    {                                                                          \
-        node->err = 1;                                                         \
-        push_back(ctx->error_arena, ctx->errors, ParseError{(node), err_msg}); \
+#define ADD_ERR(node, err_msg, ...)                                                  \
+    {                                                                                \
+        node->err = 1;                                                               \
+        array_push_back(ctx->errors, ctx->error_arena, ParseError{(node), err_msg}); \
     }
 
-#define ADD_ERR_NO_NODE(err_msg, ...)                                           \
-    { push_back(ctx->error_arena, ctx->errors, ParseError{nullptr, err_msg}); }
+#define ADD_ERR_NO_NODE(err_msg, ...)                                                 \
+    { array_push_back(ctx->errors, ctx->error_arena, ParseError{nullptr, err_msg}); }
 
 #define TO_STR(x) #x
 #define STR_CONCAT(a, b) (a b)
@@ -131,16 +131,16 @@ static inline bool is_unary_op(TokenKind type) {
 }
 
 static inline AstNode* add_node(Parser* ctx, NodeKind kind, AstNodeData data, Token tok = Token{}, bool err = false) {
-    AstNode* result = push(ctx->tree,
-                           AstNode{.kind = kind,
-                                   .err = err,
-                                   .tok = tok,
-                                   .data = data,
-                                   .kids = {}, // empty arr
-                                   .scope = 0, // TODO
-                                   .type_id = 0,
-                                   .comp_time = 0,
-                                   .statement = false});
+    AstNode* result = arena_push(ctx->tree,
+                                 AstNode{.kind = kind,
+                                         .err = err,
+                                         .tok = tok,
+                                         .data = data,
+                                         .kids = {}, // empty arr
+                                         .scope = 0, // TODO
+                                         .type_id = 0,
+                                         .comp_time = 0,
+                                         .statement = false});
     return result;
 }
 
@@ -723,7 +723,7 @@ static AstNode* parse_module(Parser* ctx) {
 #define CHANGE_TOK(x) ctx->tok.kind = (x)
 #define HAS_CHARS (ctx->idx < ctx->buffer.len)
 
-static Optional<TokenKind> get_reserved_word(StringSlice word);
+static Optional<TokenKind> get_reserved_word(String8 word);
 static Token lex_next(Parser* ctx) {
     // NOTE here we assume we have it all in memory
     if(ctx->idx == ctx->buffer.len) {
@@ -1002,7 +1002,7 @@ token_end:
 }
 
 struct ReservedWord {
-    StringSlice name;
+    String8 name;
     TokenKind kind;
 };
 
@@ -1035,7 +1035,7 @@ ReservedWord RESERVED_WORDS[] = {
     {S8_LIT("or"), TOK_OR_OP},
 };
 
-Optional<TokenKind> get_reserved_word(StringSlice word) {
+Optional<TokenKind> get_reserved_word(String8 word) {
     for(ReservedWord p : RESERVED_WORDS) {
         if(p.name == word) {
             return {p.kind, true};
@@ -1044,7 +1044,7 @@ Optional<TokenKind> get_reserved_word(StringSlice word) {
     return {TOK_UNINTIALIZED, false};
 }
 
-static Optional<i128> atoi128(StringSlice str) {
+static Optional<i128> atoi128(String8 str) {
     if(str.len == 0) {
         return {0, false};
     }
