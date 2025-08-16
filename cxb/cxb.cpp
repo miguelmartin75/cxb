@@ -49,10 +49,9 @@ CXB_C_EXPORT Arena* arena_make_nbytes(size_t n_bytes) {
     return arena_make(ArenaParams{.reserve_bytes = n_bytes, .max_n_blocks = 1});
 }
 
-CXB_C_EXPORT void* arena_push(Arena* arena, size_t size, size_t align) {
+CXB_C_EXPORT void* arena_push_bytes(Arena* arena, size_t size, size_t align) {
     ASSERT(UNLIKELY(arena != nullptr), "expected an arena");
     u64 padding = (-arena->pos) & (align - 1);
-    // ASAN_UNPOISON_MEMORY_REGION(arena->start + arena->pos, padding);
     arena->pos += padding;
     ASSERT(arena->start + arena->pos + size < arena->end, "arena will spill");
 
@@ -86,19 +85,12 @@ void* heap_alloc_proc(void* head, size_t n_bytes, size_t alignment, size_t old_n
 void heap_free_proc(void* head, size_t n_bytes, void* data);
 void heap_free_all_proc(void* data);
 
-struct HeapAllocData {
-    Atomic<i64> n_active_bytes;
-    Atomic<i64> n_allocated_bytes;
-    Atomic<i64> n_freed_bytes;
-};
-static HeapAllocData heap_alloc_data = {};
+HeapAllocData heap_alloc_data = {};
 
-Allocator heap_alloc = {
-    .alloc_proc = heap_alloc_proc,
-    .free_proc = heap_free_proc,
-    .free_all_proc = heap_free_all_proc,
-    .data = (void*) &heap_alloc_data
-};
+Allocator heap_alloc = {.alloc_proc = heap_alloc_proc,
+                        .free_proc = heap_free_proc,
+                        .free_all_proc = heap_free_all_proc,
+                        .data = (void*) &heap_alloc_data};
 
 void* heap_alloc_proc(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data) {
     (void) alignment;
@@ -150,114 +142,104 @@ void heap_free_all_proc(void* data) {
     INVALID_CODEPATH("heap allocator does not support free all");
 }
 
-CXB_C_EXPORT void cxb_mstring_destroy(MString* s) {
-    s->destroy();
+String8 arena_push_string8(Arena* arena, size_t n) {
+    ASSERT(n > 0);
+    char* data = arena_push<char>(arena, n);
+    return String8{.data = data, .len = n - 1, .null_term = true};
 }
 
-CXB_C_EXPORT void cxb_mstring_reserve(MString* s, size_t cap) {
-    if(!s) return;
-    s->reserve(cap);
+String8 arena_push_string8(Arena* arena, String8 to_copy) {
+    char* data = arena_push<char>(arena, to_copy.n_bytes());
+    String8 result = String8{.data = data, .len = to_copy.len, .null_term = to_copy.null_term};
+    memccpy(result.data, to_copy.data, sizeof(char), to_copy.n_bytes());
+    return result;
 }
 
-CXB_C_EXPORT void cxb_mstring_resize(MString* s, size_t size) {
-    if(!s) return;
-    s->resize(size);
+void string8_resize(String8& str, Arena* arena, size_t n, char fill_char) {
+    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+    ASSERT(n > str.size());
+
+    size_t delta = n - str.size();
+    arena_push(arena, delta, alignof(char));
+    memset(str.data + str.len, fill_char, delta);
+    str.len += delta;
 }
 
-CXB_C_EXPORT void cxb_mstring_extend(MString* s, StringSlice slice) {
-    if(!s) return;
-    s->extend(slice);
+void string8_push_back(String8& str, Arena* arena, char ch) {
+    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+           "string not allocated on arena");
+    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+
+    char* data = arena_push<char>(arena, 1);
+    str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
+    str.data[str.len] = ch;
+    str.len += 1;
+    if(str.null_term) {
+        str.data[str.len] = '\0';
+    }
 }
 
-CXB_C_EXPORT void cxb_mstring_push_back(MString* s, char val) {
-    if(!s) return;
-    s->push_back(val);
+void string8_pop_back(String8& str, Arena* arena) {
+    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+
+    arena_pop_to(arena, arena->pos - 1);
+    str.len -= 1;
+    str.data[str.len] = '\0';
+    str.null_term = true;
 }
 
-CXB_C_EXPORT char* cxb_mstring_push(MString* s) {
-    if(!s) return nullptr;
-    return &s->push();
+void string8_pop_all(String8& str, Arena* arena) {
+    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+
+    arena_pop_to(arena, arena->pos - str.n_bytes());
+    str.len = 0;
+    str.data = nullptr;
 }
 
-CXB_C_EXPORT void cxb_mstring_ensure_null_terminated(MString* s) {
-    if(!s) return;
-    s->ensure_null_terminated();
+void string8_insert(String8& str, Arena* arena, char ch, size_t i) {
+    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+    ASSERT(i <= str.len, "insert position out of bounds");
+
+    arena_push<char>(arena, 1);
+    str.len += 1;
+    memcpy(str.data + i + 1, str.data + i, str.len - i - 1);
+    str.data[i] = ch;
 }
 
-CXB_C_EXPORT MString cxb_mstring_copy(MString s, Allocator* to_allocator) {
-    return s.copy(to_allocator);
+void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i) {
+    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
+    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
+    ASSERT(i <= str.len, "insert position out of bounds");
+
+    arena_push<char>(arena, to_insert.len);
+
+    size_t old_len = str.len;
+    str.len += to_insert.len;
+
+    memcpy(str.data + i + to_insert.len, str.data + i, old_len - i);
+    memcpy(str.data + i, to_insert.data, to_insert.len);
 }
 
-// ** SECTION: StringSlice C functions
-CXB_C_EXPORT size_t cxb_ss_size(StringSlice s) {
-    return s.size();
-}
+void string8_extend(String8& str, Arena* arena, String8 to_append) {
+    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+           "string not allocated on arena");
+    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot push unless array is at the end");
 
-CXB_C_EXPORT size_t cxb_ss_n_bytes(StringSlice s) {
-    return s.n_bytes();
-}
+    void* data = arena_push<char>(arena, to_append.len);
+    str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
 
-CXB_C_EXPORT bool cxb_ss_empty(StringSlice s) {
-    return s.empty();
-}
-
-CXB_C_EXPORT const char* cxb_ss_c_str(StringSlice s) {
-    return s.c_str();
-}
-
-CXB_C_EXPORT StringSlice cxb_ss_slice(StringSlice s, i64 i, i64 j) {
-    return s.slice(i, j);
-}
-
-CXB_C_EXPORT bool cxb_ss_eq(StringSlice a, StringSlice b) {
-    return a == b;
-}
-
-CXB_C_EXPORT bool cxb_ss_neq(StringSlice a, StringSlice b) {
-    return a != b;
-}
-
-CXB_C_EXPORT bool cxb_ss_lt(StringSlice a, StringSlice b) {
-    return a < b;
-}
-
-CXB_C_EXPORT char cxb_ss_back(StringSlice s) {
-    return s.back();
-}
-
-// ** SECTION: MString C functions (inline ones)
-CXB_C_EXPORT size_t cxb_mstring_size(MString s) {
-    return s.size();
-}
-
-CXB_C_EXPORT size_t cxb_mstring_n_bytes(MString s) {
-    return s.n_bytes();
-}
-
-CXB_C_EXPORT bool cxb_mstring_empty(MString s) {
-    return s.empty();
-}
-
-CXB_C_EXPORT const char* cxb_mstring_c_str(MString s) {
-    return s.c_str();
-}
-
-CXB_C_EXPORT bool cxb_mstring_eq(MString a, MString b) {
-    return a == b;
-}
-
-CXB_C_EXPORT bool cxb_mstring_neq(MString a, MString b) {
-    return a != b;
-}
-
-CXB_C_EXPORT bool cxb_mstring_lt(MString a, MString b) {
-    return a < b;
-}
-
-CXB_C_EXPORT char cxb_mstring_back(MString s) {
-    return s.back();
-}
-
-CXB_C_EXPORT size_t cxb_mstring_capacity(MString s) {
-    return s.capacity;
+    size_t old_len = str.len;
+    str.len += to_append.len;
+    memcpy(str.data + old_len, to_append.data, to_append.len);
 }

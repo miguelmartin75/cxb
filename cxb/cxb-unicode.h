@@ -119,15 +119,15 @@ CXB_INLINE Utf8EncodeResult utf8_encode(rune codepoint) {
 // TODO: optimize with SIMD
 template <size_t BufferSize>
 struct Utf8IteratorBatched {
-    StringSlice s;
+    String8 s;
     size_t pos = 0;
     rune buffer[BufferSize] = {};
 
-    explicit Utf8IteratorBatched(const StringSlice& s) : s{s}, pos{0}, buffer{{}} {}
+    explicit Utf8IteratorBatched(const String8& s) : s{s}, pos{0}, buffer{{}} {}
     Utf8IteratorBatched(const Utf8IteratorBatched&) = delete;
     Utf8IteratorBatched(Utf8IteratorBatched&&) = delete;
 
-    CXB_INLINE void reset(const StringSlice& s) {
+    CXB_INLINE void reset(const String8& s) {
         this->s = s;
         pos = 0;
     }
