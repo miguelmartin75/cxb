@@ -23,7 +23,7 @@
 
 ## Containers
 * C & C++ compatible: use these types when defining a C API
-    * `String8`: a pointer to char* (`data`), a length (`len`), and a flag (`null_term`) to indicate if the string
+    * `String8`: a pointer to char* (`data`), a length (`len`), and a flag (`not_null_term`) to indicate if the string
 is null-terminated
         - `String8` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
 block of memory
@@ -529,6 +529,84 @@ inline void array_pop_all(A& xs, Arena* arena)
     xs.len = 0;
 }
 
+/* SECTION: general allocation */
+CXB_C_TYPE struct Allocator {
+    CXB_C_COMPAT_BEGIN
+    void* (*alloc_proc)(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data);
+    void (*free_proc)(void* head, size_t n_bytes, void* data);
+    void (*free_all_proc)(void* data);
+    void* data;
+    CXB_C_COMPAT_END
+
+    template <typename T, typename H>
+    struct AllocationWithHeader {
+        T* data;
+        H* header;
+    };
+
+    void free_all() {
+        this->free_all_proc(data);
+    }
+
+    template <typename T>
+    CXB_MAYBE_INLINE T* alloc(size_t count = 1) {
+        T* result = (T*) this->alloc_proc(nullptr, sizeof(T) * count, alignof(T), 0, false, data);
+        return result;
+    }
+
+    template <typename T>
+    CXB_MAYBE_INLINE T* calloc(size_t old_count, size_t count = 1) {
+        T* result = (T*) this->alloc_proc(nullptr, sizeof(T) * count, alignof(T), sizeof(T) * old_count, true, data);
+        return result;
+    }
+
+    template <typename T>
+    CXB_MAYBE_INLINE T* realloc(T* head, size_t old_count, bool fill_zeros, size_t count) {
+        T* result =
+            (T*) this->alloc_proc((void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count, fill_zeros, data);
+        return result;
+    }
+
+    template <typename H, typename T>
+    CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header, size_t old_count, size_t count) {
+        char* new_header = (char*) this->alloc_proc((void*) header,                    // header
+                                                    sizeof(T) * count + sizeof(H),     // n_bytes
+                                                    alignof(T) + sizeof(H),            // alignment
+                                                    sizeof(T) * old_count + sizeof(H), // old bytes
+                                                    false,                             // fill_zeros
+                                                    this->data);
+        T* data = (T*) (new_header + sizeof(H));
+        return AllocationWithHeader<T, H>{data, (H*) new_header};
+    }
+
+    template <typename H, typename T>
+    CXB_MAYBE_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
+        char* new_header = (char*) this->alloc_proc((void*) header,                                      // header
+                                                    sizeof(T) * count + sizeof(H),                       // n_bytes
+                                                    alignof(T) + sizeof(H),                              // alignment
+                                                    sizeof(T) * old_count + sizeof(H) * (old_count > 0), // old bytes
+                                                    true,                                                // fill_zeros
+                                                    this->data);
+        T* data = (T*) (new_header + sizeof(H));
+        return AllocationWithHeader<T, H>{data, (H*) new_header};
+    }
+
+    template <typename H, typename T>
+    CXB_MAYBE_INLINE void free_header_offset(T* offset_from_header, size_t count) {
+        this->free_proc((char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H), this->data);
+    }
+
+    template <typename T>
+    CXB_MAYBE_INLINE void free(T* head, size_t count) {
+        this->free_proc((void*) head, sizeof(T) * count, this->data);
+    }
+};
+
+CXB_C_COMPAT_BEGIN
+extern Allocator heap_alloc;
+CXB_C_COMPAT_END
+
+
 /* SECTION: basic types */
 CXB_C_TYPE struct String8 {
     CXB_C_COMPAT_BEGIN
@@ -536,7 +614,7 @@ CXB_C_TYPE struct String8 {
     union {
         struct {
             size_t len : 63;
-            bool null_term : 1;
+            bool not_null_term : 1;
         };
         size_t metadata;
     };
@@ -544,7 +622,7 @@ CXB_C_TYPE struct String8 {
 
     // ** SECTION: slice compatible methods
     CXB_MAYBE_INLINE size_t n_bytes() const {
-        return len + null_term;
+        return len + !not_null_term;
     }
     CXB_MAYBE_INLINE size_t size() const {
         return len;
@@ -570,12 +648,12 @@ CXB_C_TYPE struct String8 {
         String8 c = *this;
         c.data = c.data + ii;
         c.len = jj - ii + 1;
-        c.null_term = ii + c.len == len ? this->null_term : false;
+        c.not_null_term = ii + c.len == len ? this->not_null_term : true;
         return c;
     }
 
     CXB_MAYBE_INLINE const char* c_str() const {
-        return null_term ? data : nullptr;
+        return not_null_term ? nullptr : data;
     }
 
     CXB_MAYBE_INLINE int compare(const String8& o) const {
@@ -731,82 +809,8 @@ struct Array {
     }
 };
 
-/* SECTION: general allocation */
-CXB_C_TYPE struct Allocator {
-    CXB_C_COMPAT_BEGIN
-    void* (*alloc_proc)(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data);
-    void (*free_proc)(void* head, size_t n_bytes, void* data);
-    void (*free_all_proc)(void* data);
-    void* data;
-    CXB_C_COMPAT_END
+// *SECTION*: formatting library
 
-    template <typename T, typename H>
-    struct AllocationWithHeader {
-        T* data;
-        H* header;
-    };
-
-    void free_all() {
-        this->free_all_proc(data);
-    }
-
-    template <typename T>
-    CXB_MAYBE_INLINE T* alloc(size_t count = 1) {
-        T* result = (T*) this->alloc_proc(nullptr, sizeof(T) * count, alignof(T), 0, false, data);
-        return result;
-    }
-
-    template <typename T>
-    CXB_MAYBE_INLINE T* calloc(size_t old_count, size_t count = 1) {
-        T* result = (T*) this->alloc_proc(nullptr, sizeof(T) * count, alignof(T), sizeof(T) * old_count, true, data);
-        return result;
-    }
-
-    template <typename T>
-    CXB_MAYBE_INLINE T* realloc(T* head, size_t old_count, bool fill_zeros, size_t count) {
-        T* result =
-            (T*) this->alloc_proc((void*) head, sizeof(T) * count, alignof(T), sizeof(T) * old_count, fill_zeros, data);
-        return result;
-    }
-
-    template <typename H, typename T>
-    CXB_MAYBE_INLINE AllocationWithHeader<T, H> realloc_with_header(H* header, size_t old_count, size_t count) {
-        char* new_header = (char*) this->alloc_proc((void*) header,                    // header
-                                                    sizeof(T) * count + sizeof(H),     // n_bytes
-                                                    alignof(T) + sizeof(H),            // alignment
-                                                    sizeof(T) * old_count + sizeof(H), // old bytes
-                                                    false,                             // fill_zeros
-                                                    this->data);
-        T* data = (T*) (new_header + sizeof(H));
-        return AllocationWithHeader<T, H>{data, (H*) new_header};
-    }
-
-    template <typename H, typename T>
-    CXB_MAYBE_INLINE AllocationWithHeader<T, H> recalloc_with_header(H* header, size_t old_count, size_t count) {
-        char* new_header = (char*) this->alloc_proc((void*) header,                                      // header
-                                                    sizeof(T) * count + sizeof(H),                       // n_bytes
-                                                    alignof(T) + sizeof(H),                              // alignment
-                                                    sizeof(T) * old_count + sizeof(H) * (old_count > 0), // old bytes
-                                                    true,                                                // fill_zeros
-                                                    this->data);
-        T* data = (T*) (new_header + sizeof(H));
-        return AllocationWithHeader<T, H>{data, (H*) new_header};
-    }
-
-    template <typename H, typename T>
-    CXB_MAYBE_INLINE void free_header_offset(T* offset_from_header, size_t count) {
-        this->free_proc((char*) (offset_from_header) - sizeof(H), sizeof(T) * count + sizeof(H), this->data);
-    }
-
-    template <typename T>
-    CXB_MAYBE_INLINE void free(T* head, size_t count) {
-        this->free_proc((void*) head, sizeof(T) * count, this->data);
-    }
-};
-
-CXB_C_COMPAT_BEGIN
-extern Allocator heap_alloc;
-CXB_C_COMPAT_END
 
 CXB_C_TYPE struct Vec2f {
     CXB_C_COMPAT_BEGIN
@@ -895,7 +899,7 @@ CXB_C_TYPE struct MString {
     union {
         struct {
             size_t len : 63;
-            bool null_term : 1;
+            bool not_null_term : 1;
         };
         size_t metadata;
     };
@@ -905,7 +909,7 @@ CXB_C_TYPE struct MString {
 
     // ** SECTION: slice compatible methods - delegate to String8
     CXB_MAYBE_INLINE size_t n_bytes() const {
-        return len + null_term;
+        return len + not_null_term;
     }
     CXB_MAYBE_INLINE size_t size() const {
         return len;
@@ -934,7 +938,7 @@ CXB_C_TYPE struct MString {
     }
 
     CXB_MAYBE_INLINE const char* c_str() const {
-        return null_term ? data : nullptr;
+        return not_null_term ? nullptr : data;
     }
 
     CXB_MAYBE_INLINE bool operator==(const String8& o) const {
@@ -969,11 +973,11 @@ CXB_C_TYPE struct MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        MString result{.data = nullptr, .len = len, .null_term = null_term, .capacity = 0, .allocator = to_allocator};
+        MString result{.data = nullptr, .len = len, .not_null_term = not_null_term, .capacity = 0, .allocator = to_allocator};
         if(len > 0) {
-            result.reserve(len + null_term);
+            result.reserve(len + not_null_term);
             memcpy(result.data, data, len);
-            if(null_term) {
+            if(!not_null_term) {
                 result.data[len] = '\0';
             }
         }
@@ -981,8 +985,8 @@ CXB_C_TYPE struct MString {
     }
 
     CXB_MAYBE_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
-        if(!null_term) {
-            ensure_null_terminated(copy_alloc_if_not);
+        if(not_null_term) {
+            ensure_not_null_terminated(copy_alloc_if_not);
         }
         return data;
     }
@@ -1009,7 +1013,7 @@ CXB_C_TYPE struct MString {
     void resize(size_t new_len, char fill_char = '\0') {
         ASSERT(UNLIKELY(allocator != nullptr));
 
-        size_t reserve_size = new_len + null_term;
+        size_t reserve_size = new_len + !not_null_term;
         if(capacity < reserve_size) {
             reserve(reserve_size);
         }
@@ -1018,20 +1022,20 @@ CXB_C_TYPE struct MString {
         if(fill_char != '\0' && new_len > old_len) {
             memset(data + old_len, fill_char, new_len - old_len);
         }
-        if(null_term) {
+        if(!not_null_term) {
             data[new_len] = '\0';
         }
         len = new_len;
     }
 
-    CXB_MAYBE_INLINE void push_back(char c) {
+    CXB_MAYBE_INLINE void push_back(char ch) {
         if(n_bytes() + 1 >= capacity) {
             reserve(CXB_STR_GROW_FN(capacity));
         }
-        data[len] = c;
-        null_term |= (c == '\0');
+        data[len] = ch;
         len += 1;
-        if(null_term) {
+        not_null_term = !(!not_null_term || ch == '\0');
+        if(!not_null_term) {
             data[len] = '\0';
         }
     }
@@ -1046,7 +1050,7 @@ CXB_C_TYPE struct MString {
         char ret = data[len - 1];
         len--;
         data[len] = '\0';
-        null_term = true;
+        not_null_term = false;
         return ret;
     }
 
@@ -1055,7 +1059,7 @@ CXB_C_TYPE struct MString {
         reserve(len + other.len);
         memcpy(data + len, other.data, other.len);
         len += other.len;
-        if(null_term) {
+        if(!not_null_term) {
             data[len] = '\0';
         }
     }
@@ -1069,18 +1073,17 @@ CXB_C_TYPE struct MString {
             return;
         }
         size_t n_len = n == SIZE_MAX ? strlen(str) : n;
-        this->extend(String8{.data = const_cast<char*>(str), .len = n_len, .null_term = true});
+        this->extend(String8{.data = const_cast<char*>(str), .len = n_len, .not_null_term = false});
     }
 
-    CXB_MAYBE_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
-        if(null_term) return;
+    CXB_MAYBE_INLINE void ensure_not_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
+        if(!not_null_term) return;
 
         ASSERT(allocator != nullptr || copy_alloc_if_not != nullptr);
         if(allocator == nullptr) {
             *this = move(this->copy(copy_alloc_if_not));
         } else {
             this->push_back('\0');
-            this->null_term = true;
         }
     }
 };
@@ -1128,7 +1131,6 @@ struct Atomic {
         return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
     }
 
-    // Arithmetic operations (only for integral types)
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
         T arg, memory_order order = memory_order_seq_cst) noexcept {
@@ -1230,19 +1232,19 @@ extern HeapAllocData heap_alloc_data;
 /* SECTION: containers */
 struct AString : MString {
     AString(Allocator* allocator = &heap_alloc)
-        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = allocator} {}
+        : MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = allocator} {}
 
     AString(const MString& m)
         : MString{.data = m.data,
                   .len = m.len,
-                  .null_term = m.null_term,
+                  .not_null_term = m.not_null_term,
                   .capacity = m.capacity,
                   .allocator = m.allocator} {}
 
-    AString(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &heap_alloc)
+    AString(const char* cstr, size_t n = SIZE_MAX, bool not_null_term = false, Allocator* allocator = &heap_alloc)
         : MString{.data = nullptr,
                   .len = n == SIZE_MAX ? strlen(cstr) : n,
-                  .null_term = null_term,
+                  .not_null_term = not_null_term,
                   .capacity = 0,
                   .allocator = allocator} {
         if(this->allocator == nullptr) {
@@ -1257,7 +1259,7 @@ struct AString : MString {
     }
 
     AString(AString&& o)
-        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = o.allocator} {
+        : MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = o.allocator} {
         data = o.data;
         metadata = o.metadata;
         capacity = o.capacity;
@@ -1289,12 +1291,12 @@ struct AString : MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        AString result{data, len, null_term, to_allocator};
+        AString result{data, len, not_null_term, to_allocator};
         return result;
     }
 
     CXB_MAYBE_INLINE MString release() {
-        MString result{.data = data, .len = len, .null_term = null_term, .capacity = capacity, .allocator = allocator};
+        MString result{.data = data, .len = len, .not_null_term = not_null_term, .capacity = capacity, .allocator = allocator};
         this->allocator = nullptr;
         return result;
     }
@@ -1602,14 +1604,14 @@ struct Optional {
 };
 
 CXB_C_COMPAT_BEGIN
-#define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
-#define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .null_term = false})
-#define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
+#define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
+#define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
+#define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .not_null_term = false})
 CXB_C_COMPAT_END
 
-#define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
+#define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .not_null_term = false})
 
-#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = (a)})
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
