@@ -1,9 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
-CXB_USE_NS;
 
-TEST_CASE("push_back", "[Seq]") {
+TEST_CASE("push_back", "AArray") {
     i64 allocated_bytes = 0;
     {
         AArray<int> xs;
@@ -13,8 +12,8 @@ TEST_CASE("push_back", "[Seq]") {
         for(int i = 0; i < 256; ++i) {
             xs.push_back(i);
         }
-        i64 active_bytes = default_alloc.n_active_bytes;
-        allocated_bytes = default_alloc.n_allocated_bytes;
+        i64 active_bytes = heap_alloc_data.n_active_bytes;
+        allocated_bytes = heap_alloc_data.n_allocated_bytes;
         REQUIRE(active_bytes == allocated_bytes);
 
         REQUIRE(xs.len == 256);
@@ -22,12 +21,12 @@ TEST_CASE("push_back", "[Seq]") {
             REQUIRE(xs[i] == i);
         }
     }
-    REQUIRE(default_alloc.n_active_bytes == 0);
-    REQUIRE(default_alloc.n_allocated_bytes == allocated_bytes);
+    REQUIRE(heap_alloc_data.n_active_bytes == 0);
+    REQUIRE(heap_alloc_data.n_allocated_bytes == allocated_bytes);
 }
 
-TEST_CASE("copy", "[Seq]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+TEST_CASE("copy", "AArray") {
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AArray<int> xs;
         xs.resize(64, 2);
@@ -39,11 +38,11 @@ TEST_CASE("copy", "[Seq]") {
         REQUIRE(copy.allocator == xs.allocator);
         REQUIRE(copy.data != xs.data);
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("nested_seq", "[Seq]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+TEST_CASE("nested", "AArray") {
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AArray<AArray<int>> nested;
         REQUIRE(nested.len == 0);
@@ -81,14 +80,14 @@ TEST_CASE("nested_seq", "[Seq]") {
         REQUIRE(nested[10][0] == 0);
         REQUIRE(nested[10][4] == 400);
 
-        REQUIRE(default_alloc.n_active_bytes > allocated_bytes_before);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_bytes_before);
     }
 
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("Seq operator<", "[Seq]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+TEST_CASE("operator<", "AArray") {
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AArray<int> seq1;
         AArray<int> seq2;
@@ -150,11 +149,11 @@ TEST_CASE("Seq operator<", "[Seq]") {
         REQUIRE(seq1 == seq5);
         REQUIRE(seq5 == seq1);
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("Seq operator==", "[Seq]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+TEST_CASE("operator==", "AArray") {
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AArray<int> seq1;
         AArray<int> seq2;
@@ -213,11 +212,11 @@ TEST_CASE("Seq operator==", "[Seq]") {
         REQUIRE(seq1 == seq1);
         REQUIRE(str_seq1 == str_seq1);
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("Seq operator> and operator!=", "[Seq]") {
-    i64 allocated_bytes_before = default_alloc.n_active_bytes;
+TEST_CASE("AArray operator> and operator!=", "AArray") {
+    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
         AArray<int> seq1;
         AArray<int> seq2;
@@ -290,5 +289,5 @@ TEST_CASE("Seq operator> and operator!=", "[Seq]") {
         REQUIRE(!(seq1 != seq5)); // should be equal
         REQUIRE(!(seq5 != seq1));
     }
-    REQUIRE(default_alloc.n_active_bytes == allocated_bytes_before);
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }

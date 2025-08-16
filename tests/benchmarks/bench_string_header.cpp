@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-CXB_USE_NS;
-
 namespace {
 constexpr size_t SMALL_SIZE = 1024;
 constexpr size_t LARGE_SIZE = 1 << 24; // 16 MiB
