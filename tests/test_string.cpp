@@ -3,20 +3,13 @@
 #include <cxb/cxb-unicode.h>
 #include <cxb/cxb.h>
 
-TEST_CASE("String8 default constructor", "[String8]") {
-    String8 s = {};
-    REQUIRE(s.size() == 0);
-    REQUIRE(s.empty());
-    REQUIRE_FALSE(s.null_term);
-}
-
 TEST_CASE("String8 from C string", "[String8]") {
     const char* test_str = "Hello, World!";
-    String8 s{.data = const_cast<char*>(test_str), .len = 13, .null_term = true};
+    String8 s{.data = const_cast<char*>(test_str), .len = 13, .not_null_term = false};
 
     REQUIRE(s.size() == 13);
     REQUIRE_FALSE(s.empty());
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(strcmp(s.c_str(), test_str) == 0);
 
     for(size_t i = 0; i < s.size(); ++i) {
@@ -28,23 +21,16 @@ TEST_CASE("String8 from empty C string", "[String8]") {
     String8 s = S8_LIT("");
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s == S8_LIT(""));
-}
-
-TEST_CASE("String8 from null pointer", "[String8]") {
-    String8 s{.data = nullptr, .len = 0, .null_term = true};
-    REQUIRE(s.size() == 0);
-    REQUIRE(s.empty());
-    REQUIRE(s.null_term);
 }
 
 TEST_CASE("String8 from raw data", "[String8]") {
     char data[] = {'H', 'e', 'l', 'l', 'o'};
-    String8 s{.data = data, .len = 5, .null_term = false};
+    String8 s{.data = data, .len = 5, .not_null_term = false};
 
     REQUIRE(s.size() == 5);
-    REQUIRE(!s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s.data == data);
 
     for(size_t i = 0; i < 5; ++i) {
@@ -62,7 +48,7 @@ TEST_CASE("String push_back", "[String]") {
         REQUIRE(s.size() == 2);
         REQUIRE(s[0] == 'H');
         REQUIRE(s[1] == 'i');
-        REQUIRE(s.null_term);
+        REQUIRE_FALSE(s.not_null_term);
 
         allocated_bytes = heap_alloc_data.n_allocated_bytes;
     }
@@ -72,14 +58,14 @@ TEST_CASE("String push_back", "[String]") {
 
 TEST_CASE("String8 push_back with null termination", "[String]") {
     AString s("Hello");
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s.allocator);
     REQUIRE(s.len == 5);
     REQUIRE(s.size() == 5);
 
     s.push_back('!');
     REQUIRE(s.size() == 6);
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
 
     String8 cmp = S8_LIT("Hello!");
     for(u64 i = 0; i < s.size(); ++i) {
@@ -94,7 +80,7 @@ TEST_CASE("String8 append C string", "[String8]") {
     s.extend(", World!");
 
     REQUIRE(s.len == 13);
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s == S8_LIT("Hello, World!"));
     REQUIRE(strcmp(s.c_str(), "Hello, World!") == 0);
 }
@@ -105,7 +91,7 @@ TEST_CASE("String8 append other String8", "[String8]") {
     s1.extend(s2);
 
     REQUIRE(s1.len == 13);
-    REQUIRE(s1.null_term);
+    REQUIRE_FALSE(s1.not_null_term);
     REQUIRE(s1 == S8_LIT("Hello, World!"));
 }
 
@@ -113,11 +99,11 @@ TEST_CASE("String8 append to non-null-terminated", "[String8]") {
     AString s;
     s.push_back('H');
     s.push_back('i');
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
 
     s.extend(" there");
     REQUIRE(s.size() == 8);
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
 
     const char expected[] = "Hi there";
     for(size_t i = 0; i < s.size(); ++i) {
@@ -131,7 +117,7 @@ TEST_CASE("String8 resize", "[String8]") {
     s.resize(10, 'X');
 
     REQUIRE(s.size() == 10);
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
 
     REQUIRE(s == S8_LIT("HelloXXXXX"));
 }
@@ -141,7 +127,7 @@ TEST_CASE("String8 resize shrinking", "[String8]") {
     s.resize(5);
 
     REQUIRE(s.size() == 5);
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s == S8_LIT("Hello"));
 }
 
@@ -151,7 +137,7 @@ TEST_CASE("String8 pop_back", "[String8]") {
 
     REQUIRE(c == 'o');
     REQUIRE(s.size() == 4);
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s == S8_LIT("Hell"));
 }
 
@@ -161,10 +147,10 @@ TEST_CASE("String8 slice", "[String8]") {
     String8 slice2 = s.slice(0, 4); // "Hello"
 
     REQUIRE(slice1.size() == 6);
-    REQUIRE(slice1.null_term);
+    REQUIRE_FALSE(slice1.not_null_term);
 
     REQUIRE(slice2.size() == 5);
-    REQUIRE_FALSE(slice2.null_term);
+    REQUIRE(slice2.not_null_term);
 
     const char hello[] = "Hello";
     const char world[] = "World!";
@@ -181,20 +167,20 @@ TEST_CASE("String8 copy", "[String8]") {
     AString copy = original.copy();
 
     REQUIRE(copy.size() == original.size());
-    REQUIRE(copy.null_term == original.null_term);
+    REQUIRE(copy.not_null_term == original.not_null_term);
     REQUIRE(copy.allocator == original.allocator);
     REQUIRE(copy.data != original.data); // different memory
     REQUIRE(original == copy);
 }
 
-TEST_CASE("String8 ensure_null_terminated", "[String8]") {
-    AString s;
+TEST_CASE("String8 ensure_not_null_terminated", "[String8]") {
+    AString s = {};
     s.push_back('H');
     s.push_back('i');
-    REQUIRE(s.null_term);
+    REQUIRE_FALSE(s.not_null_term);
 
-    s.ensure_null_terminated();
-    REQUIRE(s.null_term);
+    s.ensure_not_null_terminated();
+    REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s.size() == 2);
     REQUIRE(s == S8_LIT("Hi"));
 }
@@ -382,7 +368,7 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
 
         for(u64 i = 0; i < strings.len; ++i) {
             REQUIRE(strings[i].len > 0);
-            REQUIRE(strings[i].null_term);
+            REQUIRE_FALSE(strings[i].not_null_term);
             REQUIRE(strings[i].allocator);
 
             String8 prefix = strings[i].slice(0, 7);

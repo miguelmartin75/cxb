@@ -145,12 +145,12 @@ void heap_free_all_proc(void* data) {
 String8 arena_push_string8(Arena* arena, size_t n) {
     ASSERT(n > 0);
     char* data = arena_push<char>(arena, n);
-    return String8{.data = data, .len = n - 1, .null_term = true};
+    return String8{.data = data, .len = n - 1, .not_null_term = false};
 }
 
 String8 arena_push_string8(Arena* arena, String8 to_copy) {
     char* data = arena_push<char>(arena, to_copy.n_bytes());
-    String8 result = String8{.data = data, .len = to_copy.len, .null_term = to_copy.null_term};
+    String8 result = String8{.data = data, .len = to_copy.len, .not_null_term = to_copy.not_null_term};
     memccpy(result.data, to_copy.data, sizeof(char), to_copy.n_bytes());
     return result;
 }
@@ -177,7 +177,8 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
     str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
-    if(str.null_term) {
+    str.not_null_term = !(!str.not_null_term || ch == '\0');
+    if(!str.not_null_term) {
         str.data[str.len] = '\0';
     }
 }
@@ -190,7 +191,7 @@ void string8_pop_back(String8& str, Arena* arena) {
     arena_pop_to(arena, arena->pos - 1);
     str.len -= 1;
     str.data[str.len] = '\0';
-    str.null_term = true;
+    str.not_null_term = false;
 }
 
 void string8_pop_all(String8& str, Arena* arena) {
