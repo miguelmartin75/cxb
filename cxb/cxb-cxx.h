@@ -98,6 +98,7 @@ CXB_C_COMPAT_BEGIN
 CXB_C_COMPAT_END
 
 #include <new>
+#include <limits>
 #include <type_traits> // 27ms
 
 #ifdef __cplusplus
@@ -276,8 +277,7 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 /* SECTION: primitive functions */
 template <typename T>
 CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
-    ASSERT(a < b);
-    return max(min(b, x), a);
+    return a < b ? max(min(b, x), a) : min(max(a, x), b);
 }
 
 template <typename T>
@@ -606,6 +606,32 @@ CXB_C_COMPAT_BEGIN
 extern Allocator heap_alloc;
 CXB_C_COMPAT_END
 
+struct ThreadLocalRuntime {
+    Arena* perm;
+    Arena* scratch[2];
+    int scratch_idx;
+};
+
+struct CxbRuntimeParams {
+    ArenaParams perm_params;
+    ArenaParams scratch_params;
+};
+
+extern thread_local ThreadLocalRuntime cxb_runtime;
+void cxb_init(CxbRuntimeParams);
+Arena* get_perm();
+ArenaTemp begin_scratch();
+void end_scratch(const ArenaTemp& tmp);
+
+/* SECTION: variant types (1/2) */
+template <typename T, typename EC>
+struct Result;
+
+template <typename T>
+struct Optional;
+
+template <typename T>
+struct ParseResult;
 
 /* SECTION: basic types */
 CXB_C_TYPE struct String8 {
@@ -640,14 +666,12 @@ CXB_C_TYPE struct String8 {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+        i64 ii = clamp(i < 0 ? (i64)len + i : i, (i64)0, len == 0 ? 0 : (i64)len - 1);
+        i64 jj = clamp(j < 0 ? (i64)len + j : j, (i64)0, len == 0 ? 0 : (i64)len - 1);
 
         String8 c = *this;
         c.data = c.data + ii;
-        c.len = jj - ii + 1;
+        c.len = max(0ll, jj - ii + 1);
         c.not_null_term = ii + c.len == len ? this->not_null_term : true;
         return c;
     }
@@ -706,7 +730,83 @@ CXB_C_TYPE struct String8 {
     CXB_INLINE void extend(Arena* arena, String8 to_append) {
         string8_extend(*this, arena, to_append);
     }
+
+    // *SECTION*: parsing
+    template <typename T>
+    CXB_INLINE 
+    std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>>
+    parse(u64 base = 10) const { return string8_parse<T>(*this, base); }
 };
+
+/* SECTION: variant types (2/2) */
+template <typename T>
+struct Optional {
+    T value;
+    bool exists;
+
+    inline operator bool() const {
+        return exists;
+    }
+};
+
+template <typename T, typename EC>
+struct Result {
+    T value;
+    EC error;
+    String8 reason;
+
+    inline operator bool() const {
+        return (i64) error != 0;
+    }
+};
+
+// TODO: Result<T> ?
+template <typename T> 
+struct ParseResult {
+    T value;
+    bool exists;
+    size_t n_consumed;
+
+    inline operator bool() const {
+        return exists;
+    }
+};
+
+template <typename T>
+CXB_MAYBE_INLINE 
+std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>>
+string8_parse(String8 str, u64 base = 10) { 
+    ASSERT(base <= 10, "TODO: support bases > 10");
+    ParseResult<T> result = {
+        .value = {},
+        .exists = str.len > 0,
+        .n_consumed = 0
+    };
+    u64 num_negs = 0;
+    for(u64 i = 0; i < str.len; ++i) {
+        if(str[i] == '-') {
+            num_negs += 1;
+            result.value *= -1;
+            result.n_consumed += 1;
+            continue;
+        // TODO: support other bases
+        } else if(str[i] >= '0' && str[i] <= '9') {
+            result.value *= base;
+            result.value += str[i] - '0';
+            result.n_consumed += 1;
+        } else {
+            break;
+        }
+    }
+    if constexpr(std::is_unsigned_v<T>) {
+        if(num_negs > 0) result.exists = false;
+    } else {
+        if(num_negs > 1) result.exists = false;
+    }
+    result.exists = result.n_consumed > 0;
+    return result;
+}
+
 
 template <typename T>
 struct Array {
@@ -731,10 +831,9 @@ struct Array {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+        i64 ii = clamp(i < 0 ? (i64)len + i : i, (i64)0, (i64)len - 1);
+        i64 jj = clamp(j < 0 ? (i64)len + j : j, (i64)0, (i64)len - 1);
+        DEBUG_ASSERT(ii <= jj, "i > j: {} ({}) < {} ({})", ii, i, jj, j);
 
         Array<T> c = *this;
         c.data = c.data + ii;
@@ -1336,10 +1435,9 @@ struct MArray {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+        i64 ii = clamp(i < 0 ? (i64)len + i : i, (i64)0, (i64)len - 1);
+        i64 jj = clamp(j < 0 ? (i64)len + j : j, (i64)0, (i64)len - 1);
+        DEBUG_ASSERT(ii <= jj, "i > j: {} ({}) < {} ({})", ii, i, jj, j);
 
         Array<T> c = *this;
         c.data = c.data + ii;
@@ -1502,7 +1600,7 @@ struct MArray {
         return data[idx];
     }
 
-    template <class O>
+    template <typename O>
     void release(O& out) {
         out.data = data;
         out.len = len;
@@ -1528,12 +1626,12 @@ struct MArray {
     }
 };
 
-template <class T, class O>
+template <typename T, typename O>
 static constexpr MArray<T> marray_from_pod(O o, Allocator* allocator) {
     return MArray<T>{o.data, o.len, o.capacity, allocator};
 }
 
-template <class T, class O>
+template <typename T, typename O>
 static constexpr MArray<T> marray_from_pod(O* o, Allocator* allocator) {
     return MArray<T>{o->data, o->len, o->capacity, allocator};
 }
@@ -1577,29 +1675,6 @@ struct AArray : MArray<T> {
         MArray<T> self = *this;
         this->allocator = nullptr;
         return self;
-    }
-};
-
-/* SECTION: variant types */
-
-template <typename T, typename EC>
-struct Result {
-    T value;
-    EC error;
-    String8 reason;
-
-    inline operator bool() const {
-        return (i64) error != 0;
-    }
-};
-
-template <typename T>
-struct Optional {
-    T value;
-    bool exists;
-
-    inline operator bool() const {
-        return exists;
     }
 };
 
