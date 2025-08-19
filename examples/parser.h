@@ -93,12 +93,12 @@ struct Token {
     u64 err : 1;
 
     inline String8 ss(const char* buffer) const {
-        return String8{.data = (char*) (buffer + idx), .len = (size_t) n, .null_term = false};
+        return String8{.data = (char*) (buffer + idx), .len = (size_t) n, .not_null_term = true};
     }
 
     inline String8 ss(const String8& sv) const {
         DEBUG_ASSERT(n < sv.len);
-        return String8{.data = (char*) (sv.data + idx), .len = (size_t) n, .null_term = false};
+        return String8{.data = (char*) (sv.data + idx), .len = (size_t) n, .not_null_term = true};
     }
 };
 

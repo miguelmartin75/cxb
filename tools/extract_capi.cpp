@@ -3,7 +3,8 @@
 
 template <typename T, typename... Args>
 void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest) {
-    String8 s = {.data = (char*) fmt, .len = 0};
+    String8 s = {};
+    s.data = (char*) fmt;
 
     i64 args_i = -1;
     u64 i = 0;
@@ -14,7 +15,7 @@ void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const
         if(curr == '{') {
             args_i = i;
         } else if(curr == '}') {
-            String8 args = s.slice(args_i + 1, i - 1);
+            String8 args = s.slice(args_i + 1, (i64)i - 1);
             format_value(a, dst, args, first);
             _format_impl(a, dst, s.data + i + 1, rest...);
             break;
@@ -33,7 +34,7 @@ void _format_impl(Arena* a, String8& dst, const char* fmt) {
 
 template <typename... Args>
 String8 format(Arena* a, const char* fmt, const Args&... args) {
-    String8 dst = {};
+    String8 dst = arena_push_string8(a);
     _format_impl(a, dst, fmt, args...);
     return dst;
 }
@@ -66,16 +67,12 @@ inline void print(const char* fmt, const Args&... args) {
 }
 
 template <typename... Args>
-inline void println(Arena* a, const char* fmt, const Args&... args) {
-    auto str = format(a, fmt, args...);
-    print("{}\n", str);
-}
-
-template <typename... Args>
 inline void println(const char* fmt, const Args&... args) {
     auto str = format(fmt, args...);
     print("{}\n", str);
 }
+
+// template <class T> void format_value(Arena* a, String8& dst, String8 args, T x);
 
 void format_value(Arena* a, String8& dst, String8 args, const char* s) {
     while(*s) {
@@ -103,12 +100,16 @@ void format_value(Arena* a, String8& dst, String8 args, int value) {
     }
 }
 
-void format_value(Arena* a, String8& dst, String8 args, double value) {
-    long long int_part = static_cast<long long>(value);
+template <class T>
+std::enable_if_t<std::is_floating_point_v<T>, void>
+format_value(Arena* a, String8& dst, String8 args, T value) {
+    u64 int_part = static_cast<u64>(value);
     format_value(a, dst, args, static_cast<int>(int_part));
     string8_push_back(dst, a, '.');
-    double frac = value - int_part;
-    for(int i = 0; i < 6; ++i) {
+    f64 frac = value - int_part;
+    ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
+    u64 n_digits = digits ? min((u64)std::numeric_limits<T>::max_digits10, digits.value) : 3;
+    for(u64 i = 0; i < n_digits; ++i) {
         frac *= 10;
         int digit = static_cast<int>(frac);
         string8_push_back(dst, a, static_cast<char>('0' + digit));
@@ -116,6 +117,17 @@ void format_value(Arena* a, String8& dst, String8 args, double value) {
     }
 }
 
+struct Foo {
+    int x;
+};
+
+void format_value(Arena* a, String8& dst, String8 args, Foo x) {
+    dst.extend(a, S8_LIT("Foo(x="));
+    format_value(a, dst, {}, x.x);
+    dst.extend(a, S8_LIT(")"));
+}
+
 int main(int argc, char* argv[]) {
-    println("Hello world: {}, {}", 2.5, 2);
+    Foo f = {};
+    println("Hello world: {.12f}, {}, {}", 2.5, 2, f);
 }

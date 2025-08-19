@@ -173,14 +173,11 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    char* data = arena_push<char>(arena, 1);
+    char* data = arena_push<char>(arena, str.data == nullptr && !str.not_null_term ? 2 : 1);
     str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
     str.not_null_term = !(!str.not_null_term || ch == '\0');
-    if(!str.not_null_term) {
-        str.data[str.len] = '\0';
-    }
 }
 
 void string8_pop_back(String8& str, Arena* arena) {
@@ -243,4 +240,38 @@ void string8_extend(String8& str, Arena* arena, String8 to_append) {
     size_t old_len = str.len;
     str.len += to_append.len;
     memcpy(str.data + old_len, to_append.data, to_append.len);
+}
+
+
+thread_local ThreadLocalRuntime cxb_runtime = {};
+static CxbRuntimeParams runtime_params = {};
+
+CXB_INLINE void _maybe_init_runtime() {
+    if(UNLIKELY(!cxb_runtime.perm)) {
+        cxb_runtime.perm = arena_make(runtime_params.perm_params);
+        cxb_runtime.scratch[0] = arena_make(runtime_params.scratch_params);
+        cxb_runtime.scratch[1] = arena_make(runtime_params.scratch_params);
+        cxb_runtime.scratch_idx = 0;
+    }
+}
+
+void cxb_init(CxbRuntimeParams params) {
+    runtime_params = params;
+}
+
+Arena* get_perm() {
+    _maybe_init_runtime();
+    return cxb_runtime.perm;
+}
+
+ArenaTemp begin_scratch() {
+    _maybe_init_runtime();
+    Arena* result = cxb_runtime.scratch[cxb_runtime.scratch_idx];
+    cxb_runtime.scratch_idx += 1;
+    cxb_runtime.scratch_idx %= 2;
+    return ArenaTemp{result, result->pos};
+}
+
+void end_scratch(const ArenaTemp& tmp) {
+    tmp.arena->pos = tmp.pos;
 }
