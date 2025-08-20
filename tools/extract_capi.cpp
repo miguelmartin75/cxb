@@ -1,6 +1,28 @@
 #include <cxb/cxb.h>
 #include <stdio.h>
 
+#include <fmt/format.h>
+
+struct String8AppendIt {
+    Arena*   a;
+    String8* dst;
+
+    using difference_type = std::ptrdiff_t;
+    using value_type      = char;
+    using pointer         = void;
+    using reference       = char;
+    using iterator_category = std::output_iterator_tag;
+
+    String8AppendIt& operator=(char c) {
+        string8_push_back(*dst, a, c);
+        return *this;
+    }
+    String8AppendIt& operator*()    { return *this; }
+    String8AppendIt& operator++()   { return *this; }
+    String8AppendIt  operator++(int){ return *this; }
+};
+
+
 template <typename T, typename... Args>
 void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest) {
     String8 s = {};
@@ -84,10 +106,12 @@ void format_value(Arena* a, String8& dst, String8 args, String8 s) {
     string8_extend(dst, a, s);
 }
 
-void format_value(Arena* a, String8& dst, String8 args, int value) {
-    char buf[32] = {};
+template <class T>
+std::enable_if_t<std::is_integral_v<T>, void>
+format_value(Arena* a, String8& dst, String8 args, T value) {
+    char buf[sizeof(T) * 8] = {};
     bool neg = value < 0;
-    unsigned int v = neg ? static_cast<unsigned int>(-value) : static_cast<unsigned int>(value);
+    u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
     int i = 0;
     do {
         buf[i++] = '0' + (v % 10);
@@ -100,25 +124,28 @@ void format_value(Arena* a, String8& dst, String8 args, int value) {
     }
 }
 
+
 template <class T>
 std::enable_if_t<std::is_floating_point_v<T>, void>
 format_value(Arena* a, String8& dst, String8 args, T value) {
-    u64 int_part = static_cast<u64>(value);
-    format_value(a, dst, args, static_cast<int>(int_part));
-    string8_push_back(dst, a, '.');
+    i64 int_part = static_cast<i64>(value);
     f64 frac = value - int_part;
+    if(frac < 0) frac *= -1;
+
     ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
     u64 n_digits = digits ? min((u64)std::numeric_limits<T>::max_digits10, digits.value) : 3;
-    for(u64 i = 0; i < n_digits; ++i) {
-        frac *= 10;
-        int digit = static_cast<int>(frac);
-        string8_push_back(dst, a, static_cast<char>('0' + digit));
-        frac -= digit;
+
+    String8AppendIt out{a, &dst};
+    // TODO: implement Dragonbox
+    if(digits.exists) {
+        fmt::format_to(out, "{:.{}f}", value, static_cast<int>(n_digits));
+    } else {
+        fmt::format_to(out, "{:.{}g}", value, static_cast<int>(n_digits));
     }
 }
 
 struct Foo {
-    int x;
+    double x;
 };
 
 void format_value(Arena* a, String8& dst, String8 args, Foo x) {
@@ -129,5 +156,7 @@ void format_value(Arena* a, String8& dst, String8 args, Foo x) {
 
 int main(int argc, char* argv[]) {
     Foo f = {};
-    println("Hello world: {.12f}, {}, {}", 2.5, 2, f);
+    f.x = -1.42;
+    // println("Hello world: {.12f}, {}, {}", 2.5, 2, f);
+    println("Hello world: {.2}", f.x);
 }
