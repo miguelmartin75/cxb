@@ -23,7 +23,7 @@
 
 ## Containers
 * C & C++ compatible: use these types when defining a C API
-    * `String8`: a pointer to char* (`data`), a length (`len`), and a flag (`null_term`) to indicate if the string
+    * `String8`: a pointer to char* (`data`), a length (`len`), and a flag (`not_null_term`) to indicate if the string
 is null-terminated
         - `String8` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
 block of memory
@@ -94,9 +94,11 @@ CXB_C_COMPAT_BEGIN
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 CXB_C_COMPAT_END
 
+#include <limits>
 #include <new>
 #include <type_traits> // 27ms
 
@@ -199,6 +201,8 @@ CXB_C_COMPAT_END
 /* * SECTION: primitives */
 CXB_C_COMPAT_BEGIN
 typedef uint8_t byte8;
+// TODO
+// typedef _Float16 f16;
 typedef float f32;
 typedef double f64;
 typedef int32_t i32;
@@ -276,8 +280,7 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 /* SECTION: primitive functions */
 template <typename T>
 CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
-    ASSERT(a < b);
-    return max(min(b, x), a);
+    return a < b ? max(min(b, x), a) : min(max(a, x), b);
 }
 
 template <typename T>
@@ -359,6 +362,17 @@ CXB_C_TYPE struct ArenaTemp {
     Arena* arena;
     u64 pos;
     CXB_C_COMPAT_END
+};
+
+Arena* get_perm();
+ArenaTemp begin_scratch();
+void end_scratch(const ArenaTemp& tmp);
+
+struct AArenaTemp : ArenaTemp {
+    AArenaTemp(const ArenaTemp& other) : ArenaTemp{other} {}
+    CXB_INLINE ~AArenaTemp() {
+        end_scratch(*this);
+    }
 };
 
 // *SECTION: Arena free functions
@@ -529,208 +543,6 @@ inline void array_pop_all(A& xs, Arena* arena)
     xs.len = 0;
 }
 
-/* SECTION: basic types */
-CXB_C_TYPE struct String8 {
-    CXB_C_COMPAT_BEGIN
-    char* data;
-    union {
-        struct {
-            size_t len : 63;
-            bool null_term : 1;
-        };
-        size_t metadata;
-    };
-    CXB_C_COMPAT_END
-
-    // ** SECTION: slice compatible methods
-    CXB_MAYBE_INLINE size_t n_bytes() const {
-        return len + null_term;
-    }
-    CXB_MAYBE_INLINE size_t size() const {
-        return len;
-    }
-    CXB_MAYBE_INLINE bool empty() const {
-        return len == 0;
-    }
-    CXB_MAYBE_INLINE char& operator[](size_t idx) {
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE char& back() {
-        return data[len - 1];
-    }
-    CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
-
-        String8 c = *this;
-        c.data = c.data + ii;
-        c.len = jj - ii + 1;
-        c.null_term = ii + c.len == len ? this->null_term : false;
-        return c;
-    }
-
-    CXB_MAYBE_INLINE const char* c_str() const {
-        return null_term ? data : nullptr;
-    }
-
-    CXB_MAYBE_INLINE int compare(const String8& o) const {
-        int result = memcmp(data, o.data, len < o.len ? len : o.len);
-        if(result == 0) {
-            return len - o.len;
-        }
-        return result;
-    }
-
-    CXB_MAYBE_INLINE bool operator==(const String8& o) const {
-        return compare(o) == 0;
-    }
-
-    CXB_MAYBE_INLINE bool operator!=(const String8& o) const {
-        return !(*this == o);
-    }
-
-    CXB_MAYBE_INLINE bool operator<(const String8& o) const {
-        size_t n = len < o.len ? len : o.len;
-        int cmp = memcmp(data, o.data, n);
-        if(cmp < 0) return true;
-        if(cmp > 0) return false;
-        return len < o.len;
-    }
-
-    CXB_MAYBE_INLINE bool operator>(const String8& o) const {
-        return o < *this;
-    }
-
-    // ** SECTION: arena UFCS
-    CXB_INLINE void resize(Arena* arena, size_t n, char fill_char = '\0') {
-        string8_resize(*this, arena, n, fill_char);
-    }
-    CXB_INLINE void push_back(Arena* arena, char ch) {
-        string8_push_back(*this, arena, ch);
-    }
-    CXB_INLINE void pop_back(Arena* arena) {
-        string8_pop_back(*this, arena);
-    }
-    CXB_INLINE void pop_all(Arena* arena) {
-        string8_pop_all(*this, arena);
-    }
-    CXB_INLINE void insert(Arena* arena, char ch, size_t i) {
-        string8_insert(*this, arena, ch, i);
-    }
-    CXB_INLINE void insert(Arena* arena, String8 to_insert, size_t i) {
-        string8_insert(*this, arena, to_insert, i);
-    }
-    CXB_INLINE void extend(Arena* arena, String8 to_append) {
-        string8_extend(*this, arena, to_append);
-    }
-};
-
-template <typename T>
-struct Array {
-    T* data;
-    size_t len;
-
-    CXB_MAYBE_INLINE size_t size() const {
-        return len;
-    }
-    CXB_MAYBE_INLINE bool empty() const {
-        return len == 0;
-    }
-    CXB_MAYBE_INLINE T& operator[](size_t idx) {
-        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE const T& operator[](size_t idx) const {
-        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
-        return data[idx];
-    }
-    CXB_MAYBE_INLINE T& back() {
-        return data[len - 1];
-    }
-    CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
-
-        Array<T> c = *this;
-        c.data = c.data + ii;
-        c.len = jj - ii + 1;
-        return c;
-    }
-
-    CXB_MAYBE_INLINE bool operator<(const Array<T>& o) const {
-        size_t n = len < o.len ? len : o.len;
-        for(size_t i = 0; i < n; ++i) {
-            if(o.data[i] < data[i])
-                return false;
-            else if(data[i] < o.data[i])
-                return true;
-        }
-        return len < o.len;
-    }
-
-    CXB_MAYBE_INLINE bool operator==(const Array<T>& o) const {
-        if(len != o.len) return false;
-        for(size_t i = 0; i < len; ++i) {
-            if(!(data[i] == o.data[i])) return false;
-        }
-        return true;
-    }
-
-    CXB_MAYBE_INLINE bool operator!=(const Array<T>& o) const {
-        return !(*this == o);
-    }
-
-    CXB_MAYBE_INLINE bool operator>(const Array<T>& o) const {
-        return o < *this;
-    }
-
-    CXB_MAYBE_INLINE T* begin() {
-        return data;
-    }
-    CXB_MAYBE_INLINE T* end() {
-        return data + len;
-    }
-    CXB_MAYBE_INLINE const T* begin() const {
-        return data;
-    }
-    CXB_MAYBE_INLINE const T* end() const {
-        return data + len;
-    }
-
-    // ** SECTION: arena UFCS
-    CXB_INLINE void resize(Arena* arena, size_t n) {
-        array_resize(*this, arena, n);
-    }
-    CXB_INLINE void resize(Arena* arena, size_t n, T value) {
-        array_resize(*this, arena, n, value);
-    }
-    CXB_INLINE void push_back(Arena* arena, T x) {
-        array_push_back(*this, arena, x);
-    }
-    CXB_INLINE void pop_back(Arena* arena) {
-        array_pop_back(*this, arena);
-    }
-    CXB_INLINE void pop_all(Arena* arena) {
-        array_pop_all(*this, arena);
-    }
-    CXB_INLINE void insert(Arena* arena, T value, size_t i) {
-        array_insert(*this, arena, value, i);
-    }
-    CXB_INLINE void insert(Arena* arena, Array<T> to_insert, size_t i) {
-        array_insert(*this, arena, to_insert, i);
-    }
-    CXB_INLINE void extend(Arena* arena, Array<T> to_append) {
-        array_extend(*this, arena, to_append);
-    }
-};
-
 /* SECTION: general allocation */
 CXB_C_TYPE struct Allocator {
     CXB_C_COMPAT_BEGIN
@@ -807,6 +619,305 @@ CXB_C_TYPE struct Allocator {
 CXB_C_COMPAT_BEGIN
 extern Allocator heap_alloc;
 CXB_C_COMPAT_END
+
+struct ThreadLocalRuntime {
+    Arena* perm;
+    Arena* scratch[2];
+    int scratch_idx;
+};
+
+struct CxbRuntimeParams {
+    ArenaParams perm_params;
+    ArenaParams scratch_params;
+};
+
+extern thread_local ThreadLocalRuntime cxb_runtime;
+void cxb_init(CxbRuntimeParams);
+
+/* SECTION: variant types (1/2) */
+template <typename T, typename EC>
+struct Result;
+
+template <typename T>
+struct Optional;
+
+template <typename T>
+struct ParseResult;
+
+/* SECTION: basic types */
+CXB_C_TYPE struct String8 {
+    CXB_C_COMPAT_BEGIN
+    char* data;
+    union {
+        struct {
+            size_t len : 63;
+            bool not_null_term : 1;
+        };
+        size_t metadata;
+    };
+    CXB_C_COMPAT_END
+
+    // ** SECTION: slice compatible methods
+    CXB_MAYBE_INLINE size_t n_bytes() const {
+        return len + !not_null_term;
+    }
+    CXB_MAYBE_INLINE size_t size() const {
+        return len;
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_MAYBE_INLINE char& operator[](size_t idx) {
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE const char& operator[](size_t idx) const {
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE char& back() {
+        return data[len - 1];
+    }
+    CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
+        if(!data) {
+            return {};
+        }
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, len == 0 ? 0 : (i64) len - 1);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, len == 0 ? 0 : (i64) len - 1);
+
+        String8 c = *this;
+        c.data = c.data + ii;
+        c.len = max(0ll, jj - ii + 1);
+        c.not_null_term = ii + c.len == len ? this->not_null_term : true;
+        return c;
+    }
+
+    CXB_MAYBE_INLINE const char* c_str() const {
+        return not_null_term ? nullptr : data;
+    }
+
+    CXB_MAYBE_INLINE int compare(const String8& o) const {
+        int result = memcmp(data, o.data, len < o.len ? len : o.len);
+        if(result == 0) {
+            return len - o.len;
+        }
+        return result;
+    }
+
+    CXB_MAYBE_INLINE bool operator==(const String8& o) const {
+        return compare(o) == 0;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const String8& o) const {
+        return !(*this == o);
+    }
+
+    CXB_MAYBE_INLINE bool operator<(const String8& o) const {
+        size_t n = len < o.len ? len : o.len;
+        int cmp = memcmp(data, o.data, n);
+        if(cmp < 0) return true;
+        if(cmp > 0) return false;
+        return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const String8& o) const {
+        return o < *this;
+    }
+
+    // ** SECTION: arena UFCS
+    CXB_INLINE void resize(Arena* arena, size_t n, char fill_char = '\0') {
+        string8_resize(*this, arena, n, fill_char);
+    }
+    CXB_INLINE void push_back(Arena* arena, char ch) {
+        string8_push_back(*this, arena, ch);
+    }
+    CXB_INLINE void pop_back(Arena* arena) {
+        string8_pop_back(*this, arena);
+    }
+    CXB_INLINE void pop_all(Arena* arena) {
+        string8_pop_all(*this, arena);
+    }
+    CXB_INLINE void insert(Arena* arena, char ch, size_t i) {
+        string8_insert(*this, arena, ch, i);
+    }
+    CXB_INLINE void insert(Arena* arena, String8 to_insert, size_t i) {
+        string8_insert(*this, arena, to_insert, i);
+    }
+    CXB_INLINE void extend(Arena* arena, String8 to_append) {
+        string8_extend(*this, arena, to_append);
+    }
+
+    // *SECTION*: parsing
+    template <typename T>
+    CXB_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>> parse(
+        u64 base = 10) const {
+        return string8_parse<T>(*this, base);
+    }
+};
+
+/* SECTION: variant types (2/2) */
+template <typename T>
+struct Optional {
+    T value;
+    bool exists;
+
+    inline operator bool() const {
+        return exists;
+    }
+};
+
+template <typename T, typename EC>
+struct Result {
+    T value;
+    EC error;
+    String8 reason;
+
+    inline operator bool() const {
+        return (i64) error != 0;
+    }
+};
+
+// TODO: Result<T> ?
+template <typename T>
+struct ParseResult {
+    T value;
+    bool exists;
+    size_t n_consumed;
+
+    inline operator bool() const {
+        return exists;
+    }
+};
+
+template <typename T>
+CXB_MAYBE_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>> string8_parse(
+    String8 str, u64 base = 10) {
+    ASSERT(base <= 10, "TODO: support bases > 10");
+    ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
+    u64 num_negs = 0;
+    for(u64 i = 0; i < str.len; ++i) {
+        if(str[i] == '-') {
+            num_negs += 1;
+            result.value *= -1;
+            result.n_consumed += 1;
+            continue;
+            // TODO: support other bases
+        } else if(str[i] >= '0' && str[i] <= '9') {
+            result.value *= base;
+            result.value += str[i] - '0';
+            result.n_consumed += 1;
+        } else {
+            break;
+        }
+    }
+    if constexpr(std::is_unsigned_v<T>) {
+        if(num_negs > 0) result.exists = false;
+    } else {
+        if(num_negs > 1) result.exists = false;
+    }
+    result.exists = result.n_consumed > 0;
+    return result;
+}
+
+template <typename T>
+struct Array {
+    T* data;
+    size_t len;
+
+    CXB_MAYBE_INLINE size_t size() const {
+        return len;
+    }
+    CXB_MAYBE_INLINE bool empty() const {
+        return len == 0;
+    }
+    CXB_MAYBE_INLINE T& operator[](size_t idx) {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE const T& operator[](size_t idx) const {
+        DEBUG_ASSERT(idx < len, "index out of bounds {} >= {}", idx, len);
+        return data[idx];
+    }
+    CXB_MAYBE_INLINE T& back() {
+        return data[len - 1];
+    }
+    CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, (i64) len - 1);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, (i64) len - 1);
+        DEBUG_ASSERT(ii <= jj, "i > j: {} ({}) < {} ({})", ii, i, jj, j);
+
+        Array<T> c = *this;
+        c.data = c.data + ii;
+        c.len = jj - ii + 1;
+        return c;
+    }
+
+    CXB_MAYBE_INLINE bool operator<(const Array<T>& o) const {
+        size_t n = len < o.len ? len : o.len;
+        for(size_t i = 0; i < n; ++i) {
+            if(o.data[i] < data[i])
+                return false;
+            else if(data[i] < o.data[i])
+                return true;
+        }
+        return len < o.len;
+    }
+
+    CXB_MAYBE_INLINE bool operator==(const Array<T>& o) const {
+        if(len != o.len) return false;
+        for(size_t i = 0; i < len; ++i) {
+            if(!(data[i] == o.data[i])) return false;
+        }
+        return true;
+    }
+
+    CXB_MAYBE_INLINE bool operator!=(const Array<T>& o) const {
+        return !(*this == o);
+    }
+
+    CXB_MAYBE_INLINE bool operator>(const Array<T>& o) const {
+        return o < *this;
+    }
+
+    CXB_MAYBE_INLINE T* begin() {
+        return data;
+    }
+    CXB_MAYBE_INLINE T* end() {
+        return data + len;
+    }
+    CXB_MAYBE_INLINE const T* begin() const {
+        return data;
+    }
+    CXB_MAYBE_INLINE const T* end() const {
+        return data + len;
+    }
+
+    // ** SECTION: arena UFCS
+    CXB_INLINE void resize(Arena* arena, size_t n) {
+        array_resize(*this, arena, n);
+    }
+    CXB_INLINE void resize(Arena* arena, size_t n, T value) {
+        array_resize(*this, arena, n, value);
+    }
+    CXB_INLINE void push_back(Arena* arena, T x) {
+        array_push_back(*this, arena, x);
+    }
+    CXB_INLINE void pop_back(Arena* arena) {
+        array_pop_back(*this, arena);
+    }
+    CXB_INLINE void pop_all(Arena* arena) {
+        array_pop_all(*this, arena);
+    }
+    CXB_INLINE void insert(Arena* arena, T value, size_t i) {
+        array_insert(*this, arena, value, i);
+    }
+    CXB_INLINE void insert(Arena* arena, Array<T> to_insert, size_t i) {
+        array_insert(*this, arena, to_insert, i);
+    }
+    CXB_INLINE void extend(Arena* arena, Array<T> to_append) {
+        array_extend(*this, arena, to_append);
+    }
+};
+
+// *SECTION*: formatting library
 
 CXB_C_TYPE struct Vec2f {
     CXB_C_COMPAT_BEGIN
@@ -895,7 +1006,7 @@ CXB_C_TYPE struct MString {
     union {
         struct {
             size_t len : 63;
-            bool null_term : 1;
+            bool not_null_term : 1;
         };
         size_t metadata;
     };
@@ -905,7 +1016,7 @@ CXB_C_TYPE struct MString {
 
     // ** SECTION: slice compatible methods - delegate to String8
     CXB_MAYBE_INLINE size_t n_bytes() const {
-        return len + null_term;
+        return len + not_null_term;
     }
     CXB_MAYBE_INLINE size_t size() const {
         return len;
@@ -934,7 +1045,7 @@ CXB_C_TYPE struct MString {
     }
 
     CXB_MAYBE_INLINE const char* c_str() const {
-        return null_term ? data : nullptr;
+        return not_null_term ? nullptr : data;
     }
 
     CXB_MAYBE_INLINE bool operator==(const String8& o) const {
@@ -969,11 +1080,12 @@ CXB_C_TYPE struct MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        MString result{.data = nullptr, .len = len, .null_term = null_term, .capacity = 0, .allocator = to_allocator};
+        MString result{
+            .data = nullptr, .len = len, .not_null_term = not_null_term, .capacity = 0, .allocator = to_allocator};
         if(len > 0) {
-            result.reserve(len + null_term);
+            result.reserve(len + not_null_term);
             memcpy(result.data, data, len);
-            if(null_term) {
+            if(!not_null_term) {
                 result.data[len] = '\0';
             }
         }
@@ -981,8 +1093,8 @@ CXB_C_TYPE struct MString {
     }
 
     CXB_MAYBE_INLINE const char* c_str_maybe_copy(Allocator* copy_alloc_if_not) {
-        if(!null_term) {
-            ensure_null_terminated(copy_alloc_if_not);
+        if(not_null_term) {
+            ensure_not_null_terminated(copy_alloc_if_not);
         }
         return data;
     }
@@ -1009,7 +1121,7 @@ CXB_C_TYPE struct MString {
     void resize(size_t new_len, char fill_char = '\0') {
         ASSERT(UNLIKELY(allocator != nullptr));
 
-        size_t reserve_size = new_len + null_term;
+        size_t reserve_size = new_len + !not_null_term;
         if(capacity < reserve_size) {
             reserve(reserve_size);
         }
@@ -1018,20 +1130,20 @@ CXB_C_TYPE struct MString {
         if(fill_char != '\0' && new_len > old_len) {
             memset(data + old_len, fill_char, new_len - old_len);
         }
-        if(null_term) {
+        if(!not_null_term) {
             data[new_len] = '\0';
         }
         len = new_len;
     }
 
-    CXB_MAYBE_INLINE void push_back(char c) {
+    CXB_MAYBE_INLINE void push_back(char ch) {
         if(n_bytes() + 1 >= capacity) {
             reserve(CXB_STR_GROW_FN(capacity));
         }
-        data[len] = c;
-        null_term |= (c == '\0');
+        data[len] = ch;
         len += 1;
-        if(null_term) {
+        not_null_term = !(!not_null_term || ch == '\0');
+        if(!not_null_term) {
             data[len] = '\0';
         }
     }
@@ -1046,7 +1158,7 @@ CXB_C_TYPE struct MString {
         char ret = data[len - 1];
         len--;
         data[len] = '\0';
-        null_term = true;
+        not_null_term = false;
         return ret;
     }
 
@@ -1055,7 +1167,7 @@ CXB_C_TYPE struct MString {
         reserve(len + other.len);
         memcpy(data + len, other.data, other.len);
         len += other.len;
-        if(null_term) {
+        if(!not_null_term) {
             data[len] = '\0';
         }
     }
@@ -1069,18 +1181,17 @@ CXB_C_TYPE struct MString {
             return;
         }
         size_t n_len = n == SIZE_MAX ? strlen(str) : n;
-        this->extend(String8{.data = const_cast<char*>(str), .len = n_len, .null_term = true});
+        this->extend(String8{.data = const_cast<char*>(str), .len = n_len, .not_null_term = false});
     }
 
-    CXB_MAYBE_INLINE void ensure_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
-        if(null_term) return;
+    CXB_MAYBE_INLINE void ensure_not_null_terminated(Allocator* copy_alloc_if_not = nullptr) {
+        if(!not_null_term) return;
 
         ASSERT(allocator != nullptr || copy_alloc_if_not != nullptr);
         if(allocator == nullptr) {
             *this = move(this->copy(copy_alloc_if_not));
         } else {
             this->push_back('\0');
-            this->null_term = true;
         }
     }
 };
@@ -1128,7 +1239,6 @@ struct Atomic {
         return atomic_compare_exchange_strong_explicit(&value, &expected, desired, success, failure);
     }
 
-    // Arithmetic operations (only for integral types)
     template <typename U = T>
     CXB_INLINE typename std::enable_if_t<std::is_integral_v<U>, T> fetch_add(
         T arg, memory_order order = memory_order_seq_cst) noexcept {
@@ -1230,19 +1340,19 @@ extern HeapAllocData heap_alloc_data;
 /* SECTION: containers */
 struct AString : MString {
     AString(Allocator* allocator = &heap_alloc)
-        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = allocator} {}
+        : MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = allocator} {}
 
     AString(const MString& m)
         : MString{.data = m.data,
                   .len = m.len,
-                  .null_term = m.null_term,
+                  .not_null_term = m.not_null_term,
                   .capacity = m.capacity,
                   .allocator = m.allocator} {}
 
-    AString(const char* cstr, size_t n = SIZE_MAX, bool null_term = true, Allocator* allocator = &heap_alloc)
+    AString(const char* cstr, size_t n = SIZE_MAX, bool not_null_term = false, Allocator* allocator = &heap_alloc)
         : MString{.data = nullptr,
                   .len = n == SIZE_MAX ? strlen(cstr) : n,
-                  .null_term = null_term,
+                  .not_null_term = not_null_term,
                   .capacity = 0,
                   .allocator = allocator} {
         if(this->allocator == nullptr) {
@@ -1257,7 +1367,7 @@ struct AString : MString {
     }
 
     AString(AString&& o)
-        : MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = o.allocator} {
+        : MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = o.allocator} {
         data = o.data;
         metadata = o.metadata;
         capacity = o.capacity;
@@ -1289,12 +1399,13 @@ struct AString : MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        AString result{data, len, null_term, to_allocator};
+        AString result{data, len, not_null_term, to_allocator};
         return result;
     }
 
     CXB_MAYBE_INLINE MString release() {
-        MString result{.data = data, .len = len, .null_term = null_term, .capacity = capacity, .allocator = allocator};
+        MString result{
+            .data = data, .len = len, .not_null_term = not_null_term, .capacity = capacity, .allocator = allocator};
         this->allocator = nullptr;
         return result;
     }
@@ -1334,10 +1445,9 @@ struct MArray {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = i < 0 ? len + i : i;
-        i64 jj = j < 0 ? len + j : j;
-        DEBUG_ASSERT(ii >= 0 && ii < (i64) len, "i OOB: {} ({}) < {}", ii, i, len);
-        DEBUG_ASSERT(jj >= 0 && jj < (i64) len, "j OOB: {} ({}) < {}", jj, j, len);
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, (i64) len - 1);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, (i64) len - 1);
+        DEBUG_ASSERT(ii <= jj, "i > j: {} ({}) < {} ({})", ii, i, jj, j);
 
         Array<T> c = *this;
         c.data = c.data + ii;
@@ -1500,7 +1610,7 @@ struct MArray {
         return data[idx];
     }
 
-    template <class O>
+    template <typename O>
     void release(O& out) {
         out.data = data;
         out.len = len;
@@ -1526,12 +1636,12 @@ struct MArray {
     }
 };
 
-template <class T, class O>
+template <typename T, typename O>
 static constexpr MArray<T> marray_from_pod(O o, Allocator* allocator) {
     return MArray<T>{o.data, o.len, o.capacity, allocator};
 }
 
-template <class T, class O>
+template <typename T, typename O>
 static constexpr MArray<T> marray_from_pod(O* o, Allocator* allocator) {
     return MArray<T>{o->data, o->len, o->capacity, allocator};
 }
@@ -1578,45 +1688,127 @@ struct AArray : MArray<T> {
     }
 };
 
-/* SECTION: variant types */
-
-template <typename T, typename EC>
-struct Result {
-    T value;
-    EC error;
-    String8 reason;
-
-    inline operator bool() const {
-        return (i64) error != 0;
-    }
-};
-
-template <typename T>
-struct Optional {
-    T value;
-    bool exists;
-
-    inline operator bool() const {
-        return exists;
-    }
-};
-
 CXB_C_COMPAT_BEGIN
-#define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .null_term = true})
-#define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .null_term = false})
-#define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .null_term = true})
+#define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
+#define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
+#define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .not_null_term = false})
 CXB_C_COMPAT_END
 
-#define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .null_term = true})
+#define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .not_null_term = false})
 
-#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .null_term = true, .capacity = 0, .allocator = (a)})
+#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = (a)})
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
 #endif
 
-// ensure the C API is included
-#define CXB_C_API
-#include "cxb-c.h"
+template <typename T, typename... Args>
+void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest);
+
+template <typename... Args>
+String8 format(Arena* a, const char* fmt, const Args&... args) {
+    String8 dst = arena_push_string8(a);
+    _format_impl(a, dst, fmt, args...);
+    return dst;
+}
+
+template <typename... Args>
+void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
+    String8 str = format(a, fmt, args...);
+    if(str.data) {
+        fwrite(&str[0], sizeof(char), str.len, f);
+    }
+}
+
+template <typename... Args>
+void print(FILE* f, const char* fmt, const Args&... args) {
+    ArenaTemp a = begin_scratch();
+    String8 str = format(a.arena, fmt, args...);
+    if(str.data) {
+        fwrite(&str[0], sizeof(char), str.len, f);
+    }
+    end_scratch(a);
+}
+
+template <typename... Args>
+CXB_INLINE void print(const char* fmt, const Args&... args) {
+    print(stdout, fmt, args...);
+}
+
+template <typename... Args>
+CXB_INLINE void println(const char* fmt, const Args&... args) {
+    ArenaTemp a = begin_scratch();
+    String8 str = format(a.arena, fmt, args...);
+    print("{}\n", str);
+    end_scratch(a);
+}
+
+/*
+to format your own type T, provide an overloaded version of:
+
+void format_value(Arena* a, String8& dst, String8 args, T x);
+*/
+void format_value(Arena* a, String8& dst, String8 args, const char* s);
+void format_value(Arena* a, String8& dst, String8 args, String8 s);
+
+template <class T>
+std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& dst, String8 args, T value) {
+    (void)args;
+    char buf[sizeof(T) * 8] = {};
+    bool neg = value < 0;
+    u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
+    int i = 0;
+    while(v > 0) {
+        buf[i++] = '0' + (v % 10);
+        v /= 10;
+    }
+
+    if(neg) {
+        string8_push_back(dst, a, '-');
+    }
+    for(int j = i - 1; j >= 0; --j) {
+        string8_push_back(dst, a, buf[j]);
+    }
+}
+
+void format_value(Arena* a, String8& dst, String8 args, bool value);
+void format_value(Arena* a, String8& dst, String8 args, f32 value);
+void format_value(Arena* a, String8& dst, String8 args, f64 value);
+
+template <typename T, typename... Args>
+void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest) {
+    String8 s = {};
+    s.data = (char*) fmt;
+
+    i64 args_i = -1;
+    u64 i = 0;
+    while(*fmt) {
+        s.len += 1;
+
+        char curr = s[i];
+        if(curr == '{') {
+            args_i = i;
+        } else if(curr == '}') {
+            String8 args = s.slice(args_i + 1, (i64) i - 1);
+            format_value(a, dst, args, first);
+            _format_impl(a, dst, s.data + i + 1, rest...);
+            break;
+        } else if(args_i < 0) {
+            string8_push_back(dst, a, curr);
+        }
+        ++i;
+        ++fmt;
+    }
+}
+
+CXB_MAYBE_INLINE void _format_impl(Arena* a, String8& dst, const char* fmt) {
+    while(*fmt) {
+        if(*fmt == '{' && *(fmt + 1) != '{') {
+            DEBUG_ASSERT(false, "not enough parameters given to format string");
+            break;
+        }
+        string8_push_back(dst, a, *fmt++);
+    }
+}
 
 #endif

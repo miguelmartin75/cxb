@@ -7,6 +7,10 @@
 #include <unistd.h> // for sysconf()
 #endif
 
+// TODO: remove fmtlib
+#include "fmt/format.h"
+#include "format.cc"
+
 /*
 NOTES on Arenas
 
@@ -14,7 +18,7 @@ NOTES on Arenas
 
 To commit memory read or write to the memory, e.g. memset(base, 0, commit_n_bytes);
 
-To decommite memory, call mprotect:
+To de-commit memory, call mprotect:
 
     size_t decommit = 5 * 1024 * 1024;
     char* decommit_addr = base - decommit;
@@ -25,6 +29,9 @@ To decommite memory, call mprotect:
 */
 
 CXB_C_EXPORT Arena* arena_make(ArenaParams params) {
+    if(params.reserve_bytes == 0) {
+        params.reserve_bytes = MB(1);
+    }
     ASSERT(params.reserve_bytes > 2 * sizeof(Arena), "need memory to allocate arena");
 
     // TODO: can reserve specific regions with PROT_NONE
@@ -145,12 +152,12 @@ void heap_free_all_proc(void* data) {
 String8 arena_push_string8(Arena* arena, size_t n) {
     ASSERT(n > 0);
     char* data = arena_push<char>(arena, n);
-    return String8{.data = data, .len = n - 1, .null_term = true};
+    return String8{.data = data, .len = n - 1, .not_null_term = false};
 }
 
 String8 arena_push_string8(Arena* arena, String8 to_copy) {
     char* data = arena_push<char>(arena, to_copy.n_bytes());
-    String8 result = String8{.data = data, .len = to_copy.len, .null_term = to_copy.null_term};
+    String8 result = String8{.data = data, .len = to_copy.len, .not_null_term = to_copy.not_null_term};
     memccpy(result.data, to_copy.data, sizeof(char), to_copy.n_bytes());
     return result;
 }
@@ -173,13 +180,11 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    char* data = arena_push<char>(arena, 1);
+    char* data = arena_push<char>(arena, str.data == nullptr && !str.not_null_term ? 2 : 1);
     str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
-    if(str.null_term) {
-        str.data[str.len] = '\0';
-    }
+    str.not_null_term = !(!str.not_null_term || ch == '\0');
 }
 
 void string8_pop_back(String8& str, Arena* arena) {
@@ -190,7 +195,7 @@ void string8_pop_back(String8& str, Arena* arena) {
     arena_pop_to(arena, arena->pos - 1);
     str.len -= 1;
     str.data[str.len] = '\0';
-    str.null_term = true;
+    str.not_null_term = false;
 }
 
 void string8_pop_all(String8& str, Arena* arena) {
@@ -242,4 +247,103 @@ void string8_extend(String8& str, Arena* arena, String8 to_append) {
     size_t old_len = str.len;
     str.len += to_append.len;
     memcpy(str.data + old_len, to_append.data, to_append.len);
+}
+
+thread_local ThreadLocalRuntime cxb_runtime = {};
+static CxbRuntimeParams runtime_params = {};
+
+CXB_INLINE void _maybe_init_runtime() {
+    if(UNLIKELY(!cxb_runtime.perm)) {
+        cxb_runtime.perm = arena_make(runtime_params.perm_params);
+        cxb_runtime.scratch[0] = arena_make(runtime_params.scratch_params);
+        cxb_runtime.scratch[1] = arena_make(runtime_params.scratch_params);
+        cxb_runtime.scratch_idx = 0;
+    }
+}
+
+void cxb_init(CxbRuntimeParams params) {
+    runtime_params = params;
+}
+
+Arena* get_perm() {
+    _maybe_init_runtime();
+    return cxb_runtime.perm;
+}
+
+ArenaTemp begin_scratch() {
+    _maybe_init_runtime();
+    Arena* result = cxb_runtime.scratch[cxb_runtime.scratch_idx];
+    cxb_runtime.scratch_idx += 1;
+    cxb_runtime.scratch_idx %= 2;
+    return ArenaTemp{result, result->pos};
+}
+
+void end_scratch(const ArenaTemp& tmp) {
+    arena_pop_to(tmp.arena, tmp.pos);
+}
+
+void format_value(Arena* a, String8& dst, String8 args, const char* s) {
+    (void) args;
+    while(*s) {
+        string8_push_back(dst, a, *s++);
+    }
+}
+
+void format_value(Arena* a, String8& dst, String8 args, String8 s) {
+    (void) args;
+    string8_extend(dst, a, s);
+}
+
+// TODO: remove fmtlib
+struct String8AppendIt {
+    Arena* a;
+    String8* dst;
+
+    using difference_type = std::ptrdiff_t;
+
+    String8AppendIt& operator=(char c) {
+        string8_push_back(*dst, a, c);
+        return *this;
+    }
+    String8AppendIt& operator*() {
+        return *this;
+    }
+    String8AppendIt& operator++() {
+        return *this;
+    }
+    String8AppendIt operator++(int) {
+        return *this;
+    }
+};
+
+template <class T>
+std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
+    i64 int_part = static_cast<i64>(value);
+    f64 frac = value - int_part;
+    if(frac < 0) frac *= -1;
+
+    ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
+    u64 n_digits = digits ? min((u64) std::numeric_limits<T>::max_digits10, digits.value) : 3;
+
+    String8AppendIt out{a, &dst};
+    // TODO: remove fmtlib
+    // TODO: implement Dragonbox
+    if(digits.exists) {
+        fmt::format_to(out, "{:.{}f}", value, static_cast<int>(n_digits));
+    } else {
+        fmt::format_to(out, "{:.{}g}", value, static_cast<int>(n_digits));
+    }
+}
+
+void format_value(Arena* a, String8& dst, String8 args, bool value) {
+    (void) args;
+    dst.extend(a, value ? S8_LIT("true") : S8_LIT("false"));
+}
+
+void format_value(Arena* a, String8& dst, String8 args, f32 value) {
+    format_float_impl(a, dst, args, value);
+}
+
+void format_value(Arena* a, String8& dst, String8 args, f64 value) {
+    format_float_impl(a, dst, args, value);
 }
