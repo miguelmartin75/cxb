@@ -6,7 +6,7 @@
 A C++ utility library with focus on performance and simplicity.
 
 Current Header Compile Times:
-* `cxb-cxx.h`: 131±124ms on Apple M1 Max
+* `cxb-cxx.h`: 80±63ms on Apple M1 Max
 
 ## Development
 
@@ -14,7 +14,7 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
 
 # TODOs
 - [ ] formatting
-    - [ ] print & format alternative (using fmtlib for floats)
+    - [x] print & format alternative (using fmtlib for floats)
     - [ ] Dragonbox float conversion algo
 - [ ] hash map
     - [ ] HashMap<K, V> on arena with free form functions
