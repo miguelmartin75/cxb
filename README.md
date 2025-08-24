@@ -14,6 +14,7 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
 
 # TODOs
 - [ ] formatting
+    - [ ] print & format alternative (using fmtlib for floats)
     - [ ] Dragonbox float conversion algo
 - [ ] hash map
     - [ ] HashMap<K, V> on arena with free form functions

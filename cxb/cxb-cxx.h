@@ -677,6 +677,9 @@ CXB_C_TYPE struct String8 {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
+        if(!data) {
+            return {};
+        }
         i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, len == 0 ? 0 : (i64) len - 1);
         i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, len == 0 ? 0 : (i64) len - 1);
 
@@ -1710,14 +1713,6 @@ String8 format(Arena* a, const char* fmt, const Args&... args) {
 }
 
 template <typename... Args>
-String8 format(const char* fmt, const Args&... args) {
-    ArenaTemp a = begin_scratch();
-    String8 result = format(a.arena, fmt, args...);
-    end_scratch(a);
-    return result;
-}
-
-template <typename... Args>
 void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
     String8 str = format(a, fmt, args...);
     if(str.data) {
@@ -1727,10 +1722,12 @@ void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
 
 template <typename... Args>
 void print(FILE* f, const char* fmt, const Args&... args) {
-    String8 str = format(fmt, args...);
+    ArenaTemp a = begin_scratch();
+    String8 str = format(a.arena, fmt, args...);
     if(str.data) {
         fwrite(&str[0], sizeof(char), str.len, f);
     }
+    end_scratch(a);
 }
 
 template <typename... Args>
@@ -1740,8 +1737,10 @@ CXB_INLINE void print(const char* fmt, const Args&... args) {
 
 template <typename... Args>
 CXB_INLINE void println(const char* fmt, const Args&... args) {
-    auto str = format(fmt, args...);
+    ArenaTemp a = begin_scratch();
+    String8 str = format(a.arena, fmt, args...);
     print("{}\n", str);
+    end_scratch(a);
 }
 
 /*
