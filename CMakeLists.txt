@@ -59,10 +59,8 @@ endfunction()
 if(CXB_BUILD_EXAMPLES)
     set(INTERPRETER_SRCS examples/interpreter.cpp examples/parser.cpp examples/memfile.cpp)
     add_exe(interpreter "${INTERPRETER_SRCS}")
-endif()
 
-if(CXB_BUILD_EXAMPLES)
-    add_exe(extract_capi tools/extract_capi.cpp)
+    add_exe(extract_capi scripts/extract_capi.cpp)
 endif()
 
 if(CXB_BUILD_TESTS)
