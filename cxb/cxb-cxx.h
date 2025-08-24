@@ -1754,6 +1754,7 @@ void format_value(Arena* a, String8& dst, String8 args, String8 s);
 
 template <class T>
 std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& dst, String8 args, T value) {
+    (void)args;
     char buf[sizeof(T) * 8] = {};
     bool neg = value < 0;
     u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
