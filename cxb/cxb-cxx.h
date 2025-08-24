@@ -94,12 +94,12 @@ CXB_C_COMPAT_BEGIN
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 CXB_C_COMPAT_END
 
-#include <new>
 #include <limits>
+#include <new>
 #include <type_traits> // 27ms
 
 #ifdef __cplusplus
@@ -368,9 +368,11 @@ Arena* get_perm();
 ArenaTemp begin_scratch();
 void end_scratch(const ArenaTemp& tmp);
 
-struct AArenaTemp: ArenaTemp { 
+struct AArenaTemp : ArenaTemp {
     AArenaTemp(const ArenaTemp& other) : ArenaTemp{other} {}
-    CXB_INLINE ~AArenaTemp() { end_scratch(*this); } 
+    CXB_INLINE ~AArenaTemp() {
+        end_scratch(*this);
+    }
 };
 
 // *SECTION: Arena free functions
@@ -675,8 +677,8 @@ CXB_C_TYPE struct String8 {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
-        i64 ii = clamp(i < 0 ? (i64)len + i : i, (i64)0, len == 0 ? 0 : (i64)len - 1);
-        i64 jj = clamp(j < 0 ? (i64)len + j : j, (i64)0, len == 0 ? 0 : (i64)len - 1);
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, len == 0 ? 0 : (i64) len - 1);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, len == 0 ? 0 : (i64) len - 1);
 
         String8 c = *this;
         c.data = c.data + ii;
@@ -742,9 +744,10 @@ CXB_C_TYPE struct String8 {
 
     // *SECTION*: parsing
     template <typename T>
-    CXB_INLINE 
-    std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>>
-    parse(u64 base = 10) const { return string8_parse<T>(*this, base); }
+    CXB_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>> parse(
+        u64 base = 10) const {
+        return string8_parse<T>(*this, base);
+    }
 };
 
 /* SECTION: variant types (2/2) */
@@ -770,7 +773,7 @@ struct Result {
 };
 
 // TODO: Result<T> ?
-template <typename T> 
+template <typename T>
 struct ParseResult {
     T value;
     bool exists;
@@ -782,15 +785,10 @@ struct ParseResult {
 };
 
 template <typename T>
-CXB_MAYBE_INLINE 
-std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>>
-string8_parse(String8 str, u64 base = 10) { 
+CXB_MAYBE_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>> string8_parse(
+    String8 str, u64 base = 10) {
     ASSERT(base <= 10, "TODO: support bases > 10");
-    ParseResult<T> result = {
-        .value = {},
-        .exists = str.len > 0,
-        .n_consumed = 0
-    };
+    ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
     u64 num_negs = 0;
     for(u64 i = 0; i < str.len; ++i) {
         if(str[i] == '-') {
@@ -798,7 +796,7 @@ string8_parse(String8 str, u64 base = 10) {
             result.value *= -1;
             result.n_consumed += 1;
             continue;
-        // TODO: support other bases
+            // TODO: support other bases
         } else if(str[i] >= '0' && str[i] <= '9') {
             result.value *= base;
             result.value += str[i] - '0';
@@ -815,7 +813,6 @@ string8_parse(String8 str, u64 base = 10) {
     result.exists = result.n_consumed > 0;
     return result;
 }
-
 
 template <typename T>
 struct Array {
@@ -840,8 +837,8 @@ struct Array {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = clamp(i < 0 ? (i64)len + i : i, (i64)0, (i64)len - 1);
-        i64 jj = clamp(j < 0 ? (i64)len + j : j, (i64)0, (i64)len - 1);
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, (i64) len - 1);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, (i64) len - 1);
         DEBUG_ASSERT(ii <= jj, "i > j: {} ({}) < {} ({})", ii, i, jj, j);
 
         Array<T> c = *this;
@@ -918,7 +915,6 @@ struct Array {
 };
 
 // *SECTION*: formatting library
-
 
 CXB_C_TYPE struct Vec2f {
     CXB_C_COMPAT_BEGIN
@@ -1081,7 +1077,8 @@ CXB_C_TYPE struct MString {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        MString result{.data = nullptr, .len = len, .not_null_term = not_null_term, .capacity = 0, .allocator = to_allocator};
+        MString result{
+            .data = nullptr, .len = len, .not_null_term = not_null_term, .capacity = 0, .allocator = to_allocator};
         if(len > 0) {
             result.reserve(len + not_null_term);
             memcpy(result.data, data, len);
@@ -1404,7 +1401,8 @@ struct AString : MString {
     }
 
     CXB_MAYBE_INLINE MString release() {
-        MString result{.data = data, .len = len, .not_null_term = not_null_term, .capacity = capacity, .allocator = allocator};
+        MString result{
+            .data = data, .len = len, .not_null_term = not_null_term, .capacity = capacity, .allocator = allocator};
         this->allocator = nullptr;
         return result;
     }
@@ -1444,8 +1442,8 @@ struct MArray {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE Array<T> slice(i64 i = 0, i64 j = -1) {
-        i64 ii = clamp(i < 0 ? (i64)len + i : i, (i64)0, (i64)len - 1);
-        i64 jj = clamp(j < 0 ? (i64)len + j : j, (i64)0, (i64)len - 1);
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, (i64) len - 1);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, (i64) len - 1);
         DEBUG_ASSERT(ii <= jj, "i > j: {} ({}) < {} ({})", ii, i, jj, j);
 
         Array<T> c = *this;
@@ -1736,7 +1734,9 @@ void print(FILE* f, const char* fmt, const Args&... args) {
 }
 
 template <typename... Args>
-CXB_INLINE void print(const char* fmt, const Args&... args) { print(stdout, fmt, args...); }
+CXB_INLINE void print(const char* fmt, const Args&... args) {
+    print(stdout, fmt, args...);
+}
 
 template <typename... Args>
 CXB_INLINE void println(const char* fmt, const Args&... args) {
@@ -1744,17 +1744,16 @@ CXB_INLINE void println(const char* fmt, const Args&... args) {
     print("{}\n", str);
 }
 
-/* 
+/*
 to format your own type T, provide an overloaded version of:
 
-void format_value(Arena* a, String8& dst, String8 args, T x); 
+void format_value(Arena* a, String8& dst, String8 args, T x);
 */
-void format_value(Arena* a, String8& dst, String8 args, const char* s); 
+void format_value(Arena* a, String8& dst, String8 args, const char* s);
 void format_value(Arena* a, String8& dst, String8 args, String8 s);
 
 template <class T>
-std::enable_if_t<std::is_integral_v<T>, void>
-format_value(Arena* a, String8& dst, String8 args, T value) {
+std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& dst, String8 args, T value) {
     char buf[sizeof(T) * 8] = {};
     bool neg = value < 0;
     u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
@@ -1771,7 +1770,6 @@ format_value(Arena* a, String8& dst, String8 args, T value) {
         string8_push_back(dst, a, buf[j]);
     }
 }
-
 
 void format_value(Arena* a, String8& dst, String8 args, bool value);
 void format_value(Arena* a, String8& dst, String8 args, f32 value);
@@ -1791,7 +1789,7 @@ void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const
         if(curr == '{') {
             args_i = i;
         } else if(curr == '}') {
-            String8 args = s.slice(args_i + 1, (i64)i - 1);
+            String8 args = s.slice(args_i + 1, (i64) i - 1);
             format_value(a, dst, args, first);
             _format_impl(a, dst, s.data + i + 1, rest...);
             break;

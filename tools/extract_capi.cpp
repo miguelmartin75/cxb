@@ -1,7 +1,6 @@
 #include <cxb/cxb.h>
-#include <stdio.h>
-
 #include <fmt/format.h>
+#include <stdio.h>
 
 struct Foo {
     double x;
@@ -15,7 +14,7 @@ void format_value(Arena* a, String8& dst, String8 args, Foo x) {
 
 int fib(int n) {
     if(n <= 1) return n;
-    int n1 = fib(n-1);
+    int n1 = fib(n - 1);
     int n2 = fib(n - 2);
     println("fib({}) = fib({}) + fib({}) = {} + {} = {}", n, n - 1, n - 2, n1, n2, n1 + n2);
     return n1 + n2;

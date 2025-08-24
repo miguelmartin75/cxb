@@ -8,9 +8,8 @@
 #endif
 
 // TODO: remove fmtlib
-#include "format.cc"
 #include "fmt/format.h"
-
+#include "format.cc"
 
 /*
 NOTES on Arenas
@@ -250,7 +249,6 @@ void string8_extend(String8& str, Arena* arena, String8 to_append) {
     memcpy(str.data + old_len, to_append.data, to_append.len);
 }
 
-
 thread_local ThreadLocalRuntime cxb_runtime = {};
 static CxbRuntimeParams runtime_params = {};
 
@@ -284,22 +282,21 @@ void end_scratch(const ArenaTemp& tmp) {
     arena_pop_to(tmp.arena, tmp.pos);
 }
 
-
 void format_value(Arena* a, String8& dst, String8 args, const char* s) {
-    (void)args;
+    (void) args;
     while(*s) {
         string8_push_back(dst, a, *s++);
     }
 }
 
 void format_value(Arena* a, String8& dst, String8 args, String8 s) {
-    (void)args;
+    (void) args;
     string8_extend(dst, a, s);
 }
 
 // TODO: remove fmtlib
 struct String8AppendIt {
-    Arena*   a;
+    Arena* a;
     String8* dst;
 
     using difference_type = std::ptrdiff_t;
@@ -308,20 +305,25 @@ struct String8AppendIt {
         string8_push_back(*dst, a, c);
         return *this;
     }
-    String8AppendIt& operator*()    { return *this; }
-    String8AppendIt& operator++()   { return *this; }
-    String8AppendIt  operator++(int){ return *this; }
+    String8AppendIt& operator*() {
+        return *this;
+    }
+    String8AppendIt& operator++() {
+        return *this;
+    }
+    String8AppendIt operator++(int) {
+        return *this;
+    }
 };
 
 template <class T>
-std::enable_if_t<std::is_floating_point_v<T>, void>
-format_float_impl(Arena* a, String8& dst, String8 args, T value) {
+std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
     i64 int_part = static_cast<i64>(value);
     f64 frac = value - int_part;
     if(frac < 0) frac *= -1;
 
     ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
-    u64 n_digits = digits ? min((u64)std::numeric_limits<T>::max_digits10, digits.value) : 3;
+    u64 n_digits = digits ? min((u64) std::numeric_limits<T>::max_digits10, digits.value) : 3;
 
     String8AppendIt out{a, &dst};
     // TODO: remove fmtlib
@@ -334,7 +336,7 @@ format_float_impl(Arena* a, String8& dst, String8 args, T value) {
 }
 
 void format_value(Arena* a, String8& dst, String8 args, bool value) {
-    (void)args;
+    (void) args;
     dst.extend(a, value ? S8_LIT("true") : S8_LIT("false"));
 }
 
