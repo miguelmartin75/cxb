@@ -11,3 +11,13 @@ Current Header Compile Times:
 ## Development
 
 For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+# TODOs
+- [ ] formatting
+    - [ ] Dragonbox float conversion algo
+- [ ] hash map
+    - [ ] HashMap<K, V> on arena with free form functions
+        - hashmap_put(m, a, k, v)
+        - hashmap_get(m, a, k, v)
+        - hashmap_exists(m, a, k, v)
+    - [ ] MHashMap<K, V>, AHashMap<K, V> on allocator

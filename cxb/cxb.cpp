@@ -7,6 +7,11 @@
 #include <unistd.h> // for sysconf()
 #endif
 
+// TODO: remove fmtlib
+#include "format.cc"
+#include "fmt/format.h"
+
+
 /*
 NOTES on Arenas
 
@@ -14,7 +19,7 @@ NOTES on Arenas
 
 To commit memory read or write to the memory, e.g. memset(base, 0, commit_n_bytes);
 
-To decommite memory, call mprotect:
+To de-commit memory, call mprotect:
 
     size_t decommit = 5 * 1024 * 1024;
     char* decommit_addr = base - decommit;
@@ -25,6 +30,9 @@ To decommite memory, call mprotect:
 */
 
 CXB_C_EXPORT Arena* arena_make(ArenaParams params) {
+    if(params.reserve_bytes == 0) {
+        params.reserve_bytes = MB(1);
+    }
     ASSERT(params.reserve_bytes > 2 * sizeof(Arena), "need memory to allocate arena");
 
     // TODO: can reserve specific regions with PROT_NONE
@@ -273,5 +281,67 @@ ArenaTemp begin_scratch() {
 }
 
 void end_scratch(const ArenaTemp& tmp) {
-    tmp.arena->pos = tmp.pos;
+    arena_pop_to(tmp.arena, tmp.pos);
+}
+
+
+void format_value(Arena* a, String8& dst, String8 args, const char* s) {
+    (void)args;
+    while(*s) {
+        string8_push_back(dst, a, *s++);
+    }
+}
+
+void format_value(Arena* a, String8& dst, String8 args, String8 s) {
+    (void)args;
+    string8_extend(dst, a, s);
+}
+
+// TODO: remove fmtlib
+struct String8AppendIt {
+    Arena*   a;
+    String8* dst;
+
+    using difference_type = std::ptrdiff_t;
+
+    String8AppendIt& operator=(char c) {
+        string8_push_back(*dst, a, c);
+        return *this;
+    }
+    String8AppendIt& operator*()    { return *this; }
+    String8AppendIt& operator++()   { return *this; }
+    String8AppendIt  operator++(int){ return *this; }
+};
+
+template <class T>
+std::enable_if_t<std::is_floating_point_v<T>, void>
+format_float_impl(Arena* a, String8& dst, String8 args, T value) {
+    i64 int_part = static_cast<i64>(value);
+    f64 frac = value - int_part;
+    if(frac < 0) frac *= -1;
+
+    ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
+    u64 n_digits = digits ? min((u64)std::numeric_limits<T>::max_digits10, digits.value) : 3;
+
+    String8AppendIt out{a, &dst};
+    // TODO: remove fmtlib
+    // TODO: implement Dragonbox
+    if(digits.exists) {
+        fmt::format_to(out, "{:.{}f}", value, static_cast<int>(n_digits));
+    } else {
+        fmt::format_to(out, "{:.{}g}", value, static_cast<int>(n_digits));
+    }
+}
+
+void format_value(Arena* a, String8& dst, String8 args, bool value) {
+    (void)args;
+    dst.extend(a, value ? S8_LIT("true") : S8_LIT("false"));
+}
+
+void format_value(Arena* a, String8& dst, String8 args, f32 value) {
+    format_float_impl(a, dst, args, value);
+}
+
+void format_value(Arena* a, String8& dst, String8 args, f64 value) {
+    format_float_impl(a, dst, args, value);
 }

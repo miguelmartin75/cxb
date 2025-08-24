@@ -95,6 +95,7 @@ CXB_C_COMPAT_BEGIN
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 CXB_C_COMPAT_END
 
 #include <new>
@@ -200,6 +201,8 @@ CXB_C_COMPAT_END
 /* * SECTION: primitives */
 CXB_C_COMPAT_BEGIN
 typedef uint8_t byte8;
+// TODO
+// typedef _Float16 f16;
 typedef float f32;
 typedef double f64;
 typedef int32_t i32;
@@ -359,6 +362,15 @@ CXB_C_TYPE struct ArenaTemp {
     Arena* arena;
     u64 pos;
     CXB_C_COMPAT_END
+};
+
+Arena* get_perm();
+ArenaTemp begin_scratch();
+void end_scratch(const ArenaTemp& tmp);
+
+struct AArenaTemp: ArenaTemp { 
+    AArenaTemp(const ArenaTemp& other) : ArenaTemp{other} {}
+    CXB_INLINE ~AArenaTemp() { end_scratch(*this); } 
 };
 
 // *SECTION: Arena free functions
@@ -619,9 +631,6 @@ struct CxbRuntimeParams {
 
 extern thread_local ThreadLocalRuntime cxb_runtime;
 void cxb_init(CxbRuntimeParams);
-Arena* get_perm();
-ArenaTemp begin_scratch();
-void end_scratch(const ArenaTemp& tmp);
 
 /* SECTION: variant types (1/2) */
 template <typename T, typename EC>
@@ -1692,8 +1701,116 @@ CXB_C_COMPAT_END
 #include "cxb.cpp"
 #endif
 
-// ensure the C API is included
-#define CXB_C_API
-#include "cxb-c.h"
+template <typename T, typename... Args>
+void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest);
+
+template <typename... Args>
+String8 format(Arena* a, const char* fmt, const Args&... args) {
+    String8 dst = arena_push_string8(a);
+    _format_impl(a, dst, fmt, args...);
+    return dst;
+}
+
+template <typename... Args>
+String8 format(const char* fmt, const Args&... args) {
+    ArenaTemp a = begin_scratch();
+    String8 result = format(a.arena, fmt, args...);
+    end_scratch(a);
+    return result;
+}
+
+template <typename... Args>
+void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
+    String8 str = format(a, fmt, args...);
+    if(str.data) {
+        fwrite(&str[0], sizeof(char), str.len, f);
+    }
+}
+
+template <typename... Args>
+void print(FILE* f, const char* fmt, const Args&... args) {
+    String8 str = format(fmt, args...);
+    if(str.data) {
+        fwrite(&str[0], sizeof(char), str.len, f);
+    }
+}
+
+template <typename... Args>
+CXB_INLINE void print(const char* fmt, const Args&... args) { print(stdout, fmt, args...); }
+
+template <typename... Args>
+CXB_INLINE void println(const char* fmt, const Args&... args) {
+    auto str = format(fmt, args...);
+    print("{}\n", str);
+}
+
+/* 
+to format your own type T, provide an overloaded version of:
+
+void format_value(Arena* a, String8& dst, String8 args, T x); 
+*/
+void format_value(Arena* a, String8& dst, String8 args, const char* s); 
+void format_value(Arena* a, String8& dst, String8 args, String8 s);
+
+template <class T>
+std::enable_if_t<std::is_integral_v<T>, void>
+format_value(Arena* a, String8& dst, String8 args, T value) {
+    char buf[sizeof(T) * 8] = {};
+    bool neg = value < 0;
+    u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
+    int i = 0;
+    while(v > 0) {
+        buf[i++] = '0' + (v % 10);
+        v /= 10;
+    }
+
+    if(neg) {
+        string8_push_back(dst, a, '-');
+    }
+    for(int j = i - 1; j >= 0; --j) {
+        string8_push_back(dst, a, buf[j]);
+    }
+}
+
+
+void format_value(Arena* a, String8& dst, String8 args, bool value);
+void format_value(Arena* a, String8& dst, String8 args, f32 value);
+void format_value(Arena* a, String8& dst, String8 args, f64 value);
+
+template <typename T, typename... Args>
+void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest) {
+    String8 s = {};
+    s.data = (char*) fmt;
+
+    i64 args_i = -1;
+    u64 i = 0;
+    while(*fmt) {
+        s.len += 1;
+
+        char curr = s[i];
+        if(curr == '{') {
+            args_i = i;
+        } else if(curr == '}') {
+            String8 args = s.slice(args_i + 1, (i64)i - 1);
+            format_value(a, dst, args, first);
+            _format_impl(a, dst, s.data + i + 1, rest...);
+            break;
+        } else if(args_i < 0) {
+            string8_push_back(dst, a, curr);
+        }
+        ++i;
+        ++fmt;
+    }
+}
+
+CXB_MAYBE_INLINE void _format_impl(Arena* a, String8& dst, const char* fmt) {
+    while(*fmt) {
+        if(*fmt == '{' && *(fmt + 1) != '{') {
+            DEBUG_ASSERT(false, "not enough parameters given to format string");
+            break;
+        }
+        string8_push_back(dst, a, *fmt++);
+    }
+}
 
 #endif

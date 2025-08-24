@@ -3,147 +3,6 @@
 
 #include <fmt/format.h>
 
-struct String8AppendIt {
-    Arena*   a;
-    String8* dst;
-
-    using difference_type = std::ptrdiff_t;
-    using value_type      = char;
-    using pointer         = void;
-    using reference       = char;
-    using iterator_category = std::output_iterator_tag;
-
-    String8AppendIt& operator=(char c) {
-        string8_push_back(*dst, a, c);
-        return *this;
-    }
-    String8AppendIt& operator*()    { return *this; }
-    String8AppendIt& operator++()   { return *this; }
-    String8AppendIt  operator++(int){ return *this; }
-};
-
-
-template <typename T, typename... Args>
-void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest) {
-    String8 s = {};
-    s.data = (char*) fmt;
-
-    i64 args_i = -1;
-    u64 i = 0;
-    while(*fmt) {
-        s.len += 1;
-
-        char curr = s[i];
-        if(curr == '{') {
-            args_i = i;
-        } else if(curr == '}') {
-            String8 args = s.slice(args_i + 1, (i64)i - 1);
-            format_value(a, dst, args, first);
-            _format_impl(a, dst, s.data + i + 1, rest...);
-            break;
-        } else if(args_i < 0) {
-            string8_push_back(dst, a, curr);
-        }
-        ++i;
-        ++fmt;
-    }
-}
-
-// TODO: fixme
-void _format_impl(Arena* a, String8& dst, const char* fmt) {
-    while(*fmt) string8_push_back(dst, a, *fmt++);
-}
-
-template <typename... Args>
-String8 format(Arena* a, const char* fmt, const Args&... args) {
-    String8 dst = arena_push_string8(a);
-    _format_impl(a, dst, fmt, args...);
-    return dst;
-}
-
-template <typename... Args>
-String8 format(const char* fmt, const Args&... args) {
-    Arena* a = arena_make_nbytes(KB(1)); // TODO: scratch buffer
-    return format(a, fmt, args...);
-}
-
-template <typename... Args>
-void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
-    String8 str = format(a, fmt, args...);
-    if(str.data) {
-        fwrite(&str[0], sizeof(char), str.len, f);
-    }
-}
-
-template <typename... Args>
-void print(FILE* f, const char* fmt, const Args&... args) {
-    String8 str = format(fmt, args...);
-    if(str.data) {
-        fwrite(&str[0], sizeof(char), str.len, f);
-    }
-}
-
-template <typename... Args>
-inline void print(const char* fmt, const Args&... args) {
-    print(stdout, fmt, args...);
-}
-
-template <typename... Args>
-inline void println(const char* fmt, const Args&... args) {
-    auto str = format(fmt, args...);
-    print("{}\n", str);
-}
-
-// template <class T> void format_value(Arena* a, String8& dst, String8 args, T x);
-
-void format_value(Arena* a, String8& dst, String8 args, const char* s) {
-    while(*s) {
-        string8_push_back(dst, a, *s++);
-    }
-}
-
-void format_value(Arena* a, String8& dst, String8 args, String8 s) {
-    string8_extend(dst, a, s);
-}
-
-template <class T>
-std::enable_if_t<std::is_integral_v<T>, void>
-format_value(Arena* a, String8& dst, String8 args, T value) {
-    char buf[sizeof(T) * 8] = {};
-    bool neg = value < 0;
-    u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
-    int i = 0;
-    do {
-        buf[i++] = '0' + (v % 10);
-        v /= 10;
-    } while(v);
-    if(neg) buf[i++] = '-';
-
-    for(int j = i - 1; j >= 0; --j) {
-        string8_push_back(dst, a, buf[j]);
-    }
-}
-
-
-template <class T>
-std::enable_if_t<std::is_floating_point_v<T>, void>
-format_value(Arena* a, String8& dst, String8 args, T value) {
-    i64 int_part = static_cast<i64>(value);
-    f64 frac = value - int_part;
-    if(frac < 0) frac *= -1;
-
-    ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
-    u64 n_digits = digits ? min((u64)std::numeric_limits<T>::max_digits10, digits.value) : 3;
-
-    String8AppendIt out{a, &dst};
-    // TODO: implement Dragonbox
-    if(digits.exists) {
-        fmt::format_to(out, "{:.{}f}", value, static_cast<int>(n_digits));
-    } else {
-        fmt::format_to(out, "{:.{}g}", value, static_cast<int>(n_digits));
-    }
-}
-
 struct Foo {
     double x;
 };
@@ -154,9 +13,20 @@ void format_value(Arena* a, String8& dst, String8 args, Foo x) {
     dst.extend(a, S8_LIT(")"));
 }
 
+int fib(int n) {
+    if(n <= 1) return n;
+    int n1 = fib(n-1);
+    int n2 = fib(n - 2);
+    println("fib({}) = fib({}) + fib({}) = {} + {} = {}", n, n - 1, n - 2, n1, n2, n1 + n2);
+    return n1 + n2;
+}
+
 int main(int argc, char* argv[]) {
     Foo f = {};
     f.x = -1.42;
     // println("Hello world: {.12f}, {}, {}", 2.5, 2, f);
     println("Hello world: {.2}", f.x);
+    println("Hello world: {}", false);
+
+    // fib(30);
 }
