@@ -3,7 +3,7 @@
 
 # cxb
 
-A C++ utility library with focus on performance and simplicity.
+An unorthodox C++ base library with a focus on performance & simplicity
 
 Current Header Compile Times:
 * `cxb-cxx.h`: 80±63ms on Apple M1 Max
