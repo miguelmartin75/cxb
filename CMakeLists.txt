@@ -12,6 +12,7 @@ option(CXB_BUILD_EXAMPLES "enable examples?" OFF)
 option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 
 set(CXB_SRCS "cxb/cxb.cpp")
+set(CXB_DEPS_INCLUDE_DIRS deps/fmt/include deps/fmt/src)
 
 # Add compiler-specific options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -22,7 +23,8 @@ endif()
 
 function(add_test_exe test_name test_source fsanitize)
     add_executable(${test_name} ${test_source} ${CXB_SRCS})
-    target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+    # TODO: remove fmtlib dependency
+    target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
     target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain ${ARGN})
     if(${fsanitize} AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
         target_compile_options(${test_name} PRIVATE
@@ -38,8 +40,9 @@ function(add_test_exe test_name test_source fsanitize)
 endfunction()
 
 function(add_exe name sources)
-    add_executable(${name} ${sources} ${CXB_SRCS} deps/fmt/src/format.cc)
-    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} deps/fmt/include)
+    add_executable(${name} ${sources} ${CXB_SRCS})
+    # TODO: remove fmtlib dependency
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
     if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
         target_compile_options(${name} PRIVATE
             -fsanitize=address
@@ -83,12 +86,12 @@ if(CXB_BUILD_TESTS)
     if(0)  # TODO
         # Pure C test
         add_executable(test_c_api_c tests/test_c_api_c.c tests/c_api_test.cpp ${CXB_SRCS})
-        target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+        target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
         # target_link_libraries(test_c_api_c PRIVATE cxb)
 
         # C++ test that uses Catch2
         add_executable(test_c_api_cpp tests/test_c_api_cpp.cpp tests/c_api_test.cpp ${CXB_SRCS})
-        target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+        target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
         target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain)
 
         add_test(NAME test_c_api_c COMMAND test_c_api_c)
