@@ -128,14 +128,14 @@ TEST_CASE("operator<", "AArray") {
         REQUIRE(!(seq1 < seq4));
 
         // Test lexicographic order with strings
-        AArray<AString> str_seq1;
-        AArray<AString> str_seq2;
+        AArray<AString8> str_seq1;
+        AArray<AString8> str_seq2;
 
-        str_seq1.push_back(AString("apple"));
-        str_seq1.push_back(AString("banana"));
+        str_seq1.push_back(AString8("apple"));
+        str_seq1.push_back(AString8("banana"));
 
-        str_seq2.push_back(AString("apple"));
-        str_seq2.push_back(AString("cherry"));
+        str_seq2.push_back(AString8("apple"));
+        str_seq2.push_back(AString8("cherry"));
 
         REQUIRE(str_seq1 < str_seq2); // "banana" < "cherry"
         REQUIRE(!(str_seq2 < str_seq1));
@@ -189,21 +189,21 @@ TEST_CASE("operator==", "AArray") {
         REQUIRE(!(seq3 == seq1));
 
         // Test with strings
-        AArray<AString> str_seq1;
-        AArray<AString> str_seq2;
+        AArray<AString8> str_seq1;
+        AArray<AString8> str_seq2;
 
-        str_seq1.push_back(AString("hello"));
-        str_seq1.push_back(AString("world"));
+        str_seq1.push_back(AString8("hello"));
+        str_seq1.push_back(AString8("world"));
 
-        str_seq2.push_back(AString("hello"));
-        str_seq2.push_back(AString("world"));
+        str_seq2.push_back(AString8("hello"));
+        str_seq2.push_back(AString8("world"));
 
         REQUIRE(str_seq1 == str_seq2);
         REQUIRE(str_seq2 == str_seq1);
 
         // Different strings
         str_seq2.pop_back();
-        str_seq2.push_back(AString("test"));
+        str_seq2.push_back(AString8("test"));
 
         REQUIRE(!(str_seq1 == str_seq2));
         REQUIRE(!(str_seq2 == str_seq1));
@@ -264,14 +264,14 @@ TEST_CASE("AArray operator> and operator!=", "AArray") {
         REQUIRE(seq1 != seq4);
 
         // Test with strings
-        AArray<AString> str_seq1;
-        AArray<AString> str_seq2;
+        AArray<AString8> str_seq1;
+        AArray<AString8> str_seq2;
 
-        str_seq1.push_back(AString("apple"));
-        str_seq1.push_back(AString("banana"));
+        str_seq1.push_back(AString8("apple"));
+        str_seq1.push_back(AString8("banana"));
 
-        str_seq2.push_back(AString("apple"));
-        str_seq2.push_back(AString("cherry"));
+        str_seq2.push_back(AString8("apple"));
+        str_seq2.push_back(AString8("cherry"));
 
         REQUIRE(str_seq2 > str_seq1); // "cherry" > "banana"
         REQUIRE(!(str_seq1 > str_seq2));

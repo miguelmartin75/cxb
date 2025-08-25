@@ -31,7 +31,7 @@ block of memory
         - In C++-land: there are methods the same operations the C free functions
           support plus operator overloads for convenience, e.g. `operator[]`,
           `slice`, `c_str`, `empty`, `size`, `n_bytes`, etc.
-    * `MString`: a manually memory managed string, "M" stands for "manual"
+    * `MString8`: a manually memory managed string, "M" stands for "manual"
         - This type is a `std::string` alternative, but requires manual memory management
         - Think of this type as a `String8` that is optionally attached to an allocator
         - Compatible with `String8`
@@ -41,9 +41,9 @@ block of memory
         - Call `.destroy()` (in C++) or `cxb_mstring8_destroy` (in C) to free the memory
         - Destructor does not call `.destroy()`, see `String` for this functionality
 * C++ only types: use these types when when defining C++ APIs or in implementation files
-    * `AString: an automatically managed string using RAII, compatible with MString
+    * `AString8: an automatically managed string using RAII, compatible with MString8
         - This type is a `std::string` alternative, with RAII semantics but requires manual copies
-        - This type is an extension of `MString`, which automatically calls `destroy()` on destruction
+        - This type is an extension of `MString8`, which automatically calls `destroy()` on destruction
         - This type is compatible with `String8`
         - Copies must be done manually via `copy()`, i.e. the copy contractor and assignment operator are deleted
         - Moves are supported
@@ -51,7 +51,7 @@ block of memory
     * `Array<T>`: similar to String8 but for any type
     * `MArray<T>`: a manually memory managed expandable sequence of elements where elements are stored contiguously in
 memory, "M" stands for "manual"
-        - Provides an interface similar to `MString`, but for any type; "null terminated" is not supported
+        - Provides an interface similar to `MString8`, but for any type; "null terminated" is not supported
         - This type is a `std::vector<T>` alternative, but requires manual memory management
         - This type is compatible with `Array<T>`
         - Call `.destroy()` to free memory
@@ -101,6 +101,7 @@ CXB_C_COMPAT_END
 #include <limits>
 #include <new>
 #include <type_traits> // 27ms
+#include <initializer_list>
 
 #ifdef __cplusplus
 #define CXB_C_EXPORT extern "C"
@@ -357,7 +358,7 @@ CXB_C_EXPORT void* arena_push_bytes(Arena* arena, size_t size, size_t align);
 CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos);
 CXB_C_EXPORT void arena_clear(Arena* arena);
 
-CXB_C_TYPE struct ArenaTemp {
+CXB_C_TYPE struct ArenaTmp {
     CXB_C_COMPAT_BEGIN
     Arena* arena;
     u64 pos;
@@ -365,12 +366,12 @@ CXB_C_TYPE struct ArenaTemp {
 };
 
 Arena* get_perm();
-ArenaTemp begin_scratch();
-void end_scratch(const ArenaTemp& tmp);
+ArenaTmp begin_scratch();
+void end_scratch(const ArenaTmp& tmp);
 
-struct AArenaTemp : ArenaTemp {
-    AArenaTemp(const ArenaTemp& other) : ArenaTemp{other} {}
-    CXB_INLINE ~AArenaTemp() {
+struct AArenaTmp : ArenaTmp {
+    AArenaTmp(const ArenaTmp& other) : ArenaTmp{other} {}
+    CXB_INLINE ~AArenaTmp() {
         end_scratch(*this);
     }
 };
@@ -417,7 +418,7 @@ inline void arena_pop(Arena* arena, T* x) {
 template <typename T>
 inline Array<T> arena_push_array(Arena* arena, size_t n) {
     T* data = arena_push<T>(arena, n);
-    return Array<T>{.data = data, .len = n};
+    return Array<T>{data, n};
 }
 
 template <typename T>
@@ -822,6 +823,13 @@ struct Array {
     T* data;
     size_t len;
 
+    Array() = default;
+    Array(T* data, size_t len) : data{data}, len{len} {}
+    Array(std::initializer_list<T> xs) : data{xs}, len{xs.size()} {}
+    Array(const Array<T>&) = default;
+    Array(Array<T>&&) = default;
+    ~Array() = default;
+
     CXB_MAYBE_INLINE size_t size() const {
         return len;
     }
@@ -1000,7 +1008,7 @@ static const Mat33f identity3x3 = {.arr = {
                                        1,
                                    }};
 
-CXB_C_TYPE struct MString {
+CXB_C_TYPE struct MString8 {
     CXB_C_COMPAT_BEGIN
     char* data;
     union {
@@ -1069,18 +1077,18 @@ CXB_C_TYPE struct MString {
     }
 
     // ** SECTION: allocator-related methods - delegate to UString
-    CXB_MAYBE_INLINE MString& copy_(Allocator* to_allocator = &heap_alloc) {
-        MString temp = *this;
+    CXB_MAYBE_INLINE MString8& copy_(Allocator* to_allocator = &heap_alloc) {
+        MString8 temp = *this;
         *this = move(this->copy(to_allocator));
         temp.destroy();
         return *this;
     }
 
-    CXB_MAYBE_INLINE MString copy(Allocator* to_allocator = nullptr) {
+    CXB_MAYBE_INLINE MString8 copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        MString result{
+        MString8 result{
             .data = nullptr, .len = len, .not_null_term = not_null_term, .capacity = 0, .allocator = to_allocator};
         if(len > 0) {
             result.reserve(len + not_null_term);
@@ -1338,19 +1346,19 @@ struct HeapAllocData {
 extern HeapAllocData heap_alloc_data;
 
 /* SECTION: containers */
-struct AString : MString {
-    AString(Allocator* allocator = &heap_alloc)
-        : MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = allocator} {}
+struct AString8 : MString8 {
+    AString8(Allocator* allocator = &heap_alloc)
+        : MString8{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = allocator} {}
 
-    AString(const MString& m)
-        : MString{.data = m.data,
+    AString8(const MString8& m)
+        : MString8{.data = m.data,
                   .len = m.len,
                   .not_null_term = m.not_null_term,
                   .capacity = m.capacity,
                   .allocator = m.allocator} {}
 
-    AString(const char* cstr, size_t n = SIZE_MAX, bool not_null_term = false, Allocator* allocator = &heap_alloc)
-        : MString{.data = nullptr,
+    AString8(const char* cstr, size_t n = SIZE_MAX, bool not_null_term = false, Allocator* allocator = &heap_alloc)
+        : MString8{.data = nullptr,
                   .len = n == SIZE_MAX ? strlen(cstr) : n,
                   .not_null_term = not_null_term,
                   .capacity = 0,
@@ -1366,15 +1374,15 @@ struct AString : MString {
         }
     }
 
-    AString(AString&& o)
-        : MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = o.allocator} {
+    AString8(AString8&& o)
+        : MString8{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = o.allocator} {
         data = o.data;
         metadata = o.metadata;
         capacity = o.capacity;
         o.allocator = nullptr;
     }
 
-    CXB_INLINE AString& operator=(AString&& o) {
+    CXB_INLINE AString8& operator=(AString8&& o) {
         allocator = o.allocator;
         o.allocator = nullptr;
         data = o.data;
@@ -1383,28 +1391,28 @@ struct AString : MString {
         return *this;
     }
 
-    AString(const AString& o) = delete;
-    AString& operator=(const AString& o) = delete;
+    AString8(const AString8& o) = delete;
+    AString8& operator=(const AString8& o) = delete;
 
-    CXB_MAYBE_INLINE ~AString() {
+    CXB_MAYBE_INLINE ~AString8() {
         destroy();
     }
 
-    CXB_MAYBE_INLINE AString& copy_(Allocator* to_allocator = &heap_alloc) {
+    CXB_MAYBE_INLINE AString8& copy_(Allocator* to_allocator = &heap_alloc) {
         *this = move(this->copy(to_allocator));
         return *this;
     }
 
-    CXB_MAYBE_INLINE AString copy(Allocator* to_allocator = nullptr) {
+    CXB_MAYBE_INLINE AString8 copy(Allocator* to_allocator = nullptr) {
         if(to_allocator == nullptr) to_allocator = allocator;
         ASSERT(to_allocator != nullptr);
 
-        AString result{data, len, not_null_term, to_allocator};
+        AString8 result{data, len, not_null_term, to_allocator};
         return result;
     }
 
-    CXB_MAYBE_INLINE MString release() {
-        MString result{
+    CXB_MAYBE_INLINE MString8 release() {
+        MString8 result{
             .data = data, .len = len, .not_null_term = not_null_term, .capacity = capacity, .allocator = allocator};
         this->allocator = nullptr;
         return result;
@@ -1688,6 +1696,10 @@ struct AArray : MArray<T> {
     }
 };
 
+inline String8 operator""_s8(const char* s, size_t len) {
+    return String8{.data = (char*)s, .len = len, .not_null_term = false};
+}
+        
 CXB_C_COMPAT_BEGIN
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
 #define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
@@ -1696,7 +1708,7 @@ CXB_C_COMPAT_END
 
 #define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .not_null_term = false})
 
-#define MSTRING_NT(a) (MString{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = (a)})
+#define MSTRING_NT(a) (MString8{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = (a)})
 
 #ifdef CXB_IMPL
 #include "cxb.cpp"
@@ -1722,7 +1734,7 @@ void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
 
 template <typename... Args>
 void print(FILE* f, const char* fmt, const Args&... args) {
-    ArenaTemp a = begin_scratch();
+    ArenaTmp a = begin_scratch();
     String8 str = format(a.arena, fmt, args...);
     if(str.data) {
         fwrite(&str[0], sizeof(char), str.len, f);
@@ -1737,7 +1749,7 @@ CXB_INLINE void print(const char* fmt, const Args&... args) {
 
 template <typename... Args>
 CXB_INLINE void println(const char* fmt, const Args&... args) {
-    ArenaTemp a = begin_scratch();
+    ArenaTmp a = begin_scratch();
     String8 str = format(a.arena, fmt, args...);
     print("{}\n", str);
     end_scratch(a);
