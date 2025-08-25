@@ -6,7 +6,7 @@
 An unorthodox C++ base library with a focus on performance & simplicity
 
 Current Header Compile Times:
-* `cxb-cxx.h`: 80±63ms on Apple M1 Max
+* `cxb-cxx.h`: 164±150ms on Apple M1 Max
 
 ## Development
 
