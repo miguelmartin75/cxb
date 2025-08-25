@@ -98,10 +98,10 @@ CXB_C_COMPAT_BEGIN
 #include <string.h>
 CXB_C_COMPAT_END
 
+#include <initializer_list>
 #include <limits>
 #include <new>
 #include <type_traits> // 27ms
-#include <initializer_list>
 
 #ifdef __cplusplus
 #define CXB_C_EXPORT extern "C"
@@ -1374,17 +1374,17 @@ struct AString8 : MString8 {
 
     AString8(const MString8& m)
         : MString8{.data = m.data,
-                  .len = m.len,
-                  .not_null_term = m.not_null_term,
-                  .capacity = m.capacity,
-                  .allocator = m.allocator} {}
+                   .len = m.len,
+                   .not_null_term = m.not_null_term,
+                   .capacity = m.capacity,
+                   .allocator = m.allocator} {}
 
     AString8(const char* cstr, size_t n = SIZE_MAX, bool not_null_term = false, Allocator* allocator = &heap_alloc)
         : MString8{.data = nullptr,
-                  .len = n == SIZE_MAX ? strlen(cstr) : n,
-                  .not_null_term = not_null_term,
-                  .capacity = 0,
-                  .allocator = allocator} {
+                   .len = n == SIZE_MAX ? strlen(cstr) : n,
+                   .not_null_term = not_null_term,
+                   .capacity = 0,
+                   .allocator = allocator} {
         if(this->allocator == nullptr) {
             data = const_cast<char*>(cstr);
         } else {
@@ -1449,8 +1449,9 @@ struct MArray {
     Allocator* allocator;
 
     MArray(Allocator* allocator = &heap_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {}
-    MArray(std::initializer_list<T> xs, Allocator* allocator = &heap_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {
-        extend(Array<T>{(T*)(xs.begin()), xs.size()});
+    MArray(std::initializer_list<T> xs, Allocator* allocator = &heap_alloc)
+        : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {
+        extend(Array<T>{(T*) (xs.begin()), xs.size()});
     }
     MArray(T* data, size_t len, Allocator* allocator = &heap_alloc)
         : data{data}, len{len}, capacity{0}, allocator{allocator} {}
@@ -1708,9 +1709,9 @@ struct AArray : MArray<T> {
 };
 
 inline String8 operator""_s8(const char* s, size_t len) {
-    return String8{.data = (char*)s, .len = len, .not_null_term = false};
+    return String8{.data = (char*) s, .len = len, .not_null_term = false};
 }
-        
+
 CXB_C_COMPAT_BEGIN
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
 #define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
@@ -1776,7 +1777,7 @@ void format_value(Arena* a, String8& dst, String8 args, String8 s);
 
 template <class T>
 std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& dst, String8 args, T value) {
-    (void)args;
+    (void) args;
     char buf[sizeof(T) * 8] = {};
     bool neg = value < 0;
     u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
