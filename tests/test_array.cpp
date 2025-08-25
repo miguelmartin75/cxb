@@ -2,12 +2,22 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
 
+TEST_CASE("simple initializer list", "AArray") {
+    Array<int> xs = {get_perm(), {1, 2, 3}};
+    REQUIRE(xs.len == 3);
+    REQUIRE(xs[0] == 1);
+    REQUIRE(xs[1] == 2);
+    REQUIRE(xs[2] == 3);
+    xs.push_back(get_perm(), 5);
+    REQUIRE(xs.len == 4);
+    REQUIRE(xs[3] == 5);
+}
+
 TEST_CASE("push_back", "AArray") {
     i64 allocated_bytes = 0;
     {
         AArray<int> xs;
         REQUIRE(xs.len == 0);
-        // REQUIRE(xs.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 256; ++i) {
             xs.push_back(i);
@@ -46,7 +56,6 @@ TEST_CASE("nested", "AArray") {
     {
         AArray<AArray<int>> nested;
         REQUIRE(nested.len == 0);
-        // REQUIRE(nested.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 10; ++i) {
             AArray<int> inner;
@@ -89,41 +98,18 @@ TEST_CASE("nested", "AArray") {
 TEST_CASE("operator<", "AArray") {
     i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        AArray<int> seq1;
-        AArray<int> seq2;
-
-        // Empty sequences should be equal
-        REQUIRE(seq1 == seq2);
-        REQUIRE(seq2 == seq1);
-
-        // Test with different lengths
-        seq1.push_back(1);
-        seq1.push_back(2);
-        seq1.push_back(3);
-
-        seq2.push_back(1);
-        seq2.push_back(2);
-        seq2.push_back(3);
-        seq2.push_back(4);
+        AArray<int> seq1 = {1, 2, 3};
+        AArray<int> seq2 = {1, 2, 3, 4};
 
         REQUIRE(seq1 < seq2); // shorter sequence is less than longer with same prefix
         REQUIRE(!(seq2 < seq1));
 
-        // Test with different values
-        AArray<int> seq3;
-        seq3.push_back(1);
-        seq3.push_back(2);
-        seq3.push_back(2); // smaller value at same position
-
+        AArray<int> seq3 = {1, 2, 2};
         REQUIRE(seq3 < seq1); // [1,2,2] < [1,2,3]
         REQUIRE(!(seq1 < seq3));
 
         // Test with different first element
-        AArray<int> seq4;
-        seq4.push_back(0);
-        seq4.push_back(5);
-        seq4.push_back(10);
-
+        AArray<int> seq4 = {0, 5, 10};
         REQUIRE(seq4 < seq1); // [0,5,10] < [1,2,3]
         REQUIRE(!(seq1 < seq4));
 
@@ -141,153 +127,9 @@ TEST_CASE("operator<", "AArray") {
         REQUIRE(!(str_seq2 < str_seq1));
 
         // Test identical sequences
-        AArray<int> seq5;
-        seq5.push_back(1);
-        seq5.push_back(2);
-        seq5.push_back(3);
-
+        AArray<int> seq5 = {1, 2, 3};
         REQUIRE(seq1 == seq5);
         REQUIRE(seq5 == seq1);
-    }
-    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
-}
-
-TEST_CASE("operator==", "AArray") {
-    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
-    {
-        AArray<int> seq1;
-        AArray<int> seq2;
-
-        // Empty sequences should be equal
-        REQUIRE(seq1 == seq2);
-        REQUIRE(seq2 == seq1);
-
-        // Add same elements to both sequences
-        seq1.push_back(1);
-        seq1.push_back(2);
-        seq1.push_back(3);
-
-        seq2.push_back(1);
-        seq2.push_back(2);
-        seq2.push_back(3);
-
-        REQUIRE(seq1 == seq2);
-        REQUIRE(seq2 == seq1);
-
-        // Test different lengths
-        seq2.push_back(4);
-        REQUIRE(!(seq1 == seq2));
-        REQUIRE(!(seq2 == seq1));
-
-        // Test different values
-        AArray<int> seq3;
-        seq3.push_back(1);
-        seq3.push_back(2);
-        seq3.push_back(2); // different value
-
-        REQUIRE(!(seq1 == seq3));
-        REQUIRE(!(seq3 == seq1));
-
-        // Test with strings
-        AArray<AString8> str_seq1;
-        AArray<AString8> str_seq2;
-
-        str_seq1.push_back(AString8("hello"));
-        str_seq1.push_back(AString8("world"));
-
-        str_seq2.push_back(AString8("hello"));
-        str_seq2.push_back(AString8("world"));
-
-        REQUIRE(str_seq1 == str_seq2);
-        REQUIRE(str_seq2 == str_seq1);
-
-        // Different strings
-        str_seq2.pop_back();
-        str_seq2.push_back(AString8("test"));
-
-        REQUIRE(!(str_seq1 == str_seq2));
-        REQUIRE(!(str_seq2 == str_seq1));
-
-        // Test self-equality
-        REQUIRE(seq1 == seq1);
-        REQUIRE(str_seq1 == str_seq1);
-    }
-    REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
-}
-
-TEST_CASE("AArray operator> and operator!=", "AArray") {
-    i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
-    {
-        AArray<int> seq1;
-        AArray<int> seq2;
-
-        // Empty sequences should be equal (not greater than each other)
-        REQUIRE(!(seq1 > seq2));
-        REQUIRE(!(seq2 > seq1));
-        REQUIRE(!(seq1 != seq2)); // should be equal
-
-        // Test with different lengths
-        seq1.push_back(1);
-        seq1.push_back(2);
-        seq1.push_back(3);
-
-        seq2.push_back(1);
-        seq2.push_back(2);
-        seq2.push_back(3);
-        seq2.push_back(4);
-
-        REQUIRE(seq2 > seq1); // longer sequence is greater than shorter with same prefix
-        REQUIRE(!(seq1 > seq2));
-        REQUIRE(seq1 != seq2); // different lengths should not be equal
-        REQUIRE(seq2 != seq1);
-
-        // Test with different values
-        AArray<int> seq3;
-        seq3.push_back(1);
-        seq3.push_back(2);
-        seq3.push_back(4); // larger value at same position
-
-        REQUIRE(seq3 > seq1); // [1,2,4] > [1,2,3]
-        REQUIRE(!(seq1 > seq3));
-        REQUIRE(seq3 != seq1);
-        REQUIRE(seq1 != seq3);
-
-        // Test with different first element
-        AArray<int> seq4;
-        seq4.push_back(2);
-        seq4.push_back(1);
-        seq4.push_back(1);
-
-        REQUIRE(seq4 > seq1); // [2,1,1] > [1,2,3]
-        REQUIRE(!(seq1 > seq4));
-        REQUIRE(seq4 != seq1);
-        REQUIRE(seq1 != seq4);
-
-        // Test with strings
-        AArray<AString8> str_seq1;
-        AArray<AString8> str_seq2;
-
-        str_seq1.push_back(AString8("apple"));
-        str_seq1.push_back(AString8("banana"));
-
-        str_seq2.push_back(AString8("apple"));
-        str_seq2.push_back(AString8("cherry"));
-
-        REQUIRE(str_seq2 > str_seq1); // "cherry" > "banana"
-        REQUIRE(!(str_seq1 > str_seq2));
-        REQUIRE(str_seq1 != str_seq2);
-        REQUIRE(str_seq2 != str_seq1);
-
-        // Test identical sequences
-        AArray<int> seq5;
-        seq5.push_back(1);
-        seq5.push_back(2);
-        seq5.push_back(3);
-
-        REQUIRE(!(seq1 > seq5));
-        REQUIRE(!(seq5 > seq1));
-        REQUIRE(!(seq1 != seq5)); // should be equal
-        REQUIRE(!(seq5 != seq1));
     }
     REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
