@@ -1,11 +1,33 @@
 /*
 # cxb: Base library for CX (Orthodox-C++)
 
-## Inspiration
-* Odin
-* Zig
-* Python
-* Nim
+This library supports C for some subset of the library. See `cxb-c.h` for details.
+
+## Memory
+
+* Arena
+* Allocator
+
+Both of the above are C-compatible.
+
+## Containers
+* C & C++ compatible: use these types when defining a C API
+    * `String8`: a pointer to char* (`data`), a length (`len`), and a flag (`not_null_term`) to indicate if the string
+is null-terminated
+        - `String8` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
+        - Arenas are supported with this type, you may append additional characters (if the string is on the arena) and
+the `not_null_term` flag will be maintained
+    * `MString8`: a manually memory managed string given an allocator, "M" stands for "manual". Call `.destroy()` to
+free memory
+* C++ only types: use these types when when defining C++ APIs or in implementation files
+    * `AString8: an automatically managed string using RAII, compatible with `MString8` and `String8`
+        - Destructor calls `destroy()`, i.e. this type is a `std::string` alternative
+        - Moves are supported, but unlike std::string, manual copies are required via `copy()`
+        - You may call `.release()` to remove ownership of the underlying memory, i.e. such that the destructor does not
+free the memory
+    * `Array<T>`: TODO
+    * `MArray<T>`: TODO
+    * `AArray<T>`: TODO
 
 ## Math Types
 * C and C++ compatible
@@ -20,50 +42,6 @@
     * Color4i
     * Mat33f
     * Mat44f
-
-## Containers
-* C & C++ compatible: use these types when defining a C API
-    * `String8`: a pointer to char* (`data`), a length (`len`), and a flag (`not_null_term`) to indicate if the string
-is null-terminated
-        - `String8` is a POD type, it does not own the memory it points to, it is only a view into a contiguous
-block of memory
-        - In C-land: free functions are provided, such as TODO
-        - In C++-land: there are methods the same operations the C free functions
-          support plus operator overloads for convenience, e.g. `operator[]`,
-          `slice`, `c_str`, `empty`, `size`, `n_bytes`, etc.
-    * `MString8`: a manually memory managed string, "M" stands for "manual"
-        - This type is a `std::string` alternative, but requires manual memory management
-        - Think of this type as a `String8` that is optionally attached to an allocator
-        - Compatible with `String8`
-        - In C-land: free functions are provided, such as TODO
-        - In C++-land: there are methods the same operations the C free functions
-          support plus operator overloads for convenience, e.g. `operator[]`, `c_str`, `empty`, `size`, `n_bytes`, etc.
-        - Call `.destroy()` (in C++) or `cxb_mstring8_destroy` (in C) to free the memory
-        - Destructor does not call `.destroy()`, see `String` for this functionality
-* C++ only types: use these types when when defining C++ APIs or in implementation files
-    * `AString8: an automatically managed string using RAII, compatible with MString8
-        - This type is a `std::string` alternative, with RAII semantics but requires manual copies
-        - This type is an extension of `MString8`, which automatically calls `destroy()` on destruction
-        - This type is compatible with `String8`
-        - Copies must be done manually via `copy()`, i.e. the copy contractor and assignment operator are deleted
-        - Moves are supported
-        - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
-    * `Array<T>`: similar to String8 but for any type
-    * `MArray<T>`: a manually memory managed expandable sequence of elements where elements are stored contiguously in
-memory, "M" stands for "manual"
-        - Provides an interface similar to `MString8`, but for any type; "null terminated" is not supported
-        - This type is a `std::vector<T>` alternative, but requires manual memory management
-        - This type is compatible with `Array<T>`
-        - Call `.destroy()` to free memory
-        - Destructor does not call `.destroy()`, see `AArray<T>` for this functionality
-    * `AArray<T>`: an automatically managed sequence container using RAII, compatible with `MArray<T>`
-        - Provides an interface similar to `String`, but for any type; "null terminated" is not supported
-        - This type is a `std::vector<T>` alternative, with RAII semantics but requires manual copies
-        - This type is an extension of `MArray<T>`, which automatically calls `destroy()` on destruction
-        - This type is compatible with `Array<T>`
-        - Copies must be done manually via `copy()`, i.e. the copy contractor and assignment operator are deleted
-        - Moves are supported
-        - Call `.release()` to remove ownership of the memory, i.e. such that the destructor does not call `destroy()`
 */
 
 #ifndef CXB_H
@@ -442,13 +420,7 @@ inline Array<T> arena_push_array(Arena* arena, size_t n) {
 template <typename T>
 inline Array<T> arena_push_array(Arena* arena, Array<T> to_copy) {
     T* data = arena_push<T>(arena, to_copy.len);
-    if constexpr(std::is_trivially_copyable_v<T>) {
-        memcpy(data, to_copy.data, to_copy.len * sizeof(T));
-    } else {
-        for(size_t i = 0; i < to_copy.len; ++i) {
-            data[i] = to_copy.data[i];
-        }
-    }
+    ::copy(data, to_copy.data, to_copy.len);
     return Array<T>{.data = data, .len = to_copy.len};
 }
 
@@ -528,7 +500,7 @@ inline void array_insert(A& xs, Arena* arena, const B& to_insert, size_t i)
     xs.len += to_insert.len;
 
     memmove(xs.data + i + to_insert.len, xs.data + i, (old_len - i) * sizeof(T));
-    memcpy(xs.data + i, to_insert.data, to_insert.len * sizeof(T));
+    ::copy(xs.data + i, to_insert.data, to_insert.len);
 }
 
 template <typename A, typename B>
@@ -546,7 +518,7 @@ inline void array_extend(A& xs, Arena* arena, const B& to_append)
     size_t old_len = xs.len;
     xs.len += to_append.len;
 
-    memcpy(xs.data + old_len, to_append.data, to_append.len * sizeof(T));
+    ::copy(xs.data + old_len, to_append.data, to_append.len);
 }
 
 template <typename A>

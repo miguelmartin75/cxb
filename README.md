@@ -29,5 +29,6 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
         - hashmap_get(m, a, k, v)
         - hashmap_exists(m, a, k, v)
     - [ ] MHashMap<K, V>, AHashMap<K, V> on allocator
+- [ ] arena allocator
 - [ ] test cases
-    - [ ] 
+    - [ ] arena allocator
