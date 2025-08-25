@@ -18,8 +18,8 @@ TEST_CASE("String operator< benchmark", "[benchmark][String]") {
     std::mt19937 rng(42); // Fixed seed for reproducibility
     std::uniform_int_distribution<int> char_dist('a', 'z');
 
-    AString small_str1;
-    AString small_str2;
+    AString8 small_str1;
+    AString8 small_str2;
 
     for(int i = 0; i < 64; ++i) {
         char c1 = static_cast<char>(char_dist(rng));
@@ -28,8 +28,8 @@ TEST_CASE("String operator< benchmark", "[benchmark][String]") {
         small_str2.push_back(c2);
     }
 
-    AString medium_str1;
-    AString medium_str2;
+    AString8 medium_str1;
+    AString8 medium_str2;
 
     for(int i = 0; i < 100000; ++i) {
         char c1 = static_cast<char>(char_dist(rng));
@@ -38,8 +38,8 @@ TEST_CASE("String operator< benchmark", "[benchmark][String]") {
         medium_str2.push_back(c2);
     }
 
-    AString large_str1;
-    AString large_str2;
+    AString8 large_str1;
+    AString8 large_str2;
 
     for(int i = 0; i < 1000000; ++i) {
         char c1 = static_cast<char>(char_dist(rng));
@@ -76,9 +76,9 @@ TEST_CASE("String operator< benchmark", "[benchmark][String]") {
     };
 
     // Additional benchmarks with equal strings (worst case for for loop)
-    AString equal_small = small_str1.copy();
-    AString equal_medium = medium_str1.copy();
-    AString equal_large = large_str1.copy();
+    AString8 equal_small = small_str1.copy();
+    AString8 equal_medium = medium_str1.copy();
+    AString8 equal_large = large_str1.copy();
 
     BENCHMARK("String operator< (memcmp) - Equal small strings") {
         return small_str1 < equal_small;
@@ -107,7 +107,7 @@ TEST_CASE("String operator< benchmark", "[benchmark][String]") {
 
 TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
     // Create a large ASCII string for benchmarking with varied content
-    AString ascii_text;
+    AString8 ascii_text;
     std::mt19937 rng(42); // Fixed seed for reproducibility
     std::uniform_int_distribution<int> char_dist('A', 'Z');
 
@@ -148,8 +148,8 @@ TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
 }
 
 TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
-    AString ascii_text;
-    AString unicode_text;
+    AString8 ascii_text;
+    AString8 unicode_text;
 
     std::mt19937 rng(123);
     std::uniform_int_distribution<int> ascii_dist(32, 126);
@@ -195,7 +195,7 @@ TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
     };
 }
 TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
-    AString unicode_text;
+    AString8 unicode_text;
     const char* samples[] = {
         "Hello 🌍 World! ",   // ASCII + emoji
         "Café naïve résumé ", // ASCII + accented chars

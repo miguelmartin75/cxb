@@ -18,7 +18,7 @@ TEST_CASE("String8 from C string", "[String8]") {
 }
 
 TEST_CASE("String8 from empty C string", "[String8]") {
-    String8 s = S8_LIT("");
+    String8 s = ""_s8;
     REQUIRE(s.size() == 0);
     REQUIRE(s.empty());
     REQUIRE_FALSE(s.not_null_term);
@@ -41,7 +41,7 @@ TEST_CASE("String8 from raw data", "[String8]") {
 TEST_CASE("String push_back", "[String]") {
     i64 allocated_bytes = 0;
     {
-        AString s;
+        AString8 s;
         s.push_back('H');
         s.push_back('i');
 
@@ -57,7 +57,7 @@ TEST_CASE("String push_back", "[String]") {
 }
 
 TEST_CASE("String8 push_back with null termination", "[String]") {
-    AString s("Hello");
+    AString8 s("Hello");
     REQUIRE_FALSE(s.not_null_term);
     REQUIRE(s.allocator);
     REQUIRE(s.len == 5);
@@ -76,7 +76,7 @@ TEST_CASE("String8 push_back with null termination", "[String]") {
 }
 
 TEST_CASE("String8 append C string", "[String8]") {
-    AString s("Hello");
+    AString8 s("Hello");
     s.extend(", World!");
 
     REQUIRE(s.len == 13);
@@ -86,7 +86,7 @@ TEST_CASE("String8 append C string", "[String8]") {
 }
 
 TEST_CASE("String8 append other String8", "[String8]") {
-    AString s1("Hello");
+    AString8 s1("Hello");
     String8 s2 = S8_LIT(", World!");
     s1.extend(s2);
 
@@ -96,7 +96,7 @@ TEST_CASE("String8 append other String8", "[String8]") {
 }
 
 TEST_CASE("String8 append to non-null-terminated", "[String8]") {
-    AString s;
+    AString8 s;
     s.push_back('H');
     s.push_back('i');
     REQUIRE_FALSE(s.not_null_term);
@@ -113,7 +113,7 @@ TEST_CASE("String8 append to non-null-terminated", "[String8]") {
 }
 
 TEST_CASE("String8 resize", "[String8]") {
-    AString s("Hello");
+    AString8 s("Hello");
     s.resize(10, 'X');
 
     REQUIRE(s.size() == 10);
@@ -123,7 +123,7 @@ TEST_CASE("String8 resize", "[String8]") {
 }
 
 TEST_CASE("String8 resize shrinking", "[String8]") {
-    AString s("Hello, World!");
+    AString8 s("Hello, World!");
     s.resize(5);
 
     REQUIRE(s.size() == 5);
@@ -132,7 +132,7 @@ TEST_CASE("String8 resize shrinking", "[String8]") {
 }
 
 TEST_CASE("String8 pop_back", "[String8]") {
-    AString s("Hello");
+    AString8 s("Hello");
     char c = s.pop_back();
 
     REQUIRE(c == 'o');
@@ -163,8 +163,8 @@ TEST_CASE("String8 slice", "[String8]") {
 }
 
 TEST_CASE("String8 copy", "[String8]") {
-    AString original("Hello, World!");
-    AString copy = original.copy();
+    AString8 original("Hello, World!");
+    AString8 copy = original.copy();
 
     REQUIRE(copy.size() == original.size());
     REQUIRE(copy.not_null_term == original.not_null_term);
@@ -174,7 +174,7 @@ TEST_CASE("String8 copy", "[String8]") {
 }
 
 TEST_CASE("String8 ensure_not_null_terminated", "[String8]") {
-    AString s = {};
+    AString8 s = {};
     s.push_back('H');
     s.push_back('i');
     REQUIRE_FALSE(s.not_null_term);
@@ -291,10 +291,10 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
 }
 
-TEST_CASE("MString manual cleanup", "[MString]") {
+TEST_CASE("MString8 manual cleanup", "[MString8]") {
     i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        MString s = MSTRING_NT(&heap_alloc);
+        MString8 s = MSTRING_NT(&heap_alloc);
         s.extend("Hello, World!");
         REQUIRE(s.len == 13);
         REQUIRE(s.allocator == &heap_alloc);
@@ -305,12 +305,12 @@ TEST_CASE("MString manual cleanup", "[MString]") {
     REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("MString -> String", "[MString]") {
+TEST_CASE("MString8 -> String", "[MString8]") {
     i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        MString m = MSTRING_NT(&heap_alloc);
+        MString8 m = MSTRING_NT(&heap_alloc);
         m.extend("Hello, World!");
-        AString s = m;
+        AString8 s = m;
 
         REQUIRE(s.len == 13);
         REQUIRE(s.allocator == &heap_alloc);
@@ -320,12 +320,12 @@ TEST_CASE("MString -> String", "[MString]") {
     REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
 }
 
-TEST_CASE("String -> MString", "[MString]") {
+TEST_CASE("String -> MString8", "[MString8]") {
     i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        AString s;
+        AString8 s;
         s.extend("Hello, World!");
-        MString m = s.release();
+        MString8 m = s.release();
 
         REQUIRE(m.len == 13);
         REQUIRE(m.allocator == &heap_alloc);
@@ -339,18 +339,18 @@ TEST_CASE("String -> MString", "[MString]") {
 TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
-        AArray<AString> strings;
+        AArray<AString8> strings;
         REQUIRE(strings.len == 0);
         // REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 10; ++i) {
-            AString s;
+            AString8 s;
             s.extend("String #");
             if(i == 0)
                 s.extend("0");
             else {
                 int temp = i;
-                AString num_str;
+                AString8 num_str;
                 while(temp > 0) {
                     num_str.push_back('0' + (temp % 10));
                     temp /= 10;
@@ -382,14 +382,14 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
         REQUIRE(strings[5].len > strings[4].len);
 
         // Add a new string with emoji
-        AString emoji_str("Hello 🌍!");
+        AString8 emoji_str("Hello 🌍!");
         strings.push_back(move(emoji_str));
 
         REQUIRE(strings.len == 11);
         REQUIRE(strings[10] == S8_LIT("Hello 🌍!"));
 
         // Add an empty string
-        AString empty_str;
+        AString8 empty_str;
         strings.push_back(move(empty_str));
 
         REQUIRE(strings.len == 12);
@@ -452,10 +452,10 @@ TEST_CASE("String8 and String operator<", "[String8][String]") {
     REQUIRE(numeric < alpha);   // "123" < "abc" (ASCII values)
 
     // Test String operator< (should behave the same as String8)
-    AString str1("apple");
-    AString str2("banana");
-    AString str3("app");
-    AString str4("apple");
+    AString8 str1("apple");
+    AString8 str2("banana");
+    AString8 str3("app");
+    AString8 str4("apple");
 
     REQUIRE(str1 < str2);    // "apple" < "banana"
     REQUIRE(!(str2 < str1)); // "banana" not < "apple"

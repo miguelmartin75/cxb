@@ -180,7 +180,7 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    char* data = arena_push<char>(arena, str.data == nullptr && !str.not_null_term ? 2 : 1);
+    char* data = arena_push<char>(arena, str.data == nullptr && str.len == 0 && !str.not_null_term ? 2 : 1);
     str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
@@ -188,6 +188,7 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
 }
 
 void string8_pop_back(String8& str, Arena* arena) {
+    ASSERT(str.len > 0, "empty string provided to string8_pop_back");
     ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
     ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
@@ -270,15 +271,15 @@ Arena* get_perm() {
     return cxb_runtime.perm;
 }
 
-ArenaTemp begin_scratch() {
+ArenaTmp begin_scratch() {
     _maybe_init_runtime();
     Arena* result = cxb_runtime.scratch[cxb_runtime.scratch_idx];
     cxb_runtime.scratch_idx += 1;
     cxb_runtime.scratch_idx %= 2;
-    return ArenaTemp{result, result->pos};
+    return ArenaTmp{result, result->pos};
 }
 
-void end_scratch(const ArenaTemp& tmp) {
+void end_scratch(const ArenaTmp& tmp) {
     arena_pop_to(tmp.arena, tmp.pos);
 }
 
