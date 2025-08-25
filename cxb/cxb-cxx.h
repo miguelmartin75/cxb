@@ -280,6 +280,17 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 
 /* SECTION: primitive functions */
 template <typename T>
+CXB_MAYBE_INLINE void copy(T* dst, const T* src, size_t n) {
+    if constexpr(std::is_trivially_assignable_v<T, T>) {
+        memcpy(dst, src, n * sizeof(T));
+    } else {
+        for(size_t i = 0; i < n; ++i) {
+            dst[i] = src[i];
+        }
+    }
+}
+
+template <typename T>
 CXB_PURE const T& clamp(const T& x, const T& a, const T& b) {
     return a < b ? max(min(b, x), a) : min(max(a, x), b);
 }
@@ -377,6 +388,13 @@ struct AArenaTmp : ArenaTmp {
 };
 
 // *SECTION: Arena free functions
+template <typename T>
+inline T* arena_push_fast(Arena* arena, size_t n = 1) {
+    const size_t size = sizeof(T) * n;
+    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
+    return data;
+}
+
 template <typename T>
 inline T* arena_push(Arena* arena, size_t n = 1) {
     const size_t size = sizeof(T) * n;
@@ -825,7 +843,11 @@ struct Array {
 
     Array() = default;
     Array(T* data, size_t len) : data{data}, len{len} {}
-    Array(std::initializer_list<T> xs) : data{xs}, len{xs.size()} {}
+    Array(Arena* a, std::initializer_list<T> xs) : data{nullptr}, len{0} {
+        data = arena_push_fast<T>(a, xs.size());
+        len = xs.size();
+        ::copy(data, xs.begin(), xs.size());
+    }
     Array(const Array<T>&) = default;
     Array(Array<T>&&) = default;
     ~Array() = default;
@@ -1427,6 +1449,9 @@ struct MArray {
     Allocator* allocator;
 
     MArray(Allocator* allocator = &heap_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {}
+    MArray(std::initializer_list<T> xs, Allocator* allocator = &heap_alloc) : data{nullptr}, len{0}, capacity{0}, allocator{allocator} {
+        extend(Array<T>{(T*)(xs.begin()), xs.size()});
+    }
     MArray(T* data, size_t len, Allocator* allocator = &heap_alloc)
         : data{data}, len{len}, capacity{0}, allocator{allocator} {}
     MArray(T* data, size_t len, size_t capacity, Allocator* allocator)
@@ -1521,13 +1546,7 @@ struct MArray {
         MArray<T> result{nullptr, 0, to_allocator};
         result.reserve(len);
         if(data && len > 0) {
-            if constexpr(std::is_trivially_assignable_v<T, T>) {
-                memcpy(result.data, data, len * sizeof(T));
-            } else {
-                for(size_t i = 0; i < len; ++i) {
-                    data[i] = result.data[i];
-                }
-            }
+            ::copy(result.data, data, len);
         }
         result.len = len;
         return result;
@@ -1630,17 +1649,8 @@ struct MArray {
     void extend(Array<T> other) {
         if(other.len == 0) return;
         reserve(len + other.len);
-        // TODO std::copy alternative
-        if constexpr(std::is_trivially_assignable_v<T, T>) {
-            memmove(data + len, other.data, other.len);
-            len += other.len;
-        } else {
-            size_t old_len = len;
-            len += other.len;
-            for(size_t i = old_len; i < len; ++i) {
-                data[i] = other[i];
-            }
-        }
+        ::copy(data + len, other.data, other.len);
+        len += other.len;
     }
 };
 
@@ -1658,6 +1668,7 @@ template <typename T>
 struct AArray : MArray<T> {
     AArray(Allocator* allocator = &heap_alloc) : MArray<T>(allocator) {}
     AArray(T* data, size_t len, Allocator* allocator = &heap_alloc) : MArray<T>(data, len, allocator) {}
+    AArray(std::initializer_list<T> xs, Allocator* allocator = &heap_alloc) : MArray<T>(xs, allocator) {}
     AArray(T* data, size_t len, size_t capacity, Allocator* allocator) : MArray<T>(data, len, capacity, allocator) {}
     AArray(const AArray<T>& o) = delete;
     AArray<T>& operator=(const AArray<T>& o) = delete;
