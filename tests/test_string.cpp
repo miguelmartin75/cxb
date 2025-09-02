@@ -295,19 +295,28 @@ TEST_CASE("String8 and String operator<", "[String8][String]") {
     REQUIRE(!(lower < upper));
 }
 
-TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
+TEST_CASE("Utf8Iterator with unicode", "[Utf8Iterator]") {
+    // é is U+00E9 (2 bytes in UTF-8: C3, A9)
+    // € is U+20AC (3 bytes in UTF-8: E2, 82, AC)
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
-    String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D \xE2\x82\xAC \xC3\xA9!");
     ArenaTmp scratch = begin_scratch();
 
     Array<u32> codepoints = decode_string8(scratch.arena, s);
-    REQUIRE(codepoints.len == 7);
+
+    REQUIRE(codepoints.len == 11);
     REQUIRE((char)codepoints[0] == 'H');
     REQUIRE((char)codepoints[1] == 'i');
     REQUIRE((char)codepoints[2] == ' ');
-    REQUIRE(codepoints[4] == ' ');
     REQUIRE(codepoints[3] == U'👋');
+    REQUIRE(codepoints[4] == ' ');
     REQUIRE(codepoints[5] == U'🌍');
-    REQUIRE(codepoints[6] == '!');
+    REQUIRE(codepoints[6] == ' ');
+    REQUIRE(codepoints[7] == U'€');
+    REQUIRE(codepoints[8] == ' ');
+    REQUIRE(codepoints[9] == U'é');
+    REQUIRE(codepoints[10] == '!');
+
+    end_scratch(scratch);
 }
