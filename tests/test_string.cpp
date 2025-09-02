@@ -197,23 +197,6 @@ TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
     end_scratch(scratch);
 }
 
-TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
-    // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
-    // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
-    String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
-    ArenaTmp scratch = begin_scratch();
-
-    Array<u32> codepoints = decode_string8(scratch.arena, s);
-    REQUIRE(codepoints.len == 7);
-    REQUIRE((char)codepoints[0] == 'H');
-    REQUIRE((char)codepoints[1] == 'i');
-    REQUIRE((char)codepoints[2] == ' ');
-    REQUIRE(codepoints[4] == ' ');
-    REQUIRE(codepoints[3] == U'👋');
-    REQUIRE(codepoints[5] == U'🌍');
-    REQUIRE(codepoints[6] == '!');
-}
-
 TEST_CASE("MString8 manual cleanup", "[MString8]") {
     i64 allocated_bytes_before = heap_alloc_data.n_active_bytes;
     {
@@ -310,4 +293,21 @@ TEST_CASE("String8 and String operator<", "[String8][String]") {
 
     REQUIRE(upper < lower); // "APPLE" < "apple" (ASCII values)
     REQUIRE(!(lower < upper));
+}
+
+TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
+    // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
+    // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
+    String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
+    ArenaTmp scratch = begin_scratch();
+
+    Array<u32> codepoints = decode_string8(scratch.arena, s);
+    REQUIRE(codepoints.len == 7);
+    REQUIRE((char)codepoints[0] == 'H');
+    REQUIRE((char)codepoints[1] == 'i');
+    REQUIRE((char)codepoints[2] == ' ');
+    REQUIRE(codepoints[4] == ' ');
+    REQUIRE(codepoints[3] == U'👋');
+    REQUIRE(codepoints[5] == U'🌍');
+    REQUIRE(codepoints[6] == '!');
 }
