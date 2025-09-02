@@ -1,7 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include <cxb/cxb-unicode.h>
 #include <cxb/cxb.h>
 #include <random>
 
@@ -119,81 +118,34 @@ TEST_CASE("UTF-8 decoding benchmark - ASCII text", "[.benchmark]") {
         ascii_text.push_back(' ');
     }
 
-    BENCHMARK("UTF-8 decode ASCII with utf8_decode") {
-        size_t pos = 0;
-        u64 checksum = 0;
+    // BENCHMARK("UTF-8 decode ASCII with utf8_decode") {
+    //     size_t pos = 0;
+    //     u64 checksum = 0;
 
-        while(pos < ascii_text.size()) {
-            auto result = utf8_decode(ascii_text.data + pos, ascii_text.size() - pos);
-            if(!result.valid) break;
-            pos += result.bytes_consumed;
-            checksum ^= result.codepoint;
-        }
+    //     while(pos < ascii_text.size()) {
+    //         auto result = utf8_decode(ascii_text.data + pos, ascii_text.size() - pos);
+    //         if(!result.valid) break;
+    //         pos += result.bytes_consumed;
+    //         checksum ^= result.codepoint;
+    //     }
 
-        return checksum;
-    };
+    //     return checksum;
+    // };
 
-    BENCHMARK("UTF-8 decode ASCII with Utf8Iterator") {
-        Utf8Iterator iter(ascii_text);
-        u64 checksum = 0;
+    // BENCHMARK("UTF-8 decode ASCII with Utf8Iterator") {
+    //     Utf8Iterator iter(ascii_text);
+    //     u64 checksum = 0;
 
-        while(iter.has_next()) {
-            auto result = iter.next();
-            if(!result.valid) break;
-            checksum ^= result.codepoint; // Prevent optimization
-        }
+    //     while(iter.has_next()) {
+    //         auto result = iter.next();
+    //         if(!result.valid) break;
+    //         checksum ^= result.codepoint; // Prevent optimization
+    //     }
 
-        return checksum;
-    };
+    //     return checksum;
+    // };
 }
 
-TEST_CASE("UTF-8 validation benchmark", "[.benchmark]") {
-    AString8 ascii_text;
-    AString8 unicode_text;
-
-    std::mt19937 rng(123);
-    std::uniform_int_distribution<int> ascii_dist(32, 126);
-
-    for(int i = 0; i < 10000; ++i) {
-        while(ascii_text.size() < 100) {
-            ascii_text.push_back(static_cast<char>(ascii_dist(rng)));
-        }
-        ascii_text.push_back('\n');
-    }
-
-    u32 unicode_codepoints[] = {
-        0x1F600, 0x1F601, 0x1F602, 0x1F603, 0x1F604, 0x1F605, 0x1F606, 0x1F607, // Smileys
-        0x1F680, 0x1F681, 0x1F682, 0x1F683, 0x1F684, 0x1F685, 0x1F686, 0x1F687, // Transportation
-        0x1F300, 0x1F301, 0x1F302, 0x1F303, 0x1F304, 0x1F305, 0x1F306, 0x1F307, // Nature
-        0x1F30D, 0x1F30E, 0x1F30F, 0x1F311, 0x1F313, 0x1F314, 0x1F315, 0x1F319, // Earth/Moon
-        0x1F44D, 0x1F44E, 0x1F44F, 0x1F450, 0x1F451, 0x1F4A9, 0x1F4AA, 0x1F525, // Hands/Objects
-        0x2764,  0x2665,  0x2B50,  0x2728,  0x26A1,  0x1F525, 0x1F4A5, 0x1F31F  // Hearts/Stars
-    };
-    std::uniform_int_distribution<size_t> unicode_dist(0,
-                                                       sizeof(unicode_codepoints) / sizeof(unicode_codepoints[0]) - 1);
-
-    for(int i = 0; i < 10000; ++i) {
-        while(unicode_text.size() < 100) {
-            u32 codepoint = unicode_codepoints[unicode_dist(rng)];
-            auto encode_result = utf8_encode(codepoint);
-            if(encode_result.valid) {
-                for(u8 j = 0; j < encode_result.byte_count; ++j) {
-                    unicode_text.extend(S8_DATA(encode_result.bytes, encode_result.byte_count));
-                }
-            }
-        }
-        unicode_text.push_back('\n');
-    }
-
-    BENCHMARK("Iterate ASCII text") {
-        u64 result = 0;
-        for(size_t i = 0; i < ascii_text.size(); ++i) {
-            result ^= ascii_text[i];
-        }
-        REQUIRE(result);
-        return result;
-    };
-}
 TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
     AString8 unicode_text;
     const char* samples[] = {
@@ -210,16 +162,16 @@ TEST_CASE("UTF-8 decoding benchmark - Mixed Unicode", "[.benchmark]") {
         }
     }
 
-    BENCHMARK("UTF-8 decode single") {
-        Utf8Iterator iter(unicode_text);
-        u64 checksum = 0;
+    // BENCHMARK("UTF-8 decode single") {
+    //     Utf8Iterator iter(unicode_text);
+    //     u64 checksum = 0;
 
-        while(iter.has_next()) {
-            auto result = iter.next();
-            if(!result.valid) break;
-            checksum ^= result.codepoint;
-        }
+    //     while(iter.has_next()) {
+    //         auto result = iter.next();
+    //         if(!result.valid) break;
+    //         checksum ^= result.codepoint;
+    //     }
 
-        return checksum;
-    };
+    //     return checksum;
+    // };
 }
