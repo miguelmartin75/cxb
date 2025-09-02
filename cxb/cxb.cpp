@@ -360,30 +360,52 @@ CXB_C_EXPORT bool utf8_iter_next(Utf8Iter* iter, Utf8IterBatch* batch) {
         u8 c1 = iter->s[iter->pos];
         // 1 byte
         if(!(c1 & (1 << 7))) {
+            println("ASCII: i={}, ch={}", iter->pos, c1);
             batch->data[batch->len++] = c1;
             iter->pos += 1;
         }
         // 1, 2, or 3 bytes ahead
         else {
-            // +3 bytes
-            // if((c1 & (1 << 6)) && (c1 & (1 << 5)) && (c1 & (1 << 4))) {
-            if((c1 & 0b111100) == 0b111100) {
-
-            } 
-            // +2 bytes
-            else if((c1 & (1 << 6)) && (c1 & (1 << 5))) {
-
-            } 
-            // +1 bytes
-            // else if((c1 & (1 << 6))) {
-            else if((c1 & 0b1100000) == 0b1100000) {
+            // +3 bytes (4-byte UTF-8: 11110xxx)
+            if((c1 & 0b11111000) == 0b11110000) {
+                println("+3: i={}, ch={}", iter->pos, c1);
                 u8 c2 = iter->s[iter->pos + 1];
-                batch->data[batch->len++] = c1 & 0b0011111;
-                batch->data[batch->len++] = c2 & 0b0011111;
+                u8 c3 = iter->s[iter->pos + 2];
+                u8 c4 = iter->s[iter->pos + 3];
+                batch->data[batch->len++] = (
+                    ((c1 & 0b00000111) << 18) + 
+                    ((c2 & 0b00111111) << 12) +
+                    ((c3 & 0b00111111) << 6) +
+                    ((c4 & 0b00111111) << 0)
+                );
+
+                iter->pos += 4;
+            } 
+            // +2 bytes (3-byte UTF-8: 1110xxxx)
+            else if((c1 & 0b11110000) == 0b11100000) {
+                println("+2: i={}, ch={}", iter->pos, c1);
+                u8 c2 = iter->s[iter->pos + 1];
+                u8 c3 = iter->s[iter->pos + 2];
+                batch->data[batch->len++] = (
+                    ((c1 & 0b00001111) << 12) +
+                    ((c2 & 0b00111111) << 6) +
+                    ((c3 & 0b00111111) << 0)
+                );
+                iter->pos += 3;
+            } 
+            // +1 bytes (2-byte UTF-8: 110xxxxx)
+            else if((c1 & 0b11100000) == 0b11000000) {
+                println("+1: i={}, ch={}", iter->pos, c1);
+                u8 c2 = iter->s[iter->pos + 1];
+                batch->data[batch->len++] = (
+                    ((c1 & 0b00011111) << 6) +
+                    ((c2 & 0b00111111) << 0)
+                );
                 iter->pos += 2;
             } else {
-                // TODO: invalid?
-                return false;
+                println("error: i={}, ch={}", iter->pos, c1);
+                // TODO: error ?
+                iter->pos += 1;
             }
         }
     }

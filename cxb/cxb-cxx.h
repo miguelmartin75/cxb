@@ -1788,10 +1788,10 @@ std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& ds
     bool neg = value < 0;
     u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
     int i = 0;
-    while(v > 0) {
+    do {
         buf[i++] = '0' + (v % 10);
         v /= 10;
-    }
+    } while(v > 0);
 
     if(neg) {
         string8_push_back(dst, a, '-');
