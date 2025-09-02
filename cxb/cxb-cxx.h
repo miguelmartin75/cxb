@@ -1755,9 +1755,11 @@ void format_value(Arena* a, String8& dst, String8 args, T x);
 void format_value(Arena* a, String8& dst, String8 args, const char* s);
 void format_value(Arena* a, String8& dst, String8 args, String8 s);
 
-static constexpr char BASE_16_CHARS[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
-template <typename T> void format_value(Arena* a, String8& dst, String8 args, T* s) {
-    (void)args;
+static constexpr char BASE_16_CHARS[] = {
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+template <typename T>
+void format_value(Arena* a, String8& dst, String8 args, T* s) {
+    (void) args;
     constexpr i64 N = (sizeof(u64) * 8);
 
     u64 v = reinterpret_cast<u64>(s);
@@ -1851,9 +1853,13 @@ CXB_C_TYPE struct Utf8Iter {
     u64 pos;
     CXB_C_COMPAT_END
 
-    CXB_INLINE bool next(Utf8IterBatch& batch) { return utf8_iter_next(this, &batch); };
+    CXB_INLINE bool next(Utf8IterBatch& batch) {
+        return utf8_iter_next(this, &batch);
+    };
 };
-CXB_INLINE Utf8Iter make_utf8_iter(String8 s) { return Utf8Iter{s, 0}; }
+CXB_INLINE Utf8Iter make_utf8_iter(String8 s) {
+    return Utf8Iter{s, 0};
+}
 
 CXB_C_TYPE struct Utf8IterBatch {
     CXB_C_COMPAT_BEGIN
@@ -1861,7 +1867,9 @@ CXB_C_TYPE struct Utf8IterBatch {
     u64 len;
     CXB_C_COMPAT_END
 
-    Array<u32> as_array() { return Array<u32>{&data[0], len}; }
+    Array<u32> as_array() {
+        return Array<u32>{&data[0], len};
+    }
 };
 
 // TODO: with indices?

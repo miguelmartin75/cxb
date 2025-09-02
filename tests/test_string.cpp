@@ -191,7 +191,7 @@ TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
     Array<u32> codepoints = decode_string8(scratch.arena, s);
     REQUIRE(codepoints.len == s.len);
     for(u64 i = 0; i < codepoints.len; ++i) {
-        REQUIRE((char)codepoints[i] == s[i]);
+        REQUIRE((char) codepoints[i] == s[i]);
     }
 
     end_scratch(scratch);
@@ -306,9 +306,9 @@ TEST_CASE("Utf8Iterator with unicode", "[Utf8Iterator]") {
     Array<u32> codepoints = decode_string8(scratch.arena, s);
 
     REQUIRE(codepoints.len == 11);
-    REQUIRE((char)codepoints[0] == 'H');
-    REQUIRE((char)codepoints[1] == 'i');
-    REQUIRE((char)codepoints[2] == ' ');
+    REQUIRE((char) codepoints[0] == 'H');
+    REQUIRE((char) codepoints[1] == 'i');
+    REQUIRE((char) codepoints[2] == ' ');
     REQUIRE(codepoints[3] == U'👋');
     REQUIRE(codepoints[4] == ' ');
     REQUIRE(codepoints[5] == U'🌍');
