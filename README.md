@@ -18,7 +18,9 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
     - [ ] Dragonbox float conversion algo
 - [ ] refactor
     - [x] A/MString -> A/MString8
-    - [ ] remove or update utf8 decode
+    - [x] remove or update utf8 decode
+    - [ ] concepts: only use ArrayLikeNoT
+    - [ ] make free-form functions C-compat by default
 - [ ] std::initializer_list support
     - [ ] Array
     - [ ] MArray
