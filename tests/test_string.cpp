@@ -198,80 +198,20 @@ TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
 }
 
 TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
-    // String with mixed ASCII and emojis: "Hi 👋 🌍!"
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
     String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
     ArenaTmp scratch = begin_scratch();
 
     Array<u32> codepoints = decode_string8(scratch.arena, s);
-    REQUIRE(codepoints.len == s.len);
-    for(u64 i = 0; i < codepoints.len; ++i) {
-        REQUIRE((char)codepoints[i] == s[i]);
-    }
     REQUIRE(codepoints.len == 7);
     REQUIRE((char)codepoints[0] == 'H');
     REQUIRE((char)codepoints[1] == 'i');
     REQUIRE((char)codepoints[2] == ' ');
-
-
-    // Test ASCII 'H'
-    // REQUIRE(iter.has_next());
-    // auto result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == 'H');
-    // REQUIRE(result.bytes_consumed == 1);
-
-    // // Test ASCII 'i'
-    // result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == 'i');
-    // REQUIRE(result.bytes_consumed == 1);
-
-    // // Test ASCII space
-    // result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == ' ');
-    // REQUIRE(result.bytes_consumed == 1);
-
-    // // Test waving hand emoji 👋 (U+1F44B)
-    // result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == 0x1F44B);
-    // REQUIRE(result.bytes_consumed == 4);
-
-    // // Test ASCII space
-    // result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == ' ');
-    // REQUIRE(result.bytes_consumed == 1);
-
-    // // Test earth emoji 🌍 (U+1F30D)
-    // result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == 0x1F30D);
-    // REQUIRE(result.bytes_consumed == 4);
-
-    // // Test ASCII '!'
-    // result = iter.next();
-    // REQUIRE(result.valid);
-    // REQUIRE(result.codepoint == '!');
-    // REQUIRE(result.bytes_consumed == 1);
-
-    // // Should be at end
-    // // REQUIRE_FALSE(iter.has_next());
-
-    // // Test reset and peek with emoji
-    // iter.reset();
-    // iter.pos = 3; // Position at start of first emoji
-    // auto peek_result = iter.peek();
-    // REQUIRE(peek_result == 0x1F44B);
-    // REQUIRE(iter.pos == 3); // Position unchanged after peek
-
-    // // Verify next gives same result
-    // auto next_result = iter.next();
-    // REQUIRE(next_result.codepoint == peek_result);
-    // REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
+    REQUIRE(codepoints[4] == ' ');
+    REQUIRE(codepoints[3] == U'👋');
+    REQUIRE(codepoints[5] == U'🌍');
+    REQUIRE(codepoints[6] == '!');
 }
 
 TEST_CASE("MString8 manual cleanup", "[MString8]") {
