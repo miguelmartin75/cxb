@@ -370,33 +370,23 @@ CXB_C_EXPORT bool utf8_iter_next(Utf8Iter* iter, Utf8IterBatch* batch) {
                 u8 c2 = iter->s[iter->pos + 1];
                 u8 c3 = iter->s[iter->pos + 2];
                 u8 c4 = iter->s[iter->pos + 3];
-                batch->data[batch->len++] = (
-                    ((c1 & 0b00000111) << 18) + 
-                    ((c2 & 0b00111111) << 12) +
-                    ((c3 & 0b00111111) << 6) +
-                    ((c4 & 0b00111111) << 0)
-                );
+                batch->data[batch->len++] = (((c1 & 0b00000111) << 18) + ((c2 & 0b00111111) << 12) +
+                                             ((c3 & 0b00111111) << 6) + ((c4 & 0b00111111) << 0));
 
                 iter->pos += 4;
-            } 
+            }
             // +2 bytes
             else if((c1 & 0b11110000) == 0b11100000) {
                 u8 c2 = iter->s[iter->pos + 1];
                 u8 c3 = iter->s[iter->pos + 2];
-                batch->data[batch->len++] = (
-                    ((c1 & 0b00001111) << 12) +
-                    ((c2 & 0b00111111) << 6) +
-                    ((c3 & 0b00111111) << 0)
-                );
+                batch->data[batch->len++] =
+                    (((c1 & 0b00001111) << 12) + ((c2 & 0b00111111) << 6) + ((c3 & 0b00111111) << 0));
                 iter->pos += 3;
-            } 
+            }
             // +1 bytes
             else if((c1 & 0b11100000) == 0b11000000) {
                 u8 c2 = iter->s[iter->pos + 1];
-                batch->data[batch->len++] = (
-                    ((c1 & 0b00011111) << 6) +
-                    ((c2 & 0b00111111) << 0)
-                );
+                batch->data[batch->len++] = (((c1 & 0b00011111) << 6) + ((c2 & 0b00111111) << 0));
                 iter->pos += 2;
             } else {
                 // TODO: error ?
