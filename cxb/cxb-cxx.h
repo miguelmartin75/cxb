@@ -487,9 +487,12 @@ inline void array_pop_back(A& xs, Arena* arena)
 
 template <typename A, typename B>
 inline void array_insert(A& xs, Arena* arena, const B& to_insert, size_t i)
+#ifdef CXB_USE_CXX_CONCEPTS
     requires ArrayLikeNoT<A> && ArrayLikeNoT<B>
+#endif
 {
-    using T = decltype(xs.data[0]);
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
     ASSERT(i <= xs.len, "insert position out of bounds");
@@ -509,11 +512,16 @@ inline void array_extend(A& xs, Arena* arena, const B& to_append)
     requires ArrayLikeNoT<A> && ArrayLikeNoT<B>
 #endif
 {
-    using T = decltype(xs.data[0]);
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
 
-    arena_push_bytes(arena, to_append.len * sizeof(T), alignof(T));
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot extend unless array is at the end");
+
+    void* data = arena_push_bytes(arena, to_append.len * sizeof(T), alignof(T));
+    xs.data = UNLIKELY(xs.data == nullptr) ? (T*) data : xs.data;
 
     size_t old_len = xs.len;
     xs.len += to_append.len;
@@ -813,7 +821,7 @@ struct Array {
     T* data;
     size_t len;
 
-    Array() = default;
+    Array() : data{nullptr}, len{0} {}
     Array(T* data, size_t len) : data{data}, len{len} {}
     Array(Arena* a, std::initializer_list<T> xs) : data{nullptr}, len{0} {
         data = arena_push_fast<T>(a, xs.size());
@@ -1747,10 +1755,36 @@ void format_value(Arena* a, String8& dst, String8 args, T x);
 void format_value(Arena* a, String8& dst, String8 args, const char* s);
 void format_value(Arena* a, String8& dst, String8 args, String8 s);
 
-template <class T>
+static constexpr char BASE_16_CHARS[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+template <typename T> void format_value(Arena* a, String8& dst, String8 args, T* s) {
+    (void)args;
+    constexpr i64 N = (sizeof(u64) * 8);
+
+    u64 v = reinterpret_cast<u64>(s);
+
+    char buf[N] = {};
+    int i = 0;
+    while(v > 0) {
+        buf[i++] = BASE_16_CHARS[(v % 16)];
+        v /= 16;
+    }
+
+    string8_push_back(dst, a, '0');
+    string8_push_back(dst, a, 'x');
+    if(i == 0) {
+        string8_push_back(dst, a, '0');
+    }
+    for(i64 j = i - 1; j >= 0; --j) {
+        string8_push_back(dst, a, buf[j]);
+    }
+}
+
+template <typename T>
 std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& dst, String8 args, T value) {
     (void) args;
-    char buf[sizeof(T) * 8] = {};
+    constexpr i64 N = (sizeof(u64) * 8);
+
+    char buf[N] = {};
     bool neg = value < 0;
     u64 v = neg ? static_cast<u64>(-value) : static_cast<u64>(value);
     int i = 0;
@@ -1762,7 +1796,7 @@ std::enable_if_t<std::is_integral_v<T>, void> format_value(Arena* a, String8& ds
     if(neg) {
         string8_push_back(dst, a, '-');
     }
-    for(int j = i - 1; j >= 0; --j) {
+    for(i64 j = i - 1; j >= 0; --j) {
         string8_push_back(dst, a, buf[j]);
     }
 }
@@ -1805,6 +1839,41 @@ CXB_MAYBE_INLINE void _format_impl(Arena* a, String8& dst, const char* fmt) {
         }
         string8_push_back(dst, a, *fmt++);
     }
+}
+
+struct Utf8Iter;
+struct Utf8IterBatch;
+CXB_C_EXPORT bool utf8_iter_next(Utf8Iter* iter, Utf8IterBatch* batch);
+
+CXB_C_TYPE struct Utf8Iter {
+    CXB_C_COMPAT_BEGIN
+    String8 s;
+    u64 pos;
+    CXB_C_COMPAT_END
+
+    CXB_INLINE bool next(Utf8IterBatch& batch) { return utf8_iter_next(this, &batch); };
+};
+CXB_INLINE Utf8Iter make_utf8_iter(String8 s) { return Utf8Iter{s, 0}; }
+
+CXB_C_TYPE struct Utf8IterBatch {
+    CXB_C_COMPAT_BEGIN
+    u32 data[512];
+    u64 len;
+    CXB_C_COMPAT_END
+
+    Array<u32> as_array() { return Array<u32>{&data[0], len}; }
+};
+
+// TODO: with indices?
+CXB_MAYBE_INLINE Array<u32> decode_string8(Arena* a, String8 s) {
+    Utf8Iter iter = make_utf8_iter(s);
+    Utf8IterBatch batch = {};
+
+    Array<u32> codepoints;
+    while(iter.next(batch)) {
+        codepoints.extend(a, batch.as_array());
+    }
+    return codepoints;
 }
 
 #endif

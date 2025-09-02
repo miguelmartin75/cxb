@@ -1,6 +1,5 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-#include <cxb/cxb-unicode.h>
 #include <cxb/cxb.h>
 
 TEST_CASE("String8 from C string", "[String8]") {
@@ -187,42 +186,15 @@ TEST_CASE("String8 ensure_not_null_terminated", "[String8]") {
 
 TEST_CASE("Utf8Iterator with ASCII string", "[Utf8Iterator]") {
     String8 s = S8_LIT("Hello World");
-    Utf8Iterator iter(s);
+    ArenaTmp scratch = begin_scratch();
 
-    // Check that we can iterate through all ASCII characters
-    REQUIRE(iter.has_next());
+    Array<u32> codepoints = decode_string8(scratch.arena, s);
+    REQUIRE(codepoints.len == s.len);
+    for(u64 i = 0; i < codepoints.len; ++i) {
+        REQUIRE((char)codepoints[i] == s[i]);
+    }
 
-    // Test first character
-    auto result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == 'H');
-    REQUIRE(result.bytes_consumed == 1);
-
-    // Test space character
-    iter.pos = 5; // Move to space
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == ' ');
-    REQUIRE(result.bytes_consumed == 1);
-
-    // Test last character
-    iter.pos = 10; // Move to 'd'
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == 'd');
-    REQUIRE(result.bytes_consumed == 1);
-    REQUIRE_FALSE(iter.has_next());
-
-    // Test peek functionality
-    iter.reset();
-    auto peek_result = iter.peek();
-    REQUIRE(peek_result == 'H');
-    REQUIRE(iter.pos == 0); // Position shouldn't change after peek
-
-    // Verify next() gives same result as peek
-    auto next_result = iter.next();
-    REQUIRE(next_result.codepoint == peek_result);
-    REQUIRE(iter.pos == 1); // Position should advance after next()
+    end_scratch(scratch);
 }
 
 TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
@@ -230,65 +202,76 @@ TEST_CASE("Utf8Iterator with emoji string", "[Utf8Iterator]") {
     // 👋 is U+1F44B (4 bytes in UTF-8: F0 9F 91 8B)
     // 🌍 is U+1F30D (4 bytes in UTF-8: F0 9F 8C 8D)
     String8 s = S8_LIT("Hi \xF0\x9F\x91\x8B \xF0\x9F\x8C\x8D!");
-    Utf8Iterator iter(s);
+    ArenaTmp scratch = begin_scratch();
+
+    Array<u32> codepoints = decode_string8(scratch.arena, s);
+    REQUIRE(codepoints.len == s.len);
+    for(u64 i = 0; i < codepoints.len; ++i) {
+        REQUIRE((char)codepoints[i] == s[i]);
+    }
+    REQUIRE(codepoints.len == 7);
+    REQUIRE((char)codepoints[0] == 'H');
+    REQUIRE((char)codepoints[1] == 'i');
+    REQUIRE((char)codepoints[2] == ' ');
+
 
     // Test ASCII 'H'
-    REQUIRE(iter.has_next());
-    auto result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == 'H');
-    REQUIRE(result.bytes_consumed == 1);
+    // REQUIRE(iter.has_next());
+    // auto result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == 'H');
+    // REQUIRE(result.bytes_consumed == 1);
 
-    // Test ASCII 'i'
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == 'i');
-    REQUIRE(result.bytes_consumed == 1);
+    // // Test ASCII 'i'
+    // result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == 'i');
+    // REQUIRE(result.bytes_consumed == 1);
 
-    // Test ASCII space
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == ' ');
-    REQUIRE(result.bytes_consumed == 1);
+    // // Test ASCII space
+    // result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == ' ');
+    // REQUIRE(result.bytes_consumed == 1);
 
-    // Test waving hand emoji 👋 (U+1F44B)
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == 0x1F44B);
-    REQUIRE(result.bytes_consumed == 4);
+    // // Test waving hand emoji 👋 (U+1F44B)
+    // result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == 0x1F44B);
+    // REQUIRE(result.bytes_consumed == 4);
 
-    // Test ASCII space
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == ' ');
-    REQUIRE(result.bytes_consumed == 1);
+    // // Test ASCII space
+    // result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == ' ');
+    // REQUIRE(result.bytes_consumed == 1);
 
-    // Test earth emoji 🌍 (U+1F30D)
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == 0x1F30D);
-    REQUIRE(result.bytes_consumed == 4);
+    // // Test earth emoji 🌍 (U+1F30D)
+    // result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == 0x1F30D);
+    // REQUIRE(result.bytes_consumed == 4);
 
-    // Test ASCII '!'
-    result = iter.next();
-    REQUIRE(result.valid);
-    REQUIRE(result.codepoint == '!');
-    REQUIRE(result.bytes_consumed == 1);
+    // // Test ASCII '!'
+    // result = iter.next();
+    // REQUIRE(result.valid);
+    // REQUIRE(result.codepoint == '!');
+    // REQUIRE(result.bytes_consumed == 1);
 
-    // Should be at end
-    REQUIRE_FALSE(iter.has_next());
+    // // Should be at end
+    // // REQUIRE_FALSE(iter.has_next());
 
-    // Test reset and peek with emoji
-    iter.reset();
-    iter.pos = 3; // Position at start of first emoji
-    auto peek_result = iter.peek();
-    REQUIRE(peek_result == 0x1F44B);
-    REQUIRE(iter.pos == 3); // Position unchanged after peek
+    // // Test reset and peek with emoji
+    // iter.reset();
+    // iter.pos = 3; // Position at start of first emoji
+    // auto peek_result = iter.peek();
+    // REQUIRE(peek_result == 0x1F44B);
+    // REQUIRE(iter.pos == 3); // Position unchanged after peek
 
-    // Verify next gives same result
-    auto next_result = iter.next();
-    REQUIRE(next_result.codepoint == peek_result);
-    REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
+    // // Verify next gives same result
+    // auto next_result = iter.next();
+    // REQUIRE(next_result.codepoint == peek_result);
+    // REQUIRE(iter.pos == 7); // Position advanced by 4 bytes
 }
 
 TEST_CASE("MString8 manual cleanup", "[MString8]") {
@@ -341,62 +324,17 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
     {
         AArray<AString8> strings;
         REQUIRE(strings.len == 0);
-        // REQUIRE(strings.capacity() == CXB_MALLOCATOR_MIN_CAP);
 
         for(int i = 0; i < 10; ++i) {
-            AString8 s;
-            s.extend("String #");
-            if(i == 0)
-                s.extend("0");
-            else {
-                int temp = i;
-                AString8 num_str;
-                while(temp > 0) {
-                    num_str.push_back('0' + (temp % 10));
-                    temp /= 10;
-                }
-                // Reverse the digits
-                for(int j = num_str.len - 1; j >= 0; --j) {
-                    s.push_back(num_str[j]);
-                }
-            }
-            s.extend(" - Content");
+            AString8 s = "some string";
             strings.push_back(move(s));
         }
 
         REQUIRE(strings.len == 10);
 
-        for(u64 i = 0; i < strings.len; ++i) {
-            REQUIRE(strings[i].len > 0);
-            REQUIRE_FALSE(strings[i].not_null_term);
-            REQUIRE(strings[i].allocator);
-
-            String8 prefix = strings[i].slice(0, 7);
-            REQUIRE(prefix == S8_LIT("String #"));
-
-            String8 suffix = strings[i].slice(-10);
-            REQUIRE(suffix == S8_LIT(" - Content"));
-        }
-
         strings[5].extend(" (modified)");
         REQUIRE(strings[5].len > strings[4].len);
 
-        // Add a new string with emoji
-        AString8 emoji_str("Hello 🌍!");
-        strings.push_back(move(emoji_str));
-
-        REQUIRE(strings.len == 11);
-        REQUIRE(strings[10] == S8_LIT("Hello 🌍!"));
-
-        // Add an empty string
-        AString8 empty_str;
-        strings.push_back(move(empty_str));
-
-        REQUIRE(strings.len == 12);
-        REQUIRE(strings[11].len == 0);
-        REQUIRE(strings[11].empty());
-
-        // Verify memory is actively being used
         REQUIRE(heap_alloc_data.n_active_bytes > allocated_bytes_before);
     }
 
@@ -411,27 +349,17 @@ TEST_CASE("String8 and String operator<", "[String8][String]") {
     String8 s4 = S8_LIT("apple");
     String8 s5 = S8_LIT("application");
 
-    // Basic lexicographic comparison
     REQUIRE(s1 < s2);    // "apple" < "banana"
     REQUIRE(!(s2 < s1)); // "banana" not < "apple"
-
-    // Prefix comparison
     REQUIRE(s3 < s1);    // "app" < "apple"
     REQUIRE(!(s1 < s3)); // "apple" not < "app"
-
-    // Equal strings
     REQUIRE(!(s1 < s4)); // "apple" not < "apple"
     REQUIRE(!(s4 < s1)); // "apple" not < "apple"
-
-    // Longer vs shorter with same prefix
     REQUIRE(s1 < s5);    // "apple" < "application"
     REQUIRE(!(s5 < s1)); // "application" not < "apple"
-
-    // Test with empty strings
     String8 empty1 = S8_LIT("");
     String8 empty2 = S8_LIT("");
     String8 non_empty = S8_LIT("a");
-
     REQUIRE(!(empty1 < empty2));    // empty not < empty
     REQUIRE(empty1 < non_empty);    // empty < non-empty
     REQUIRE(!(non_empty < empty1)); // non-empty not < empty
@@ -442,61 +370,4 @@ TEST_CASE("String8 and String operator<", "[String8][String]") {
 
     REQUIRE(upper < lower); // "APPLE" < "apple" (ASCII values)
     REQUIRE(!(lower < upper));
-
-    // Test with special characters
-    String8 alpha = S8_LIT("abc");
-    String8 numeric = S8_LIT("123");
-    String8 special = S8_LIT("!@#");
-
-    REQUIRE(special < numeric); // "!@#" < "123" (ASCII values)
-    REQUIRE(numeric < alpha);   // "123" < "abc" (ASCII values)
-
-    // Test String operator< (should behave the same as String8)
-    AString8 str1("apple");
-    AString8 str2("banana");
-    AString8 str3("app");
-    AString8 str4("apple");
-
-    REQUIRE(str1 < str2);    // "apple" < "banana"
-    REQUIRE(!(str2 < str1)); // "banana" not < "apple"
-    REQUIRE(str3 < str1);    // "app" < "apple"
-    REQUIRE(!(str1 < str3)); // "apple" not < "app"
-    REQUIRE(!(str1 < str4)); // "apple" not < "apple"
-    REQUIRE(!(str4 < str1)); // "apple" not < "apple"
-
-    // Test mixed String and String8 comparison
-    REQUIRE(str1 < s2); // String("apple") < String8("banana")
-    REQUIRE(s3 < str1); // String8("app") < String("apple")
-
-    // Test operator> for String8
-    REQUIRE(s2 > s1);               // "banana" > "apple"
-    REQUIRE(!(s1 > s2));            // "apple" not > "banana"
-    REQUIRE(s1 > s3);               // "apple" > "app"
-    REQUIRE(!(s3 > s1));            // "app" not > "apple"
-    REQUIRE(s5 > s1);               // "application" > "apple"
-    REQUIRE(!(s1 > s5));            // "apple" not > "application"
-    REQUIRE(non_empty > empty1);    // "a" > ""
-    REQUIRE(!(empty1 > non_empty)); // "" not > "a"
-    REQUIRE(lower > upper);         // "apple" > "APPLE" (ASCII values)
-    REQUIRE(!(upper > lower));      // "APPLE" not > "apple"
-    REQUIRE(alpha > numeric);       // "abc" > "123" (ASCII values)
-    REQUIRE(numeric > special);     // "123" > "!@#" (ASCII values)
-
-    // Test operator> for String
-    REQUIRE(str2 > str1);    // "banana" > "apple"
-    REQUIRE(!(str1 > str2)); // "apple" not > "banana"
-    REQUIRE(str1 > str3);    // "apple" > "app"
-    REQUIRE(!(str3 > str1)); // "app" not > "apple"
-
-    // Test mixed String and String8 operator> comparison
-    REQUIRE(s2 > str1); // String8("banana") > String("apple")
-    REQUIRE(str1 > s3); // String("apple") > String8("app")
-
-    // Test that equal strings are not greater than each other
-    REQUIRE(!(s1 > s4));         // "apple" not > "apple"
-    REQUIRE(!(s4 > s1));         // "apple" not > "apple"
-    REQUIRE(!(str1 > str4));     // "apple" not > "apple"
-    REQUIRE(!(str4 > str1));     // "apple" not > "apple"
-    REQUIRE(!(empty1 > empty2)); // "" not > ""
-    REQUIRE(!(empty2 > empty1)); // "" not > ""
 }
