@@ -4,7 +4,7 @@ set -euo pipefail
 # Ensure submodules are present (Catch2)
 git submodule update --init --recursive
 
-# Simple CI script intended to be run inside the Nix devShell (see ci/flake.nix)
+# Simple CI script intended to be run inside the Nix devShell (see scripts/ci/flake.nix)
 
 # Allow CI to override compiler via the COMPILER env variable (e.g. gcc or clang)
 if [[ -n "${COMPILER:-}" ]]; then
