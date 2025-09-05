@@ -22,9 +22,9 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
     - [ ] concepts: only use ArrayLikeNoT
     - [ ] make free-form functions C-compat by default
 - [ ] std::initializer_list support
-    - [ ] Array
-    - [ ] MArray
-    - [ ] AArray
+    - [x] Array
+    - [x] MArray
+    - [x] AArray
 - [ ] hash map
     - [ ] HashMap<K, V> on arena with free form functions
         - hashmap_put(m, a, k, v)
