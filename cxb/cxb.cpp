@@ -71,6 +71,10 @@ CXB_C_EXPORT void* arena_push_bytes(Arena* arena, size_t size, size_t align) {
 }
 
 CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
+    if(UNLIKELY(pos == arena->pos)) {
+        return;
+    }
+
     ASSERT(pos >= 0 && pos < arena->pos && pos <= (u64) (arena->end - arena->start), "pop_to pos out of bounds");
     u64 old_pos = arena->pos;
     arena->pos = pos;
@@ -347,4 +351,48 @@ void format_value(Arena* a, String8& dst, String8 args, f32 value) {
 
 void format_value(Arena* a, String8& dst, String8 args, f64 value) {
     format_float_impl(a, dst, args, value);
+}
+
+CXB_C_EXPORT bool utf8_iter_next(Utf8Iter* iter, Utf8IterBatch* batch) {
+    // TODO: use simd
+    batch->len = 0;
+    while(iter->pos < iter->s.len) {
+        u8 c1 = iter->s[iter->pos];
+        // 1 byte
+        if(!(c1 & (1 << 7))) {
+            batch->data[batch->len++] = c1;
+            iter->pos += 1;
+        }
+        // 1, 2, or 3 bytes ahead
+        else {
+            // +3 bytes
+            if((c1 & 0b11111000) == 0b11110000) {
+                u8 c2 = iter->s[iter->pos + 1];
+                u8 c3 = iter->s[iter->pos + 2];
+                u8 c4 = iter->s[iter->pos + 3];
+                batch->data[batch->len++] = (((c1 & 0b00000111) << 18) + ((c2 & 0b00111111) << 12) +
+                                             ((c3 & 0b00111111) << 6) + ((c4 & 0b00111111) << 0));
+
+                iter->pos += 4;
+            }
+            // +2 bytes
+            else if((c1 & 0b11110000) == 0b11100000) {
+                u8 c2 = iter->s[iter->pos + 1];
+                u8 c3 = iter->s[iter->pos + 2];
+                batch->data[batch->len++] =
+                    (((c1 & 0b00001111) << 12) + ((c2 & 0b00111111) << 6) + ((c3 & 0b00111111) << 0));
+                iter->pos += 3;
+            }
+            // +1 bytes
+            else if((c1 & 0b11100000) == 0b11000000) {
+                u8 c2 = iter->s[iter->pos + 1];
+                batch->data[batch->len++] = (((c1 & 0b00011111) << 6) + ((c2 & 0b00111111) << 0));
+                iter->pos += 2;
+            } else {
+                // TODO: error ?
+                iter->pos += 1;
+            }
+        }
+    }
+    return batch->len > 0;
 }

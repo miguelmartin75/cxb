@@ -3,4 +3,4 @@
 	url = https://github.com/catchorg/Catch2.git
 [submodule "deps/fmt"]
 	path = deps/fmt
-	url = git@github.com:fmtlib/fmt.git
+	url = https://github.com/fmtlib/fmt

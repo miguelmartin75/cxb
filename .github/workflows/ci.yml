@@ -79,10 +79,10 @@ jobs:
       - name: Check formatting
         if: matrix.os == 'ubuntu-22.04' && matrix.compiler == 'clang' && matrix.build_type == 'Debug' && matrix.nix_system == 'x86_64-linux'
         run: |
-          nix develop ./ci --system ${{ matrix.nix_system }} --command bash -c "./scripts/format.sh --check"
+          nix develop ./scripts/ci --system ${{ matrix.nix_system }} --command bash -c "./scripts/format.sh --check"
       - name: Build & Test
         env:
           COMPILER: ${{ matrix.compiler }}
           BUILD_TYPE: ${{ matrix.build_type }}
         run: |
-          nix develop ./ci --system ${{ matrix.nix_system }} --command bash ./scripts/ci/ci.sh
+          nix develop ./scripts/ci --system ${{ matrix.nix_system }} --command bash ./scripts/ci/ci.sh
