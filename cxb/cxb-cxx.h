@@ -933,7 +933,7 @@ struct Array {
 
     Array() : data{nullptr}, len{0} {}
     Array(T* data, size_t len) : data{data}, len{len} {}
-    Array(std::initializer_list<T> xs) : data{(T*) xs.begin()}, len{xs.size()} {}
+    Array(std::initializer_list<T> xs) : data{const_cast<T*>(xs.begin())}, len{xs.size()} {}
     Array(Arena* a, std::initializer_list<T> xs) : data{nullptr}, len{0} {
         data = arena_push_fast<T>(a, xs.size());
         len = xs.size();
@@ -1661,7 +1661,8 @@ struct MArray {
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
         if(new_count > old_count) {
-            data = allocator->realloc(data, old_count, std::is_trivially_default_constructible_v<T>, new_count);
+            // data = allocator->realloc(data, old_count, std::is_trivially_default_constructible_v<T>, new_count);
+            data = allocator->realloc(data, old_count, false, new_count);
             capacity = new_count;
         }
     }
@@ -1673,12 +1674,7 @@ struct MArray {
             reserve(new_len);
         }
 
-        if constexpr(!std::is_trivially_default_constructible_v<T>) {
-            for(size_t i = len; i < new_len; ++i) {
-                new(data + i) T{};
-            }
-        }
-
+        ::construct(data + len, new_len - len);
         len = new_len;
     }
 
@@ -1689,10 +1685,7 @@ struct MArray {
             reserve(new_len);
         }
 
-        // TODO: optimize
-        for(size_t i = len; i < new_len; ++i) {
-            new(data + i) T{value};
-        }
+        ::construct(data + len, new_len - len, value);
         len = new_len;
     }
 
@@ -1848,13 +1841,16 @@ struct HashMap {
     }
 
     void extend(Arena* a, Array<KvPair<K, V>> xs) {
-        // TODO
+        // TODO optimize
+        for(auto& x : xs) {
+            put(a, x);
+        }
     }
 
     void put(Arena* a, const KvPair<K, V>& kv) {
         if(!table.data) {
             size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
-            table.resize(a, capacity);
+            table.resize_fast(a, capacity);
         }
 
         size_t i = _key_hash_index(kv.key);
