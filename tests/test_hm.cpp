@@ -1,5 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
+
+size_t hash(const int& x);
 #include <cxb/cxb.h>
 
 size_t hash(const int& x) {

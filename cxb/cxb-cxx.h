@@ -259,6 +259,33 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 
 /* SECTION: primitive functions */
 template <typename T>
+CXB_MAYBE_INLINE void construct(T* xs, size_t len) {
+    ASSERT(len > 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{};
+        }
+    } else {
+        memset(xs, 0, sizeof(T) * len);
+    }
+}
+
+template <typename T, typename... Args>
+CXB_MAYBE_INLINE void construct(T* xs, size_t len, Args&&... args) {
+    ASSERT(len > 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{args...};
+        }
+    } else {
+        // TODO: optimize?
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{args...};
+        }
+    }
+}
+
+template <typename T>
 CXB_MAYBE_INLINE void destroy(T* xs, size_t len) {
     if constexpr(!std::is_trivially_destructible_v<T>) {
         for(size_t i = 0; i < len; ++i) {
@@ -288,6 +315,11 @@ static inline void swap(T& t1, T& t2) noexcept {
     T temp(move(t1));
     t1 = move(t2);
     t2 = move(temp);
+}
+
+static CXB_INLINE u64 pow2mod(u64 x, u64 b) {
+    DEBUG_ASSERT(b != 0 && (b & (b - 1)) == 0, "{} is not a power of 2", b);
+    return x & (b - 1);
 }
 
 /* SECTION: arena */
@@ -385,15 +417,8 @@ inline T* arena_push_fast(Arena* arena, size_t n = 1) {
 
 template <typename T>
 inline T* arena_push(Arena* arena, size_t n = 1) {
-    const size_t size = sizeof(T) * n;
-    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
-    if constexpr(!std::is_trivially_default_constructible_v<T>) {
-        for(size_t i = 0; i < n; ++i) {
-            new(data + i) T{};
-        }
-    } else {
-        memset(data, 0, size);
-    }
+    T* data = (T*) arena_push_bytes(arena, sizeof(T) * n, alignof(T));
+    ::construct(data, n);
     return data;
 }
 
@@ -432,6 +457,83 @@ inline Array<T> arena_push_array(Arena* arena, Array<T> to_copy) {
     T* data = arena_push<T>(arena, to_copy.len);
     ::copy(data, to_copy.data, to_copy.len);
     return Array<T>{.data = data, .len = to_copy.len};
+}
+
+template <typename A>
+inline void array_resize_fast(A& xs, Arena* arena, size_t new_size)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A>
+#endif
+{
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+
+    if(UNLIKELY(new_size == xs.len)) return;
+
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
+    if(new_size > xs.len) {
+        T* data = arena_push_fast<T>(arena, new_size - xs.len);
+        xs.data = xs.data == nullptr ? data : xs.data;
+        xs.len = new_size;
+    } else {
+        arena_pop_to(arena, arena->pos + (sizeof(T) * (xs.len - new_size)));
+        xs.len = new_size;
+    }
+}
+
+template <typename A>
+inline void array_resize(A& xs, Arena* arena, size_t new_size)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A>
+#endif
+{
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+
+    if(UNLIKELY(new_size == xs.len)) return;
+
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
+    if(new_size > xs.len) {
+        T* data = arena_push<T>(arena, new_size - xs.len);
+        xs.data = xs.data == nullptr ? data : xs.data;
+        xs.len = new_size;
+    } else {
+        arena_pop_to(arena, arena->pos + (sizeof(T) * (xs.len - new_size)));
+        xs.len = new_size;
+    }
+}
+
+template <typename A, typename T>
+inline void array_resize(A& xs, Arena* arena, size_t new_size, T default_value)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+#endif
+
+    if(UNLIKELY(new_size == xs.len)) return;
+
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
+    if(new_size > xs.len) {
+        T* data = arena_push<T>(arena, new_size - xs.len, default_value);
+        xs.data = xs.data == nullptr ? data : xs.data;
+        xs.len = new_size;
+    } else {
+        arena_pop_to(arena, arena->pos + (sizeof(T) * (xs.len - new_size)));
+        xs.len = new_size;
+    }
 }
 
 template <typename A, typename T>
@@ -910,6 +1012,9 @@ struct Array {
     }
 
     // ** SECTION: arena UFCS
+    CXB_INLINE void resize_fast(Arena* arena, size_t n) {
+        array_resize_fast(*this, arena, n);
+    }
     CXB_INLINE void resize(Arena* arena, size_t n) {
         array_resize(*this, arena, n);
     }
@@ -1699,7 +1804,7 @@ enum HashMapState {
     HM_STATE_TOMBSTONE,
 };
 
-struct DefaultHashFn {
+struct DefaultHasher {
     template <class T>
     size_t operator()(const T& x) const {
         return hash(x);
@@ -1712,8 +1817,16 @@ struct KvPair {
     V value;
 };
 
-template <typename K, typename V, typename HashFn = DefaultHashFn>
+template <typename K, typename V, typename Hasher = DefaultHasher>
 struct HashMap {
+    /* NOTE: key and value are not default constructed, due to custom allocation methods (arena or Allocator*) */
+    struct Entry {
+        K key;
+        V value;
+        HashMapState state = HM_STATE_EMPTY;
+    };
+
+    /*
     struct HashMapEntry {
         alignas(K) char key_data[sizeof(K)];
         alignas(V) char value_data[sizeof(V)];
@@ -1722,16 +1835,16 @@ struct HashMap {
         inline K& key() const { return *reinterpret_cast<K*>(key_data); }
         inline V& value() const { return *reinterpret_cast<V*>(value_data); }
     };
+    */
 
-    Array<HashMapEntry> table;
+    Array<Entry> table;
     size_t len;
-    HashFn hasher;
+    Hasher hasher;
 
     template <class T>
-    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const { 
-        size_t h = hasher(x); 
-        size_t idx = h & (table.len - 1);
-        return idx;
+    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
+        size_t h = hasher(x);
+        return pow2mod(h, table.len);
     }
 
     void extend(Arena* a, Array<KvPair<K, V>> xs) {
@@ -1749,11 +1862,11 @@ struct HashMap {
             if(table[i].state == HM_STATE_EMPTY) {
                 break;
             }
-            i = (i + 1) & (table.len - 1);  // TODO: quad probe?
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
         }
-        table[i].key() = kv.key;
-        table[i].value() = kv.value;
-        table[i].state == HM_STATE_OCCUPIED;
+        table[i].key = kv.key;
+        table[i].value = kv.value;
+        table[i].state = HM_STATE_OCCUPIED;
     }
 
     void erase(const K& key) const {
@@ -1761,24 +1874,27 @@ struct HashMap {
         while(true) {
             if(table[i].state == HM_STATE_OCCUPIED && table[i].key() == key) {
                 table[i].state = HM_STATE_TOMBSTONE;
-                ::destroy(table[i].key(), 1);
-                ::destroy(table[i].value(), 1);
+                ::destroy(table[i].key, 1);
+                ::destroy(table[i].value, 1);
             }
-            i = (i + 1) & (table.len - 1);  // TODO: quad probe?
+            i = (i + 1) & (table.len - 1); // TODO: quad probe?
         }
     }
 
-    HashMapEntry* occupied_entry_for(const K& key) {
+    const Entry* occupied_entry_for(const K& key) const {
         size_t i = _key_hash_index(key);
         while(true) {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key() == key) {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
                 return &table[i];
             } else if(table[i].state == HM_STATE_EMPTY) {
                 return nullptr;
             }
-            i = (i + 1) & (table.len - 1);  // TODO: quad probe?
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
         }
         return nullptr;
+    }
+    Entry* occupied_entry_for(const K& key) {
+        return const_cast<Entry*>(key);
     }
 
     bool contains(const K& key) const {
@@ -1786,7 +1902,7 @@ struct HashMap {
     }
 
     V& operator[](const K& key) {
-        auto entry = occupied_entry_for(key);
+        Entry* entry = occupied_entry_for(key);
         DEBUG_ASSERT(entry != nullptr, "entry not present");
         return entry->value();
     }
