@@ -90,8 +90,7 @@ TEST_CASE("array insert", "[Arena]") {
     xs.push_back(arena, 10);
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
 
-    int ys[] = {20, 30, 50, 80};
-    xs.extend(arena, Array<int>(ys, 4));
+    xs.extend(arena, {20, 30, 50, 80});
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
 
     REQUIRE(xs.len == 5);
