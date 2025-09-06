@@ -1661,7 +1661,6 @@ struct MArray {
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
         if(new_count > old_count) {
-            // data = allocator->realloc(data, old_count, std::is_trivially_default_constructible_v<T>, new_count);
             data = allocator->realloc(data, old_count, false, new_count);
             capacity = new_count;
         }
