@@ -703,6 +703,46 @@ inline void array_pop_all(A& xs, Arena* arena)
     xs.len = 0;
 }
 
+/* SECTION: algorithms */
+
+template <typename T, typename Compare>
+static void merge_sort_impl(T* data, T* tmp, u64 left, u64 right, const Compare& cmp) {
+    if(right - left <= 1) return;
+
+    u64 mid = left + ((right - left) >> 1);
+    merge_sort_impl(data, tmp, left, mid, cmp);
+    merge_sort_impl(data, tmp, mid, right, cmp);
+
+    u64 i = left;
+    u64 j = mid;
+    u64 k = 0;
+    while(i < mid && j < right) {
+        if(cmp(data[j], data[i])) {
+            tmp[k++] = ::move(data[j++]);
+        } else {
+            tmp[k++] = ::move(data[i++]);
+        }
+    }
+    while(i < mid) tmp[k++] = ::move(data[i++]);
+    while(j < right) tmp[k++] = ::move(data[j++]);
+    for(u64 t = 0; t < k; ++t) {
+        data[left + t] = ::move(tmp[t]);
+    }
+}
+
+template <typename T, typename Compare>
+inline void merge_sort(T* data, u64 len, const Compare& cmp) {
+    if(len <= 1) return;
+    AArenaTmp scratch = begin_scratch();
+    T* tmp = arena_push_fast<T>(scratch.arena, len);
+    merge_sort_impl(data, tmp, 0, len, cmp);
+}
+
+template <typename T>
+inline void merge_sort(T* data, u64 len) {
+    merge_sort(data, len, [](const T& a, const T& b) { return a < b; });
+}
+
 /* SECTION: general allocation */
 CXB_C_TYPE struct Allocator {
     CXB_C_COMPAT_BEGIN
