@@ -418,6 +418,10 @@ void string8_pop_all(String8& str, Arena* arena);
 void string8_insert(String8& str, Arena* arena, char ch, size_t i);
 void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i);
 void string8_extend(String8& str, Arena* arena, String8 to_append);
+CXB_PURE bool string8_contains(const String8& s, String8 needle);
+CXB_PURE bool string8_contains_chars(const String8& s, String8 chars);
+CXB_PURE size_t string8_find(const String8& s, String8 needle);
+CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading = true, bool trailing = true);
 
 template <typename T>
 Array<T> arena_push_array(Arena* arena, size_t n);
@@ -880,6 +884,19 @@ CXB_C_TYPE struct String8 {
         return o < *this;
     }
 
+    CXB_INLINE bool contains(String8 needle) const {
+        return string8_contains(*this, needle);
+    }
+    CXB_INLINE bool contains_chars(String8 chars) const {
+        return string8_contains_chars(*this, chars);
+    }
+    CXB_INLINE size_t find(String8 needle) const {
+        return string8_find(*this, needle);
+    }
+    CXB_INLINE String8 trim(String8 chars, bool leading = true, bool trailing = true) const {
+        return string8_trim(*this, chars, leading, trailing);
+    }
+
     // ** SECTION: arena UFCS
     CXB_INLINE void resize(Arena* arena, size_t n, char fill_char = '\0') {
         string8_resize(*this, arena, n, fill_char);
@@ -1242,6 +1259,19 @@ CXB_C_TYPE struct MString8 {
 
     CXB_MAYBE_INLINE bool operator>(const String8& o) const {
         return o < *this;
+    }
+
+    CXB_INLINE bool contains(String8 needle) const {
+        return reinterpret_cast<const String8*>(this)->contains(needle);
+    }
+    CXB_INLINE bool contains_chars(String8 chars) const {
+        return reinterpret_cast<const String8*>(this)->contains_chars(chars);
+    }
+    CXB_INLINE size_t find(String8 needle) const {
+        return reinterpret_cast<const String8*>(this)->find(needle);
+    }
+    CXB_INLINE String8 trim(String8 chars, bool leading = true, bool trailing = true) const {
+        return reinterpret_cast<const String8*>(this)->trim(chars, leading, trailing);
     }
 
     // ** SECTION: allocator-related methods - delegate to UString
@@ -1849,6 +1879,56 @@ CXB_C_COMPAT_BEGIN
 CXB_C_COMPAT_END
 
 #define S8_STR(s) (String8{.data = (char*) s.c_str(), .len = (size_t) s.size(), .not_null_term = false})
+
+CXB_PURE size_t string8_find(const String8& s, String8 needle) {
+    if(needle.len == 0 || needle.len > s.len) {
+        return SIZE_MAX;
+    }
+    for(size_t i = 0; i <= s.len - needle.len; ++i) {
+        if(memcmp(s.data + i, needle.data, needle.len) == 0) {
+            return i;
+        }
+    }
+    return SIZE_MAX;
+}
+
+CXB_PURE bool string8_contains(const String8& s, String8 needle) {
+    return string8_find(s, needle) != SIZE_MAX;
+}
+
+CXB_PURE static bool _string8_contains_char(String8 chars, char c) {
+    for(size_t i = 0; i < chars.len; ++i) {
+        if(chars.data[i] == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CXB_PURE bool string8_contains_chars(const String8& s, String8 chars) {
+    for(size_t i = 0; i < s.len; ++i) {
+        if(_string8_contains_char(chars, s.data[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
+CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading, bool trailing) {
+    size_t start = 0;
+    size_t end = s.len;
+    if(leading) {
+        while(start < end && _string8_contains_char(chars, s.data[start])) {
+            start++;
+        }
+    }
+    if(trailing) {
+        while(end > start && _string8_contains_char(chars, s.data[end - 1])) {
+            end--;
+        }
+    }
+    return s.slice((i64) start, start < end ? (i64) end - 1 : (i64) start - 1);
+}
 
 #define MSTRING_NT(a) (MString8{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = (a)})
 
