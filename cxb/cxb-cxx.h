@@ -79,6 +79,7 @@ CXB_C_COMPAT_BEGIN
 #include <string.h>
 CXB_C_COMPAT_END
 
+#include <charconv>
 #include <initializer_list>
 #include <limits>
 #include <new>
@@ -965,8 +966,7 @@ struct ParseResult {
 };
 
 template <typename T>
-CXB_MAYBE_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>> string8_parse(
-    String8 str, u64 base = 10) {
+CXB_MAYBE_INLINE std::enable_if_t<std::is_integral_v<T>, ParseResult<T>> string8_parse(String8 str, u64 base = 10) {
     ASSERT(base <= 10, "TODO: support bases > 10");
     ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
     u64 num_negs = 0;
@@ -991,6 +991,24 @@ CXB_MAYBE_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_poin
         if(num_negs > 1) result.exists = false;
     }
     result.exists = result.n_consumed > 0;
+    return result;
+}
+
+template <typename T>
+CXB_MAYBE_INLINE std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> string8_parse(String8 str,
+                                                                                             u64 base = 10) {
+    ASSERT(base == 10, "only base 10 supported for floats");
+    ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
+    const char* begin = str.data;
+    const char* end = str.data + str.len;
+    auto fc = std::from_chars(begin, end, result.value);
+    if(fc.ec == std::errc()) {
+        result.n_consumed = (size_t) (fc.ptr - begin);
+        result.exists = result.n_consumed > 0;
+    } else {
+        result.exists = false;
+        result.n_consumed = 0;
+    }
     return result;
 }
 
