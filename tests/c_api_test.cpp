@@ -7,6 +7,7 @@ CXB_C_EXPORT void extend_elements(IntArray* in_array) {
     for(int i = 0; i < 10; ++i) {
         arr.push_back(i);
     }
+    // TODO: prefer free functions instead of this
     arr.release(*in_array);
 }
 

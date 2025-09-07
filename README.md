@@ -20,7 +20,7 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
     - [x] A/MString -> A/MString8
     - [x] remove or update utf8 decode
     - [ ] concepts: only use ArrayLikeNoT
-    - [ ] make free-form functions C-compat by default
+    - [ ] TODO: decide on whether to make free-form functions C-compat?
 - [ ] std::initializer_list support
     - [x] Array
     - [x] MArray
@@ -34,3 +34,7 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
 - [ ] arena allocator
 - [ ] test cases
     - [ ] arena allocator
+    - [ ] arena: 
+        - [ ] array_*
+        - [ ] string8_*
+    - [ ] remove or refactor bench_string

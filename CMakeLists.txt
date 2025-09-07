@@ -71,6 +71,7 @@ if(CXB_BUILD_TESTS)
     add_test_exe(test_array tests/test_array.cpp 1)
     add_test_exe(test_string tests/test_string.cpp 1)
     add_test_exe(test_arena tests/test_arena.cpp 1)
+    add_test_exe(test_hm tests/test_hm.cpp 1)
 
     add_test_exe(bench_string tests/benchmarks/bench_string.cpp 1)
     add_test_exe(bench_string_header tests/benchmarks/bench_string_header.cpp 1)
@@ -79,6 +80,7 @@ if(CXB_BUILD_TESTS)
     add_test(NAME test_array COMMAND test_array)
     add_test(NAME test_string COMMAND test_string)
     add_test(NAME test_arena COMMAND test_arena)
+    add_test(NAME test_hm COMMAND test_hm)
 
     # if(CXB_BUILD_C_API_TESTS)
     if(0)  # TODO

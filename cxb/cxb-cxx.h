@@ -60,6 +60,8 @@ free the memory
 #define CXB_SEQ_GROW_FN(x) (x) + (x) / 2 /* 3/2, reducing chance to overflow */
 #define CXB_STR_MIN_CAP 32
 #define CXB_STR_GROW_FN(x) (x) + (x) / 2 /* 3/2, reducing chance to overflow  */
+#define CXB_HM_MIN_CAP 64
+#define CXB_HM_LOAD_CAP_THRESHOLD 0.75
 
 // NOTE: to generate cxb-c.h (C header)
 #define CXB_C_COMPAT_BEGIN
@@ -258,6 +260,56 @@ static inline T&& forward(typename std::remove_reference<T>::type&& v) noexcept 
 
 /* SECTION: primitive functions */
 template <typename T>
+CXB_MAYBE_INLINE void construct(T* xs, size_t len) {
+    ASSERT(len > 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{};
+        }
+    } else {
+        memset(xs, 0, sizeof(T) * len);
+    }
+}
+
+template <typename T>
+CXB_MAYBE_INLINE void construct(T* xs, size_t len, T default_value) {
+    ASSERT(len > 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{default_value};
+        }
+    } else {
+        for(size_t i = 0; i < len; ++i) {
+            memcpy((void*) (xs + i), (void*) (&default_value), sizeof(T));
+        }
+    }
+}
+
+template <typename T, typename... Args>
+CXB_MAYBE_INLINE void construct(T* xs, size_t len, Args&&... args) {
+    ASSERT(len > 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{args...};
+        }
+    } else {
+        // TODO: optimize?
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{args...};
+        }
+    }
+}
+
+template <typename T>
+CXB_MAYBE_INLINE void destroy(T* xs, size_t len) {
+    if constexpr(!std::is_trivially_destructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            xs[i].~T();
+        }
+    }
+}
+
+template <typename T>
 CXB_MAYBE_INLINE void copy(T* dst, const T* src, size_t n) {
     if constexpr(std::is_trivially_assignable_v<T, T>) {
         memcpy(dst, src, n * sizeof(T));
@@ -278,6 +330,11 @@ static inline void swap(T& t1, T& t2) noexcept {
     T temp(move(t1));
     t1 = move(t2);
     t2 = move(temp);
+}
+
+static CXB_INLINE u64 pow2mod(u64 x, u64 b) {
+    DEBUG_ASSERT(b != 0 && (b & (b - 1)) == 0, "{} is not a power of 2", b);
+    return x & (b - 1);
 }
 
 /* SECTION: arena */
@@ -368,38 +425,21 @@ struct AArenaTmp : ArenaTmp {
 // *SECTION: Arena free functions
 template <typename T>
 inline T* arena_push_fast(Arena* arena, size_t n = 1) {
-    const size_t size = sizeof(T) * n;
-    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
+    T* data = (T*) arena_push_bytes(arena, sizeof(T) * n, alignof(T));
     return data;
 }
 
 template <typename T>
 inline T* arena_push(Arena* arena, size_t n = 1) {
-    const size_t size = sizeof(T) * n;
-    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
-    if constexpr(!std::is_trivially_default_constructible_v<T>) {
-        for(size_t i = 0; i < n; ++i) {
-            new(data + i) T{};
-        }
-    } else {
-        memset(data, 0, size);
-    }
+    T* data = (T*) arena_push_bytes(arena, sizeof(T) * n, alignof(T));
+    ::construct(data, n);
     return data;
 }
 
 template <typename T>
-inline T* arena_push(Arena* arena, T value, size_t n = 1) {
-    const size_t size = sizeof(T);
-    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
-    if constexpr(!std::is_trivially_default_constructible_v<T>) {
-        for(size_t i = 0; i < n; ++i) {
-            new(data + i) T{value};
-        }
-    } else {
-        for(size_t i = 0; i < n; ++i) {
-            memcpy((void*) (data + i), (void*) (&value), sizeof(T));
-        }
-    }
+inline T* arena_push(Arena* arena, size_t n, T default_value) {
+    T* data = (T*) arena_push_bytes(arena, sizeof(T) * n, alignof(T));
+    ::construct(data, n, default_value);
     return data;
 }
 
@@ -422,6 +462,83 @@ inline Array<T> arena_push_array(Arena* arena, Array<T> to_copy) {
     T* data = arena_push<T>(arena, to_copy.len);
     ::copy(data, to_copy.data, to_copy.len);
     return Array<T>{.data = data, .len = to_copy.len};
+}
+
+template <typename A>
+inline void array_resize_fast(A& xs, Arena* arena, size_t new_size)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A>
+#endif
+{
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+
+    if(UNLIKELY(new_size == xs.len)) return;
+
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
+    if(new_size > xs.len) {
+        T* data = arena_push_fast<T>(arena, new_size - xs.len);
+        xs.data = xs.data == nullptr ? data : xs.data;
+        xs.len = new_size;
+    } else {
+        arena_pop_to(arena, arena->pos + (sizeof(T) * (xs.len - new_size)));
+        xs.len = new_size;
+    }
+}
+
+template <typename A>
+inline void array_resize(A& xs, Arena* arena, size_t new_size)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLikeNoT<A>
+#endif
+{
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+
+    if(UNLIKELY(new_size == xs.len)) return;
+
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
+    if(new_size > xs.len) {
+        T* data = arena_push<T>(arena, new_size - xs.len);
+        xs.data = xs.data == nullptr ? data : xs.data;
+        xs.len = new_size;
+    } else {
+        arena_pop_to(arena, arena->pos - (sizeof(T) * (xs.len - new_size)));
+        xs.len = new_size;
+    }
+}
+
+template <typename A, typename T>
+inline void array_resize(A& xs, Arena* arena, size_t new_size, T default_value)
+#ifdef CXB_USE_CXX_CONCEPTS
+    requires ArrayLike<A, T>
+#endif
+{
+#ifndef CXB_USE_CXX_CONCEPTS
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
+#endif
+
+    if(UNLIKELY(new_size == xs.len)) return;
+
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
+    if(new_size > xs.len) {
+        T* data = arena_push<T>(arena, new_size - xs.len, default_value);
+        xs.data = xs.data == nullptr ? data : xs.data;
+        xs.len = new_size;
+    } else {
+        arena_pop_to(arena, arena->pos + (sizeof(T) * (xs.len - new_size)));
+        xs.len = new_size;
+    }
 }
 
 template <typename A, typename T>
@@ -462,26 +579,17 @@ inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
     xs.len += 1;
 }
 
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T>
-#else
 template <typename A>
-#endif
 inline void array_pop_back(A& xs, Arena* arena)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
+    requires ArrayLikeNoT<A>
 #endif
 {
-#ifndef CXB_USE_CXX_CONCEPTS
-    using T = decltype(xs.data[0]);
-#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
-    arena_pop_to(arena, arena->pos - sizeof(xs.data));
+    arena_pop_to(arena, arena->pos - sizeof(xs.data[0]));
 
-    if constexpr(!std::is_trivially_destructible_v<T>) {
-        xs.data[xs.len].~T();
-    }
+    ::destroy(&xs.data[xs.len], 1);
     xs.len -= 1;
 }
 
@@ -823,14 +931,17 @@ struct Array {
 
     Array() : data{nullptr}, len{0} {}
     Array(T* data, size_t len) : data{data}, len{len} {}
-    Array(std::initializer_list<T> xs) : data{(T*) xs.begin()}, len{xs.size()} {}
+    Array(std::initializer_list<T> xs) : data{const_cast<T*>(xs.begin())}, len{xs.size()} {}
     Array(Arena* a, std::initializer_list<T> xs) : data{nullptr}, len{0} {
         data = arena_push_fast<T>(a, xs.size());
         len = xs.size();
         ::copy(data, xs.begin(), xs.size());
     }
-    Array(const Array<T>&) = default;
-    Array(Array<T>&&) = default;
+    Array(const Array<T>& o) : data{o.data}, len{o.len} {}
+    Array(Array<T>&& o) : data{o.data}, len{o.len} {
+        o.data = nullptr;
+        o.len = 0;
+    }
     ~Array() = default;
 
     CXB_MAYBE_INLINE size_t size() const {
@@ -902,6 +1013,9 @@ struct Array {
     }
 
     // ** SECTION: arena UFCS
+    CXB_INLINE void resize_fast(Arena* arena, size_t n) {
+        array_resize_fast(*this, arena, n);
+    }
     CXB_INLINE void resize(Arena* arena, size_t n) {
         array_resize(*this, arena, n);
     }
@@ -918,7 +1032,7 @@ struct Array {
         array_pop_all(*this, arena);
     }
     CXB_INLINE void insert(Arena* arena, T value, size_t i) {
-        array_insert(*this, arena, value, i);
+        array_insert(*this, arena, Array<T>{{value}}, i);
     }
     CXB_INLINE void insert(Arena* arena, Array<T> to_insert, size_t i) {
         array_insert(*this, arena, to_insert, i);
@@ -1536,11 +1650,7 @@ struct MArray {
 
     CXB_MAYBE_INLINE void destroy() {
         if(data && allocator) {
-            if constexpr(!std::is_trivially_destructible_v<T>) {
-                for(size_t i = 0; i < len; ++i) {
-                    data[i].~T();
-                }
-            }
+            ::destroy(data, len);
             allocator->free(data, capacity);
             data = nullptr;
         }
@@ -1552,7 +1662,7 @@ struct MArray {
         size_t old_count = capacity;
         size_t new_count = cap < CXB_STR_MIN_CAP ? CXB_STR_MIN_CAP : cap;
         if(new_count > old_count) {
-            data = allocator->realloc(data, old_count, std::is_trivially_default_constructible_v<T>, new_count);
+            data = allocator->realloc(data, old_count, false, new_count);
             capacity = new_count;
         }
     }
@@ -1564,12 +1674,7 @@ struct MArray {
             reserve(new_len);
         }
 
-        if constexpr(!std::is_trivially_default_constructible_v<T>) {
-            for(size_t i = len; i < new_len; ++i) {
-                new(data + i) T{};
-            }
-        }
-
+        ::construct(data + len, new_len - len);
         len = new_len;
     }
 
@@ -1580,10 +1685,7 @@ struct MArray {
             reserve(new_len);
         }
 
-        // TODO: optimize
-        for(size_t i = len; i < new_len; ++i) {
-            new(data + i) T{value};
-        }
+        ::construct(data + len, new_len - len, value);
         len = new_len;
     }
 
@@ -1688,10 +1790,6 @@ struct AArray : MArray<T> {
         return self;
     }
 };
-
-inline String8 operator""_s8(const char* s, size_t len) {
-    return String8{.data = (char*) s, .len = len, .not_null_term = false};
-}
 
 CXB_C_COMPAT_BEGIN
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
@@ -1883,6 +1981,219 @@ CXB_MAYBE_INLINE Array<u32> decode_string8(Arena* a, String8 s) {
         codepoints.extend(a, batch.as_array());
     }
     return codepoints;
+}
+
+enum HashMapState {
+    HM_STATE_EMPTY,
+    HM_STATE_OCCUPIED,
+    HM_STATE_TOMBSTONE,
+};
+
+struct DefaultHasher {
+    template <class T>
+    size_t operator()(const T& x) const {
+        return hash(x);
+    }
+};
+
+template <typename K, typename V>
+struct KvPair {
+    K key;
+    V value;
+};
+
+template <typename K, typename V, typename Hasher = DefaultHasher>
+struct HashMap {
+    /* NOTE: key and value are not default constructed, due to custom allocation methods (arena or Allocator*) */
+    struct Entry {
+        K key;
+        V value;
+        HashMapState state = HM_STATE_EMPTY;
+    };
+
+    struct Iterator {
+        HashMap& hm;
+        size_t idx;
+
+        Entry& operator*() {
+            return hm.table[idx];
+        }
+        Iterator& ensure_occupied() {
+            while(LIKELY(hm.table.len != idx) && hm.table[idx].state != HM_STATE_OCCUPIED) {
+                idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
+            }
+            return *this;
+        }
+        Iterator& operator++() {
+            idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
+            ensure_occupied();
+            return *this;
+        }
+        bool operator==(const Iterator& it) const {
+            return idx == it.idx && LIKELY(&hm == &it.hm);
+        }
+        bool operator!=(const Iterator& it) const {
+            return idx != it.idx || UNLIKELY(&hm != &it.hm);
+        }
+    };
+
+    using Table = Array<Entry>;
+
+    Table table;
+    size_t len;
+    Hasher hasher;
+
+    HashMap() : table{}, len{0}, hasher{} {}
+    HashMap(Arena* arena, std::initializer_list<KvPair<K, V>> xs) : table{}, len{0}, hasher{} {
+        extend(arena, Array<KvPair<K, V>>{xs});
+    }
+    HashMap(const HashMap&) = delete;
+    HashMap(HashMap&&) = delete;
+    HashMap& operator=(const HashMap&) = delete;
+    HashMap& operator=(HashMap&&) = delete;
+    ~HashMap() = default;
+
+    f64 load_factor() const {
+        return (f64) (len) / (f64) (table.len);
+    }
+    bool needs_rehash() const {
+        return UNLIKELY(!table.data) || load_factor() >= CXB_HM_LOAD_CAP_THRESHOLD;
+    }
+
+    template <class T>
+    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
+        size_t h = hasher(x);
+        return pow2mod(h, table.len);
+    }
+
+    Iterator begin() {
+        return Iterator{
+            .hm = *this,
+            .idx = 0,
+        }
+            .ensure_occupied();
+    }
+    Iterator end() {
+        return Iterator{
+            .hm = *this,
+            .idx = len,
+        };
+    }
+
+    bool extend(Arena* a, Array<KvPair<K, V>> xs) {
+        // TODO optimize
+        for(auto& x : xs) {
+            if(!put(a, x)) return false;
+        }
+        return true;
+    }
+
+    void maybe_rehash(Arena* a) {
+        if(needs_rehash()) {
+            size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
+            Table old_table{};
+            old_table.data = table.data;
+            old_table.len = table.len;
+            table.data = nullptr;
+            table.len = 0;
+
+            // TODO: maybe optimize
+            table.resize_fast(a, capacity);
+            for(size_t i = 0; i < old_table.len; ++i) {
+                if(old_table[i].state == HM_STATE_OCCUPIED) {
+                    ASSERT(put(a, {old_table[i].key, old_table[i].value}));
+                }
+            }
+        }
+    }
+
+    bool put(Arena* a, const KvPair<K, V>& kv) {
+        maybe_rehash(a);
+
+        size_t ii = _key_hash_index(kv.key);
+        size_t i = ii;
+        while(table[i].state != HM_STATE_EMPTY) {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == kv.key) {
+                return false;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+            if(i == ii) {
+                break;
+            }
+        }
+        DEBUG_ASSERT(table[i].state != HM_STATE_OCCUPIED);
+        ::construct(&table[i].key, 1, kv.key);
+        ::construct(&table[i].value, 1, kv.value);
+        table[i].state = HM_STATE_OCCUPIED;
+        len++;
+        return true;
+    }
+
+    bool erase(const K& key) {
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
+                table[i].state = HM_STATE_TOMBSTONE;
+                ::destroy(&table[i].key, 1);
+                ::destroy(&table[i].value, 1);
+                len--;
+                return true;
+            } else if(table[i].state == HM_STATE_EMPTY) {
+                break;
+            }
+            i = (i + 1) & (table.len - 1); // TODO: quad probe?
+        } while(i != ii);
+        return false;
+    }
+
+    const Entry* occupied_entry_for(const K& key) const {
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
+                return &table[i];
+            } else if(table[i].state == HM_STATE_EMPTY) {
+                return nullptr;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return nullptr;
+    }
+
+    Entry* occupied_entry_for(const K& key) {
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
+                return &table[i];
+            } else if(table[i].state == HM_STATE_EMPTY) {
+                return nullptr;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return nullptr;
+    }
+
+    bool contains(const K& key) const {
+        return occupied_entry_for(key) != nullptr;
+    }
+
+    V& operator[](const K& key) {
+        Entry* entry = occupied_entry_for(key);
+        DEBUG_ASSERT(entry != nullptr, "entry not present");
+        return entry->value;
+    }
+
+    const V& operator[](const K& key) const {
+        auto entry = occupied_entry_for(key);
+        DEBUG_ASSERT(entry != nullptr, "entry not present");
+        return entry->value;
+    }
+};
+
+inline String8 operator""_s8(const char* s, size_t len) {
+    return String8{.data = (char*) s, .len = len, .not_null_term = false};
 }
 
 #endif
