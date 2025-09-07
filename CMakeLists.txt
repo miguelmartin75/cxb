@@ -76,6 +76,7 @@ if(CXB_BUILD_TESTS)
     add_test_exe(bench_string tests/benchmarks/bench_string.cpp 1)
     add_test_exe(bench_string_header tests/benchmarks/bench_string_header.cpp 1)
     add_test_exe(bench_std_headers tests/benchmarks/bench_std_headers.cpp 0)
+    add_test_exe(bench_hm tests/benchmarks/bench_hm.cpp 1)
 
     add_test(NAME test_array COMMAND test_array)
     add_test(NAME test_string COMMAND test_string)
