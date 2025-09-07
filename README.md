@@ -8,9 +8,15 @@ An unorthodox C++ base library with a focus on performance & simplicity
 Current Header Compile Times:
 * `cxb-cxx.h`: 164±150ms on Apple M1 Max
 
+![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)
+
 ## Development
 
 For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+## Coverage
+
+Run `./scripts/ci/coverage.sh` to build the project with clang coverage instrumentation and generate `coverage.txt`. CI uploads this report as an artifact for the Linux clang Debug job.
 
 # TODOs
 - [ ] formatting
