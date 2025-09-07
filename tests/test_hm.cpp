@@ -61,3 +61,26 @@ TEST_CASE("rehash", "[HashMap]") {
         REQUIRE(kvs.contains(j));
     }
 };
+
+TEST_CASE("MHashMap manual cleanup", "[MHashMap]") {
+    i64 allocated_before = heap_alloc_data.n_active_bytes;
+    {
+        MHashMap<int, int> hm;
+        REQUIRE(hm.put({1, 2}));
+        REQUIRE(hm.len == 1);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_before);
+        hm.destroy();
+    }
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_before);
+}
+
+TEST_CASE("AHashMap automatic cleanup", "[AHashMap]") {
+    i64 allocated_before = heap_alloc_data.n_active_bytes;
+    {
+        AHashMap<int, int> hm;
+        REQUIRE(hm.put({3, 4}));
+        REQUIRE(hm.len == 1);
+        REQUIRE(heap_alloc_data.n_active_bytes > allocated_before);
+    }
+    REQUIRE(heap_alloc_data.n_active_bytes == allocated_before);
+}

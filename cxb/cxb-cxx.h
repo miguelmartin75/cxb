@@ -2180,6 +2180,197 @@ struct HashMap {
     }
 };
 
+template <typename K, typename V, typename Hasher = DefaultHasher>
+struct MHashMap : HashMap<K, V, Hasher> {
+    using Base = HashMap<K, V, Hasher>;
+    using Entry = typename Base::Entry;
+    using Kv = KvPair<K, V>;
+
+    Allocator* allocator;
+
+    MHashMap(Allocator* allocator = &heap_alloc) : Base{}, allocator{allocator} {}
+    MHashMap(std::initializer_list<Kv> xs, Allocator* allocator = &heap_alloc) : MHashMap(allocator) {
+        extend(Array<Kv>{xs});
+    }
+    MHashMap(const MHashMap& o) : Base{}, allocator{o.allocator} {
+        this->table = o.table;
+        this->len = o.len;
+        this->hasher = o.hasher;
+    }
+    MHashMap& operator=(const MHashMap& o) {
+        if(this != &o) {
+            this->table = o.table;
+            this->len = o.len;
+            this->hasher = o.hasher;
+            allocator = o.allocator;
+        }
+        return *this;
+    }
+    MHashMap(MHashMap&& o) : Base{}, allocator{o.allocator} {
+        this->table = o.table;
+        this->len = o.len;
+        this->hasher = o.hasher;
+        o.table.data = nullptr;
+        o.table.len = 0;
+        o.len = 0;
+        o.allocator = nullptr;
+    }
+    MHashMap& operator=(MHashMap&& o) {
+        if(this != &o) {
+            destroy();
+            this->table = o.table;
+            this->len = o.len;
+            this->hasher = o.hasher;
+            allocator = o.allocator;
+            o.table.data = nullptr;
+            o.table.len = 0;
+            o.len = 0;
+            o.allocator = nullptr;
+        }
+        return *this;
+    }
+    ~MHashMap() = default;
+
+    CXB_MAYBE_INLINE void destroy() {
+        if(this->table.data && allocator) {
+            for(size_t i = 0; i < this->table.len; ++i) {
+                if(this->table[i].state == HM_STATE_OCCUPIED) {
+                    ::destroy(&this->table[i].key, 1);
+                    ::destroy(&this->table[i].value, 1);
+                }
+            }
+            allocator->free(this->table.data, this->table.len);
+            this->table.data = nullptr;
+            this->table.len = 0;
+            this->len = 0;
+        }
+    }
+
+    CXB_MAYBE_INLINE void maybe_rehash() {
+        if(this->needs_rehash()) {
+            size_t capacity = this->table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : this->table.len * 2;
+            Entry* old_data = this->table.data;
+            size_t old_cap = this->table.len;
+
+            this->table.data = allocator->calloc<Entry>(0, capacity);
+            this->table.len = capacity;
+            this->len = 0;
+
+            for(size_t i = 0; i < old_cap; ++i) {
+                if(old_data[i].state == HM_STATE_OCCUPIED) {
+                    put({move(old_data[i].key), move(old_data[i].value)});
+                    ::destroy(&old_data[i].key, 1);
+                    ::destroy(&old_data[i].value, 1);
+                }
+            }
+            if(old_data) allocator->free(old_data, old_cap);
+        }
+    }
+
+    CXB_MAYBE_INLINE bool extend(Array<Kv> xs) {
+        for(auto& x : xs) {
+            if(!put(move(x))) return false;
+        }
+        return true;
+    }
+
+    CXB_MAYBE_INLINE bool put(Kv kv) {
+        maybe_rehash();
+
+        size_t ii = this->_key_hash_index(kv.key);
+        size_t i = ii;
+        while(this->table[i].state != HM_STATE_EMPTY) {
+            if(this->table[i].state == HM_STATE_OCCUPIED && this->table[i].key == kv.key) {
+                return false;
+            }
+            i = pow2mod(i + 1, this->table.len);
+            if(i == ii) {
+                break;
+            }
+        }
+        DEBUG_ASSERT(this->table[i].state != HM_STATE_OCCUPIED);
+        ::construct(&this->table[i].key, 1, move(kv.key));
+        ::construct(&this->table[i].value, 1, move(kv.value));
+        this->table[i].state = HM_STATE_OCCUPIED;
+        this->len++;
+        return true;
+    }
+};
+
+template <typename K, typename V, typename Hasher = DefaultHasher>
+struct AHashMap : MHashMap<K, V, Hasher> {
+    using Base = MHashMap<K, V, Hasher>;
+    using Kv = KvPair<K, V>;
+
+    AHashMap(Allocator* allocator = &heap_alloc) : Base{allocator} {}
+    AHashMap(std::initializer_list<Kv> xs, Allocator* allocator = &heap_alloc) : Base{allocator} {
+        this->extend(Array<Kv>{xs});
+    }
+    AHashMap(const AHashMap&) = delete;
+    AHashMap& operator=(const AHashMap&) = delete;
+
+    AHashMap(AHashMap&& o) : Base{&heap_alloc} {
+        this->table = o.table;
+        this->len = o.len;
+        this->hasher = o.hasher;
+        this->allocator = o.allocator;
+        o.allocator = nullptr;
+        o.table.data = nullptr;
+        o.table.len = 0;
+        o.len = 0;
+    }
+    AHashMap(Base&& o) : Base{&heap_alloc} {
+        this->table = o.table;
+        this->len = o.len;
+        this->hasher = o.hasher;
+        this->allocator = o.allocator;
+        o.allocator = nullptr;
+        o.table.data = nullptr;
+        o.table.len = 0;
+        o.len = 0;
+    }
+
+    AHashMap& operator=(AHashMap&& o) {
+        if(this != &o) {
+            this->destroy();
+            this->table = o.table;
+            this->len = o.len;
+            this->hasher = o.hasher;
+            this->allocator = o.allocator;
+            o.allocator = nullptr;
+            o.table.data = nullptr;
+            o.table.len = 0;
+            o.len = 0;
+        }
+        return *this;
+    }
+    AHashMap& operator=(Base&& o) {
+        this->destroy();
+        this->table = o.table;
+        this->len = o.len;
+        this->hasher = o.hasher;
+        this->allocator = o.allocator;
+        o.allocator = nullptr;
+        o.table.data = nullptr;
+        o.table.len = 0;
+        o.len = 0;
+        return *this;
+    }
+
+    ~AHashMap() {
+        this->destroy();
+    }
+
+    Base release() {
+        Base self = *this;
+        this->allocator = nullptr;
+        this->table.data = nullptr;
+        this->table.len = 0;
+        this->len = 0;
+        return self;
+    }
+};
+
 inline String8 operator""_s8(const char* s, size_t len) {
     return String8{.data = (char*) s, .len = len, .not_null_term = false};
 }
