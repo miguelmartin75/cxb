@@ -1,0 +1,2 @@
+/nix/store/dpl99mjansi8sp7x9rzdyx9jnsrfp2ya-llvm-19.1.7/bin/llvm-ar qc libCatch2Maind.a CMakeFiles/Catch2WithMain.dir/catch2/internal/catch_main.cpp.o
+/nix/store/dpl99mjansi8sp7x9rzdyx9jnsrfp2ya-llvm-19.1.7/bin/llvm-ranlib libCatch2Maind.a
