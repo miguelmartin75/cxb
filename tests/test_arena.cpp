@@ -166,3 +166,34 @@ TEST_CASE("Array arena member functions", "[Array][Arena]") {
     REQUIRE(arr.size() == 0);
     REQUIRE(arena->pos == sizeof(Arena) + 0);
 }
+
+TEST_CASE("arena allocator interface", "[Arena][Allocator]") {
+    Arena* arena = arena_make_nbytes(KB(4));
+    Allocator alloc = make_arena_alloc(arena);
+
+    int* a = alloc.alloc<int>();
+    *a = 1;
+    int* b = alloc.alloc<int>();
+    *b = 2;
+
+    // freeing a while b is last should do nothing
+    alloc.free(a, 1);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (b + 1));
+
+    // free b which is at end
+    alloc.free(b, 1);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (a + 1));
+
+    // now a is at end and can be freed
+    alloc.free(a, 1);
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) a);
+
+    Allocator m = arena->make_alloc();
+    int* c = m.alloc<int>();
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (c + 1));
+
+    m.free_all();
+    REQUIRE(arena->pos == 0);
+
+    arena_destroy(arena);
+}

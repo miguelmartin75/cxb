@@ -1,9 +1,9 @@
 #include "cxb.h"
 
 #include <stdlib.h> // for malloc, free, realloc, calloc
+#include <sys/mman.h>
 
 #ifdef __APPLE__
-#include <sys/mman.h>
 #include <unistd.h> // for sysconf()
 #endif
 
@@ -151,6 +151,67 @@ void heap_free_proc(void* head, size_t n_bytes, void* data) {
 void heap_free_all_proc(void* data) {
     (void) data;
     INVALID_CODEPATH("heap allocator does not support free all");
+}
+
+// arena-backed allocator
+static void* arena_alloc_proc(
+    void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data) {
+    Arena* arena = (Arena*) data;
+
+    if(head == nullptr) {
+        char* result = (char*) arena_push_bytes(arena, n_bytes, alignment);
+        if(fill_zeros) {
+            memset(result, 0, n_bytes);
+        }
+        return result;
+    }
+
+    char* head_char = (char*) head;
+    char* arena_end = arena->start + arena->pos;
+    char* head_end = head_char + old_n_bytes;
+
+    if(head_end == arena_end) {
+        if(n_bytes > old_n_bytes) {
+            arena_push_bytes(arena, n_bytes - old_n_bytes, alignment);
+            if(fill_zeros) {
+                memset(head_char + old_n_bytes, 0, n_bytes - old_n_bytes);
+            }
+            return head;
+        } else {
+            arena_pop_to(arena, arena->pos - (old_n_bytes - n_bytes));
+            return head;
+        }
+    }
+
+    char* new_head = (char*) arena_push_bytes(arena, n_bytes, alignment);
+    size_t copy_n = old_n_bytes < n_bytes ? old_n_bytes : n_bytes;
+    if(copy_n > 0) {
+        memcpy(new_head, head, copy_n);
+    }
+    if(fill_zeros && n_bytes > old_n_bytes) {
+        memset(new_head + old_n_bytes, 0, n_bytes - old_n_bytes);
+    }
+    return new_head;
+}
+
+static void arena_free_proc(void* head, size_t n_bytes, void* data) {
+    Arena* arena = (Arena*) data;
+    char* head_end = (char*) head + n_bytes;
+    if(head_end == arena->start + arena->pos) {
+        arena_pop_to(arena, arena->pos - n_bytes);
+    }
+}
+
+static void arena_free_all_proc(void* data) {
+    Arena* arena = (Arena*) data;
+    arena_clear(arena);
+}
+
+Allocator make_arena_alloc(Arena* arena) {
+    return Allocator{.alloc_proc = arena_alloc_proc,
+                     .free_proc = arena_free_proc,
+                     .free_all_proc = arena_free_all_proc,
+                     .data = (void*) arena};
 }
 
 String8 arena_push_string8(Arena* arena, size_t n) {
