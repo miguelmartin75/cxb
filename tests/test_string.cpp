@@ -161,6 +161,13 @@ TEST_CASE("String8 slice", "[String8]") {
     }
 }
 
+TEST_CASE("String8 slice out of range", "[String8]") {
+    String8 s = S8_LIT("Hello");
+    REQUIRE(s.slice(5) == S8_LIT(""));
+    REQUIRE(s.slice(6) == S8_LIT(""));
+    REQUIRE(s.slice(3, 2) == S8_LIT(""));
+}
+
 TEST_CASE("String8 copy", "[String8]") {
     AString8 original("Hello, World!");
     AString8 copy = original.copy();
@@ -340,6 +347,11 @@ TEST_CASE("string8_trim", "[String8]") {
     REQUIRE(lead == S8_LIT("abc \t"));
 
     REQUIRE(s.trim(S8_LIT("\t "), false, true) == S8_LIT("   abc"));
+
+    String8 all_ws = S8_LIT("   ");
+    REQUIRE(string8_trim(all_ws, S8_LIT(" ")) == S8_LIT(""));
+    REQUIRE(string8_trim(all_ws, S8_LIT(" "), true, false) == S8_LIT(""));
+    REQUIRE(string8_trim(all_ws, S8_LIT(" "), false, true) == S8_LIT(""));
 }
 
 TEST_CASE("string8_contains_chars", "[String8]") {
