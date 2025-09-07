@@ -1,4 +1,5 @@
 #define CATCH_CONFIG_MAIN
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
 
@@ -319,4 +320,12 @@ TEST_CASE("Utf8Iterator with unicode", "[Utf8Iterator]") {
     REQUIRE(codepoints[10] == '!');
 
     end_scratch(scratch);
+}
+
+TEST_CASE("string8_parse floating point", "[String8][Parse]") {
+    String8 s = S8_LIT("3.14f");
+    auto res = string8_parse<f64>(s);
+    REQUIRE(res.exists);
+    REQUIRE(res.value == Catch::Approx(3.14));
+    REQUIRE(res.n_consumed == 4);
 }
