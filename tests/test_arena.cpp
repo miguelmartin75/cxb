@@ -96,3 +96,80 @@ TEST_CASE("array insert", "[Arena]") {
 
     REQUIRE(xs.len == 5);
 }
+
+TEST_CASE("String8 arena member functions", "[String8][Arena]") {
+    Arena* arena = arena_make_nbytes(KB(4));
+
+    String8 s = arena_push_string8(arena, S8_LIT("abc"));
+
+    s.resize(arena, 5, 'x');
+    REQUIRE(s == S8_LIT("abcxx"));
+    s.resize(arena, 3);
+    REQUIRE(s == S8_LIT("abc"));
+
+    s.push_back(arena, 'd');
+    REQUIRE(s == S8_LIT("abcd"));
+    s.pop_back(arena);
+    REQUIRE(s == S8_LIT("abc"));
+
+    s.insert(arena, 'X', 1);
+    REQUIRE(s == S8_LIT("aXbc"));
+    s.insert(arena, S8_LIT("YZ"), 2);
+    REQUIRE(s == S8_LIT("aXYZbc"));
+
+    s.extend(arena, S8_LIT("END"));
+    REQUIRE(s == S8_LIT("aXYZbcEND"));
+
+    s.pop_all(arena);
+    REQUIRE(s.size() == 0);
+
+    String8 num = arena_push_string8(arena, S8_LIT("1234"));
+    auto pr = num.parse<i32>();
+    REQUIRE(pr.exists);
+    REQUIRE(pr.value == 1234);
+    num.pop_all(arena);
+
+    REQUIRE(arena->pos == sizeof(Arena) + 0);
+}
+
+TEST_CASE("Array arena member functions", "[Array][Arena]") {
+    Arena* arena = arena_make_nbytes(KB(4));
+
+    Array<int> literal = {1, 2};
+    REQUIRE(literal[0] == 1);
+    REQUIRE(literal[1] == 2);
+
+    Array<int> arr{};
+    arr.push_back(arena, 1);
+    arr.push_back(arena, 2);
+    REQUIRE(arr[0] == 1);
+    REQUIRE(arr[1] == 2);
+
+    arr.resize(arena, 4, 7);
+    REQUIRE(arr[2] == 7);
+    REQUIRE(arr[3] == 7);
+
+    arr.resize(arena, 2);
+
+    arr.insert(arena, 5, 1);
+    REQUIRE(arr[1] == 5);
+
+    Array<int> ins = {8, 9};
+    arr.insert(arena, ins, 2);
+    REQUIRE(arr[2] == 8);
+    REQUIRE(arr[3] == 9);
+    REQUIRE(arr.size() == 5);
+
+    Array<int> ext = {10, 11};
+    arr.extend(arena, ext);
+    REQUIRE(arr.size() == 7);
+    REQUIRE(arr.back() == 11);
+
+    arr.pop_back(arena);
+    REQUIRE(arr.back() == 10);
+    REQUIRE(arr.size() == 6);
+
+    arr.pop_all(arena);
+    REQUIRE(arr.size() == 0);
+    REQUIRE(arena->pos == sizeof(Arena) + 0);
+}

@@ -823,6 +823,7 @@ struct Array {
 
     Array() : data{nullptr}, len{0} {}
     Array(T* data, size_t len) : data{data}, len{len} {}
+    Array(std::initializer_list<T> xs) : data{(T*) xs.begin()}, len{xs.size()} {}
     Array(Arena* a, std::initializer_list<T> xs) : data{nullptr}, len{0} {
         data = arena_push_fast<T>(a, xs.size());
         len = xs.size();
