@@ -617,7 +617,7 @@ inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
     requires ArrayLike<A>
 #endif
 {
-    using T = decltype(xs.data[0]);
+    using T = std::remove_reference_t<decltype(xs.data[0])>;
 
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
@@ -634,9 +634,8 @@ inline void array_pop_back(A& xs, Arena* arena)
 {
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
+    ::destroy(&xs.data[xs.len - 1], 1);
     arena_pop_to(arena, arena->pos - sizeof(xs.data[0]));
-
-    ::destroy(&xs.data[xs.len], 1);
     xs.len -= 1;
 }
 

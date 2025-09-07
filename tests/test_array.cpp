@@ -2,6 +2,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <cxb/cxb.h>
 
+struct Pair {
+    int x;
+    int y;
+};
+
 TEST_CASE("simple initializer list", "AArray") {
     Array<int> xs = {get_perm(), {1, 2, 3}};
     REQUIRE(xs.len == 3);
@@ -132,4 +137,45 @@ TEST_CASE("operator<", "AArray") {
         REQUIRE(seq5 == seq1);
     }
     REQUIRE(heap_alloc_data.n_active_bytes == allocated_bytes_before);
+}
+
+TEST_CASE("array_emplace_back and pop_back", "Array") {
+    AArenaTmp tmp = begin_scratch();
+    Arena* a = tmp.arena;
+    Array<Pair> xs{arena_push_fast<Pair>(a, 0), 0};
+    array_emplace_back(xs, a, 1, 2);
+    array_emplace_back(xs, a, 3, 4);
+    REQUIRE(xs.len == 2);
+    REQUIRE(xs[0].x == 1);
+    REQUIRE(xs[0].y == 2);
+    REQUIRE(xs[1].x == 3);
+    REQUIRE(xs[1].y == 4);
+    array_pop_back(xs, a);
+    REQUIRE(xs.len == 1);
+    REQUIRE(xs[0].x == 1);
+    REQUIRE(xs[0].y == 2);
+}
+
+TEST_CASE("array_insert and resize", "Array") {
+    AArenaTmp tmp = begin_scratch();
+    Arena* a = tmp.arena;
+    Array<int> xs = {a, {1, 2, 3}};
+    int raw[] = {4, 5};
+    Array<int> to_insert{raw, 2};
+    array_insert(xs, a, to_insert, 1);
+    REQUIRE(xs.len == 5);
+    REQUIRE(xs[0] == 1);
+    REQUIRE(xs[1] == 4);
+    REQUIRE(xs[2] == 5);
+    REQUIRE(xs[3] == 2);
+    REQUIRE(xs[4] == 3);
+    array_resize(xs, a, 7, 9);
+    REQUIRE(xs.len == 7);
+    REQUIRE(xs[5] == 9);
+    REQUIRE(xs[6] == 9);
+    array_resize(xs, a, 3);
+    REQUIRE(xs.len == 3);
+    REQUIRE(xs[0] == 1);
+    REQUIRE(xs[1] == 4);
+    REQUIRE(xs[2] == 5);
 }
