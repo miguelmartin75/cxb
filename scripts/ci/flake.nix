@@ -24,6 +24,7 @@
           clang
           clang-tools
           lld
+          llvmPackages.llvm
           git
         ];
 
