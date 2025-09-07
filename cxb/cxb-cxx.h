@@ -839,15 +839,18 @@ CXB_C_TYPE struct String8 {
         return data[len - 1];
     }
     CXB_MAYBE_INLINE String8 slice(i64 i = 0, i64 j = -1) const {
-        if(!data) {
-            return {};
+        if(!data || len == 0) {
+            return String8{.data = (char*) "", .len = 0, .not_null_term = false};
         }
-        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, len == 0 ? 0 : (i64) len - 1);
-        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, len == 0 ? 0 : (i64) len - 1);
+        i64 ii = clamp(i < 0 ? (i64) len + i : i, (i64) 0, (i64) len);
+        i64 jj = clamp(j < 0 ? (i64) len + j : j, (i64) 0, (i64) len - 1);
+        if(jj < ii) {
+            return String8{.data = (char*) "", .len = 0, .not_null_term = false};
+        }
 
         String8 c = *this;
         c.data = c.data + ii;
-        c.len = max<i64>(0, jj - ii + 1);
+        c.len = jj - ii + 1;
         c.not_null_term = ii + c.len == len ? this->not_null_term : true;
         return c;
     }
@@ -1927,7 +1930,10 @@ CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading, boo
             end--;
         }
     }
-    return s.slice((i64) start, start < end ? (i64) end - 1 : (i64) start - 1);
+    if(start >= end) {
+        return S8_LIT("");
+    }
+    return s.slice((i64) start, (i64) end - 1);
 }
 
 #define MSTRING_NT(a) (MString8{.data = nullptr, .len = 0, .not_null_term = false, .capacity = 0, .allocator = (a)})
