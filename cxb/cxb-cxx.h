@@ -1790,129 +1790,6 @@ struct AArray : MArray<T> {
     }
 };
 
-enum HashMapState {
-    HM_STATE_EMPTY,
-    HM_STATE_OCCUPIED,
-    HM_STATE_TOMBSTONE,
-};
-
-struct DefaultHasher {
-    template <class T>
-    size_t operator()(const T& x) const {
-        return hash(x);
-    }
-};
-
-template <typename K, typename V>
-struct KvPair {
-    K key;
-    V value;
-};
-
-template <typename K, typename V, typename Hasher = DefaultHasher>
-struct HashMap {
-    /* NOTE: key and value are not default constructed, due to custom allocation methods (arena or Allocator*) */
-    struct Entry {
-        K key;
-        V value;
-        HashMapState state = HM_STATE_EMPTY;
-    };
-
-    /*
-    struct HashMapEntry {
-        alignas(K) char key_data[sizeof(K)];
-        alignas(V) char value_data[sizeof(V)];
-        HashMapState state = HM_STATE_EMPTY;
-
-        inline K& key() const { return *reinterpret_cast<K*>(key_data); }
-        inline V& value() const { return *reinterpret_cast<V*>(value_data); }
-    };
-    */
-
-    Array<Entry> table;
-    size_t len;
-    Hasher hasher;
-
-    template <class T>
-    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
-        size_t h = hasher(x);
-        return pow2mod(h, table.len);
-    }
-
-    void extend(Arena* a, Array<KvPair<K, V>> xs) {
-        // TODO optimize
-        for(auto& x : xs) {
-            put(a, x);
-        }
-    }
-
-    void put(Arena* a, const KvPair<K, V>& kv) {
-        if(!table.data) {
-            size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
-            table.resize_fast(a, capacity);
-        }
-
-        size_t i = _key_hash_index(kv.key);
-        while(true) {
-            if(table[i].state == HM_STATE_EMPTY) {
-                break;
-            }
-            i = pow2mod(i + 1, table.len); // TODO: quad probe?
-        }
-        table[i].key = kv.key;
-        table[i].value = kv.value;
-        table[i].state = HM_STATE_OCCUPIED;
-    }
-
-    void erase(const K& key) const {
-        size_t i = _key_hash_index(key);
-        while(true) {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key() == key) {
-                table[i].state = HM_STATE_TOMBSTONE;
-                ::destroy(table[i].key, 1);
-                ::destroy(table[i].value, 1);
-            }
-            i = (i + 1) & (table.len - 1); // TODO: quad probe?
-        }
-    }
-
-    const Entry* occupied_entry_for(const K& key) const {
-        size_t i = _key_hash_index(key);
-        while(true) {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
-                return &table[i];
-            } else if(table[i].state == HM_STATE_EMPTY) {
-                return nullptr;
-            }
-            i = pow2mod(i + 1, table.len); // TODO: quad probe?
-        }
-        return nullptr;
-    }
-    Entry* occupied_entry_for(const K& key) {
-        return const_cast<Entry*>(key);
-    }
-
-    bool contains(const K& key) const {
-        return occupied_entry_for(key) != nullptr;
-    }
-
-    V& operator[](const K& key) {
-        Entry* entry = occupied_entry_for(key);
-        DEBUG_ASSERT(entry != nullptr, "entry not present");
-        return entry->value();
-    }
-
-    const V& operator[](const K& key) const {
-        auto entry = occupied_entry_for(key);
-        DEBUG_ASSERT(entry != nullptr, "entry not present");
-        return entry->value();
-    }
-};
-
-inline String8 operator""_s8(const char* s, size_t len) {
-    return String8{.data = (char*) s, .len = len, .not_null_term = false};
-}
-
 CXB_C_COMPAT_BEGIN
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
 #define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
@@ -2104,5 +1981,178 @@ CXB_MAYBE_INLINE Array<u32> decode_string8(Arena* a, String8 s) {
     }
     return codepoints;
 }
+
+enum HashMapState {
+    HM_STATE_EMPTY,
+    HM_STATE_OCCUPIED,
+    HM_STATE_TOMBSTONE,
+};
+
+struct DefaultHasher {
+    template <class T>
+    size_t operator()(const T& x) const {
+        return hash(x);
+    }
+};
+
+template <typename K, typename V>
+struct KvPair {
+    K key;
+    V value;
+};
+
+template <typename K, typename V, typename Hasher = DefaultHasher>
+struct HashMap {
+    /* NOTE: key and value are not default constructed, due to custom allocation methods (arena or Allocator*) */
+    struct Entry {
+        K key;
+        V value;
+        HashMapState state = HM_STATE_EMPTY;
+    };
+
+    struct Iterator {
+        HashMap& hm;
+        size_t idx;
+
+        Entry& operator*() { return hm.table[idx]; }
+        Iterator& ensure_occupied() {
+            while(LIKELY(hm.table.len != idx) && hm.table[idx].state != HM_STATE_OCCUPIED) {
+                idx += pow2mod(idx + 1, hm.table.len);  // TODO: quad probe?
+                println("it idx={}", idx);
+            }
+            return *this;
+        }
+        Iterator& operator++() {
+            idx += pow2mod(idx + 1, hm.table.len);  // TODO: quad probe?
+            ensure_occupied();
+            return *this;
+        }
+        bool operator==(const Iterator& it) const { return idx == it.idx && LIKELY(&hm == &it.hm); }
+        bool operator!=(const Iterator& it) const { return idx != it.idx || UNLIKELY(&hm != &it.hm); }
+    };
+
+    Array<Entry> table;
+    size_t len;
+    Hasher hasher;
+
+    HashMap() : table{}, len{0}, hasher{} {}
+    HashMap(Arena* arena, std::initializer_list<KvPair<K, V>> xs) : table{}, len{0}, hasher{} {
+        extend(arena, Array<KvPair<K, V>>{xs});
+    }
+    HashMap(const HashMap&) = delete;
+    HashMap(HashMap&&) = delete;
+    HashMap& operator=(const HashMap&) = delete;
+    HashMap& operator=(HashMap&&) = delete;
+    ~HashMap() = default;
+
+    template <class T>
+    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
+        size_t h = hasher(x);
+        return pow2mod(h, table.len);
+    }
+
+    Iterator begin() { return Iterator{.hm = *this, .idx = 0, }.ensure_occupied(); }
+    Iterator end() { return Iterator{.hm = *this, .idx = len, }; }
+
+    bool extend(Arena* a, Array<KvPair<K, V>> xs) {
+        // TODO optimize
+        for(auto& x : xs) {
+            if(!put(a, x)) return false;
+        }
+        return true;
+    }
+
+    bool put(Arena* a, const KvPair<K, V>& kv) {
+        if(!table.data) {
+            size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
+            table.resize_fast(a, capacity);
+        }
+
+        size_t ii = _key_hash_index(kv.key);
+        size_t i = ii;
+        while(table[i].state != HM_STATE_EMPTY) {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == kv.key) {
+                return false;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+            if(i == ii) {
+                break;
+            }
+        }
+        DEBUG_ASSERT(table[i].state != HM_STATE_OCCUPIED);
+        ::construct(&table[i].key, 1, kv.key);
+        ::construct(&table[i].value, 1, kv.value);
+        table[i].state = HM_STATE_OCCUPIED;
+        len++;
+        return true;
+    }
+
+    bool erase(const K& key) {
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
+                table[i].state = HM_STATE_TOMBSTONE;
+                ::destroy(&table[i].key, 1);
+                ::destroy(&table[i].value, 1);
+                len--;
+                return true;
+            } else if(table[i].state == HM_STATE_EMPTY) {
+                break;
+            }
+            i = (i + 1) & (table.len - 1); // TODO: quad probe?
+        } while(i != ii);
+        return false;
+    }
+
+    const Entry* occupied_entry_for(const K& key) const {
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
+                return &table[i];
+            } else if(table[i].state == HM_STATE_EMPTY) {
+                return nullptr;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return nullptr;
+    }
+
+    Entry* occupied_entry_for(const K& key) {
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
+                return &table[i];
+            } else if(table[i].state == HM_STATE_EMPTY) {
+                return nullptr;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return nullptr;
+    }
+
+    bool contains(const K& key) const {
+        return occupied_entry_for(key) != nullptr;
+    }
+
+    V& operator[](const K& key) {
+        Entry* entry = occupied_entry_for(key);
+        DEBUG_ASSERT(entry != nullptr, "entry not present");
+        return entry->value;
+    }
+
+    const V& operator[](const K& key) const {
+        auto entry = occupied_entry_for(key);
+        DEBUG_ASSERT(entry != nullptr, "entry not present");
+        return entry->value;
+    }
+};
+
+inline String8 operator""_s8(const char* s, size_t len) {
+    return String8{.data = (char*) s, .len = len, .not_null_term = false};
+}
+
 
 #endif
