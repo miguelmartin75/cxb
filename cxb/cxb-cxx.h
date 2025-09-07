@@ -344,14 +344,8 @@ template <typename T>
 struct Array;
 
 #ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T>
-concept ArrayLike = requires(A x) {
-    { x.data } -> std::convertible_to<T*>;
-    { x.len } -> std::convertible_to<u64>;
-};
-
 template <typename A>
-concept ArrayLikeNoT = requires(A x) {
+concept ArrayLike = requires(A x) {
     { x.data } -> std::convertible_to<void*>;
     { x.len } -> std::convertible_to<u64>;
 };
@@ -467,7 +461,7 @@ inline Array<T> arena_push_array(Arena* arena, Array<T> to_copy) {
 template <typename A>
 inline void array_resize_fast(A& xs, Arena* arena, size_t new_size)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A>
+    requires ArrayLike<A>
 #endif
 {
     using T = std::remove_reference_t<decltype(xs.data[0])>;
@@ -492,7 +486,7 @@ inline void array_resize_fast(A& xs, Arena* arena, size_t new_size)
 template <typename A>
 inline void array_resize(A& xs, Arena* arena, size_t new_size)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A>
+    requires ArrayLike<A>
 #endif
 {
     using T = std::remove_reference_t<decltype(xs.data[0])>;
@@ -517,7 +511,7 @@ inline void array_resize(A& xs, Arena* arena, size_t new_size)
 template <typename A, typename T>
 inline void array_resize(A& xs, Arena* arena, size_t new_size, T default_value)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
+    requires ArrayLike<A>
 #endif
 {
 #ifndef CXB_USE_CXX_CONCEPTS
@@ -544,7 +538,7 @@ inline void array_resize(A& xs, Arena* arena, size_t new_size, T default_value)
 template <typename A, typename T>
 inline void array_push_back(A& xs, Arena* arena, T value)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
+    requires ArrayLike<A>
 #endif
 {
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
@@ -558,19 +552,13 @@ inline void array_push_back(A& xs, Arena* arena, T value)
     xs.len += 1;
 }
 
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T, typename... Args>
-#else
 template <typename A, typename... Args>
-#endif
 inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
+    requires ArrayLike<A>
 #endif
 {
-#ifndef CXB_USE_CXX_CONCEPTS
     using T = decltype(xs.data[0]);
-#endif
 
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
@@ -582,7 +570,7 @@ inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
 template <typename A>
 inline void array_pop_back(A& xs, Arena* arena)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A>
+    requires ArrayLike<A>
 #endif
 {
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
@@ -596,7 +584,7 @@ inline void array_pop_back(A& xs, Arena* arena)
 template <typename A, typename B>
 inline void array_insert(A& xs, Arena* arena, const B& to_insert, size_t i)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A> && ArrayLikeNoT<B>
+    requires ArrayLike<A> && ArrayLike<B>
 #endif
 {
     using T = std::remove_reference_t<decltype(xs.data[0])>;
@@ -617,7 +605,7 @@ inline void array_insert(A& xs, Arena* arena, const B& to_insert, size_t i)
 template <typename A, typename B>
 inline void array_extend(A& xs, Arena* arena, const B& to_append)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A> && ArrayLikeNoT<B>
+    requires ArrayLike<A> && ArrayLike<B>
 #endif
 {
     using T = std::remove_reference_t<decltype(xs.data[0])>;
@@ -640,7 +628,7 @@ inline void array_extend(A& xs, Arena* arena, const B& to_append)
 template <typename A>
 inline void array_pop_all(A& xs, Arena* arena)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLikeNoT<A>
+    requires ArrayLike<A>
 #endif
 {
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
