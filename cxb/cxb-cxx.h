@@ -2014,21 +2014,27 @@ struct HashMap {
         HashMap& hm;
         size_t idx;
 
-        Entry& operator*() { return hm.table[idx]; }
+        Entry& operator*() {
+            return hm.table[idx];
+        }
         Iterator& ensure_occupied() {
             while(LIKELY(hm.table.len != idx) && hm.table[idx].state != HM_STATE_OCCUPIED) {
-                idx += pow2mod(idx + 1, hm.table.len);  // TODO: quad probe?
+                idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
                 println("it idx={}", idx);
             }
             return *this;
         }
         Iterator& operator++() {
-            idx += pow2mod(idx + 1, hm.table.len);  // TODO: quad probe?
+            idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
             ensure_occupied();
             return *this;
         }
-        bool operator==(const Iterator& it) const { return idx == it.idx && LIKELY(&hm == &it.hm); }
-        bool operator!=(const Iterator& it) const { return idx != it.idx || UNLIKELY(&hm != &it.hm); }
+        bool operator==(const Iterator& it) const {
+            return idx == it.idx && LIKELY(&hm == &it.hm);
+        }
+        bool operator!=(const Iterator& it) const {
+            return idx != it.idx || UNLIKELY(&hm != &it.hm);
+        }
     };
 
     Array<Entry> table;
@@ -2051,8 +2057,19 @@ struct HashMap {
         return pow2mod(h, table.len);
     }
 
-    Iterator begin() { return Iterator{.hm = *this, .idx = 0, }.ensure_occupied(); }
-    Iterator end() { return Iterator{.hm = *this, .idx = len, }; }
+    Iterator begin() {
+        return Iterator{
+            .hm = *this,
+            .idx = 0,
+        }
+            .ensure_occupied();
+    }
+    Iterator end() {
+        return Iterator{
+            .hm = *this,
+            .idx = len,
+        };
+    }
 
     bool extend(Arena* a, Array<KvPair<K, V>> xs) {
         // TODO optimize
@@ -2153,6 +2170,5 @@ struct HashMap {
 inline String8 operator""_s8(const char* s, size_t len) {
     return String8{.data = (char*) s, .len = len, .not_null_term = false};
 }
-
 
 #endif

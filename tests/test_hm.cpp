@@ -20,11 +20,11 @@ TEST_CASE("basic", "[HashMap]") {
 
     REQUIRE(kvs.len == 1);
     REQUIRE(kvs.extend(a,
-               {
-                   {7, 9},
-                   {3, 5},
-                   {11, 9},
-               }));
+                       {
+                           {7, 9},
+                           {3, 5},
+                           {11, 9},
+                       }));
     REQUIRE(kvs.contains(1));
     REQUIRE(kvs.contains(7));
     REQUIRE(kvs.contains(3));
