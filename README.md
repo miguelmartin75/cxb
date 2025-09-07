@@ -19,7 +19,7 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
 - [ ] refactor
     - [x] A/MString -> A/MString8
     - [x] remove or update utf8 decode
-    - [ ] concepts: only use ArrayLikeNoT
+    - [x] concepts: only use ArrayLike
     - [ ] TODO: decide on whether to make free-form functions C-compat?
 - [ ] std::initializer_list support
     - [x] Array
