@@ -329,3 +329,32 @@ TEST_CASE("string8_parse floating point", "[String8][Parse]") {
     REQUIRE(res.value == Catch::Approx(3.14));
     REQUIRE(res.n_consumed == 4);
 }
+
+TEST_CASE("string8_contains and find", "[String8]") {
+    String8 s = S8_LIT("hello world");
+    REQUIRE(string8_contains(s, S8_LIT("hello")));
+    REQUIRE(s.contains(S8_LIT("world")));
+    REQUIRE(string8_find(s, S8_LIT("world")) == 6);
+    REQUIRE(s.find(S8_LIT("hello")) == 0);
+    REQUIRE_FALSE(string8_contains(s, S8_LIT("abc")));
+    REQUIRE(string8_find(s, S8_LIT("abc")) == SIZE_MAX);
+}
+
+TEST_CASE("string8_trim", "[String8]") {
+    String8 s = S8_LIT("   abc \t");
+    String8 trimmed = string8_trim(s, S8_LIT("\t "));
+    REQUIRE(trimmed == S8_LIT("abc"));
+
+    String8 lead = string8_trim(s, S8_LIT("\t "), true, false);
+    REQUIRE(lead == S8_LIT("abc \t"));
+
+    REQUIRE(s.trim(S8_LIT("\t "), false, true) == S8_LIT("   abc"));
+}
+
+TEST_CASE("string8_contains_chars", "[String8]") {
+    String8 s = S8_LIT("hello world");
+    REQUIRE(string8_contains_chars(s, S8_LIT("ow")));
+    REQUIRE_FALSE(string8_contains_chars(s, S8_LIT("xyz")));
+    REQUIRE(s.contains_chars(S8_LIT("hw")));
+    REQUIRE_FALSE(s.contains_chars(S8_LIT("xyz")));
+}
