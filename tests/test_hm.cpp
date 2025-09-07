@@ -43,3 +43,21 @@ TEST_CASE("basic", "[HashMap]") {
 
     REQUIRE(kvs[1] == 3);
 };
+
+TEST_CASE("rehash", "[HashMap]") {
+    Arena* a = get_perm();
+    HashMap<int, int> kvs;
+    int i = 0;
+    while(true) {
+        if(i != 0 && kvs.needs_rehash()) break;
+        kvs.put(a, {i, i});
+        i += 1;
+    }
+    REQUIRE(kvs.table.len == CXB_HM_MIN_CAP);
+    kvs.put(a, {i, i});
+
+    REQUIRE(kvs.table.len == 2 * CXB_HM_MIN_CAP);
+    for(int j = i; j <= i; ++j) {
+        REQUIRE(kvs.contains(j));
+    }
+};

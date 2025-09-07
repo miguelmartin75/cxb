@@ -61,6 +61,7 @@ free the memory
 #define CXB_STR_MIN_CAP 32
 #define CXB_STR_GROW_FN(x) (x) + (x) / 2 /* 3/2, reducing chance to overflow  */
 #define CXB_HM_MIN_CAP 64
+#define CXB_HM_LOAD_CAP_THRESHOLD 0.75
 
 // NOTE: to generate cxb-c.h (C header)
 #define CXB_C_COMPAT_BEGIN
@@ -270,6 +271,20 @@ CXB_MAYBE_INLINE void construct(T* xs, size_t len) {
     }
 }
 
+template <typename T>
+CXB_MAYBE_INLINE void construct(T* xs, size_t len, T default_value) {
+    ASSERT(len > 0);
+    if constexpr(!std::is_trivially_default_constructible_v<T>) {
+        for(size_t i = 0; i < len; ++i) {
+            new(xs + i) T{default_value};
+        }
+    } else {
+        for(size_t i = 0; i < len; ++i) {
+            memcpy((void*) (xs + i), (void*) (&default_value), sizeof(T));
+        }
+    }
+}
+
 template <typename T, typename... Args>
 CXB_MAYBE_INLINE void construct(T* xs, size_t len, Args&&... args) {
     ASSERT(len > 0);
@@ -410,8 +425,7 @@ struct AArenaTmp : ArenaTmp {
 // *SECTION: Arena free functions
 template <typename T>
 inline T* arena_push_fast(Arena* arena, size_t n = 1) {
-    const size_t size = sizeof(T) * n;
-    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
+    T* data = (T*) arena_push_bytes(arena, sizeof(T) * n, alignof(T));
     return data;
 }
 
@@ -423,18 +437,9 @@ inline T* arena_push(Arena* arena, size_t n = 1) {
 }
 
 template <typename T>
-inline T* arena_push(Arena* arena, T value, size_t n = 1) {
-    const size_t size = sizeof(T);
-    T* data = (T*) arena_push_bytes(arena, size, alignof(T));
-    if constexpr(!std::is_trivially_default_constructible_v<T>) {
-        for(size_t i = 0; i < n; ++i) {
-            new(data + i) T{value};
-        }
-    } else {
-        for(size_t i = 0; i < n; ++i) {
-            memcpy((void*) (data + i), (void*) (&value), sizeof(T));
-        }
-    }
+inline T* arena_push(Arena* arena, size_t n, T default_value) {
+    T* data = (T*) arena_push_bytes(arena, sizeof(T) * n, alignof(T));
+    ::construct(data, n, default_value);
     return data;
 }
 
@@ -504,7 +509,7 @@ inline void array_resize(A& xs, Arena* arena, size_t new_size)
         xs.data = xs.data == nullptr ? data : xs.data;
         xs.len = new_size;
     } else {
-        arena_pop_to(arena, arena->pos + (sizeof(T) * (xs.len - new_size)));
+        arena_pop_to(arena, arena->pos - (sizeof(T) * (xs.len - new_size)));
         xs.len = new_size;
     }
 }
@@ -574,22 +579,15 @@ inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
     xs.len += 1;
 }
 
-#ifdef CXB_USE_CXX_CONCEPTS
-template <typename A, typename T>
-#else
 template <typename A>
-#endif
 inline void array_pop_back(A& xs, Arena* arena)
 #ifdef CXB_USE_CXX_CONCEPTS
-    requires ArrayLike<A, T>
+    requires ArrayLikeNoT<A>
 #endif
 {
-#ifndef CXB_USE_CXX_CONCEPTS
-    using T = decltype(xs.data[0]);
-#endif
     ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
     ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
-    arena_pop_to(arena, arena->pos - sizeof(xs.data));
+    arena_pop_to(arena, arena->pos - sizeof(xs.data[0]));
 
     ::destroy(&xs.data[xs.len], 1);
     xs.len -= 1;
@@ -939,8 +937,11 @@ struct Array {
         len = xs.size();
         ::copy(data, xs.begin(), xs.size());
     }
-    Array(const Array<T>&) = default;
-    Array(Array<T>&&) = default;
+    Array(const Array<T>& o) : data{o.data}, len{o.len} {}
+    Array(Array<T>&& o) : data{o.data}, len{o.len} {
+        o.data = nullptr;
+        o.len = 0;
+    }
     ~Array() = default;
 
     CXB_MAYBE_INLINE size_t size() const {
@@ -1031,7 +1032,7 @@ struct Array {
         array_pop_all(*this, arena);
     }
     CXB_INLINE void insert(Arena* arena, T value, size_t i) {
-        array_insert(*this, arena, value, i);
+        array_insert(*this, arena, Array<T>{{value}}, i);
     }
     CXB_INLINE void insert(Arena* arena, Array<T> to_insert, size_t i) {
         array_insert(*this, arena, to_insert, i);
@@ -2020,7 +2021,6 @@ struct HashMap {
         Iterator& ensure_occupied() {
             while(LIKELY(hm.table.len != idx) && hm.table[idx].state != HM_STATE_OCCUPIED) {
                 idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
-                println("it idx={}", idx);
             }
             return *this;
         }
@@ -2037,7 +2037,9 @@ struct HashMap {
         }
     };
 
-    Array<Entry> table;
+    using Table = Array<Entry>;
+
+    Table table;
     size_t len;
     Hasher hasher;
 
@@ -2050,6 +2052,13 @@ struct HashMap {
     HashMap& operator=(const HashMap&) = delete;
     HashMap& operator=(HashMap&&) = delete;
     ~HashMap() = default;
+
+    f64 load_factor() const {
+        return (f64) (len) / (f64) (table.len);
+    }
+    bool needs_rehash() const {
+        return UNLIKELY(!table.data) || load_factor() >= CXB_HM_LOAD_CAP_THRESHOLD;
+    }
 
     template <class T>
     CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
@@ -2079,11 +2088,27 @@ struct HashMap {
         return true;
     }
 
-    bool put(Arena* a, const KvPair<K, V>& kv) {
-        if(!table.data) {
+    void maybe_rehash(Arena* a) {
+        if(needs_rehash()) {
             size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
+            Table old_table{};
+            old_table.data = table.data;
+            old_table.len = table.len;
+            table.data = nullptr;
+            table.len = 0;
+
+            // TODO: maybe optimize
             table.resize_fast(a, capacity);
+            for(size_t i = 0; i < old_table.len; ++i) {
+                if(old_table[i].state == HM_STATE_OCCUPIED) {
+                    ASSERT(put(a, {old_table[i].key, old_table[i].value}));
+                }
+            }
         }
+    }
+
+    bool put(Arena* a, const KvPair<K, V>& kv) {
+        maybe_rehash(a);
 
         size_t ii = _key_hash_index(kv.key);
         size_t i = ii;
