@@ -90,8 +90,7 @@ TEST_CASE("array insert", "[Arena]") {
     xs.push_back(arena, 10);
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
 
-    int ys[] = {20, 30, 50, 80};
-    xs.extend(arena, Array<int>(ys, 4));
+    xs.extend(arena, {20, 30, 50, 80});
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
 
     REQUIRE(xs.len == 5);
@@ -135,10 +134,6 @@ TEST_CASE("String8 arena member functions", "[String8][Arena]") {
 TEST_CASE("Array arena member functions", "[Array][Arena]") {
     Arena* arena = arena_make_nbytes(KB(4));
 
-    Array<int> literal = {1, 2};
-    REQUIRE(literal[0] == 1);
-    REQUIRE(literal[1] == 2);
-
     Array<int> arr{};
     arr.push_back(arena, 1);
     arr.push_back(arena, 2);
@@ -154,20 +149,18 @@ TEST_CASE("Array arena member functions", "[Array][Arena]") {
     arr.insert(arena, 5, 1);
     REQUIRE(arr[1] == 5);
 
-    Array<int> ins = {8, 9};
-    arr.insert(arena, ins, 2);
+    arr.insert(arena, 8, 2);
+    arr.insert(arena, 9, 3);
     REQUIRE(arr[2] == 8);
     REQUIRE(arr[3] == 9);
     REQUIRE(arr.size() == 5);
 
-    Array<int> ext = {10, 11};
-    arr.extend(arena, ext);
-    REQUIRE(arr.size() == 7);
-    REQUIRE(arr.back() == 11);
-
+    REQUIRE((void*) (arr.data + arr.len) == (void*) (arena->start + arena->pos));
     arr.pop_back(arena);
-    REQUIRE(arr.back() == 10);
-    REQUIRE(arr.size() == 6);
+    REQUIRE((void*) (arr.data + arr.len) == (void*) (arena->start + arena->pos));
+
+    REQUIRE(arr.back() == 9);
+    REQUIRE(arr.size() == 4);
 
     arr.pop_all(arena);
     REQUIRE(arr.size() == 0);

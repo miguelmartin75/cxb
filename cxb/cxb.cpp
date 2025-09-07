@@ -170,12 +170,17 @@ void string8_resize(String8& str, Arena* arena, size_t n, char fill_char) {
     ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
     ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
-    ASSERT(n > str.size());
 
-    size_t delta = n - str.size();
-    arena_push(arena, delta, alignof(char));
-    memset(str.data + str.len, fill_char, delta);
-    str.len += delta;
+    if(n > str.len) {
+        size_t delta = n - str.len;
+        arena_push<char>(arena, delta);
+        memset(str.data + str.len, fill_char, delta);
+        str.len += delta;
+    } else {
+        size_t pos = arena->pos - (sizeof(char) * (str.len - n));
+        arena_pop_to(arena, pos);
+        str.len = n;
+    }
 }
 
 void string8_push_back(String8& str, Arena* arena, char ch) {
@@ -197,7 +202,7 @@ void string8_pop_back(String8& str, Arena* arena) {
     ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    arena_pop_to(arena, arena->pos - 1);
+    arena_pop_to(arena, arena->pos - sizeof(char));
     str.len -= 1;
     str.data[str.len] = '\0';
     str.not_null_term = false;
@@ -221,7 +226,7 @@ void string8_insert(String8& str, Arena* arena, char ch, size_t i) {
 
     arena_push<char>(arena, 1);
     str.len += 1;
-    memcpy(str.data + i + 1, str.data + i, str.len - i - 1);
+    memmove(str.data + i + 1, str.data + i, str.len - i - 1);
     str.data[i] = ch;
 }
 

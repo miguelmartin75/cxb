@@ -132,6 +132,7 @@ static inline bool is_unary_op(TokenKind type) {
 
 static inline AstNode* add_node(Parser* ctx, NodeKind kind, AstNodeData data, Token tok = Token{}, bool err = false) {
     AstNode* result = arena_push(ctx->tree,
+                                 1,
                                  AstNode{.kind = kind,
                                          .err = err,
                                          .tok = tok,
