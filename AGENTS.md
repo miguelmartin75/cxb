@@ -13,6 +13,19 @@ This repository houses the cxb C++ utility library and its tests.
 ## Development
 Use `rg` for searching the codebase.
 
+### Environment Setup
+Preferred: use Nix to match CI:
+```bash
+nix develop ./ci --system aarch64-linux --command bash ./ci/ci.sh
+```
+If Nix installation fails (e.g., HTTP 403) or is unavailable, install clang and build manually:
+```bash
+apt-get update && apt-get install -y clang
+CXX=clang++ CC=clang cmake -S . -B build -DCXB_BUILD_TESTS=ON
+CXX=clang++ CC=clang cmake --build build
+ctest --test-dir build
+```
+
 ### Building and Testing
 Before building tests, fetch submodules:
 `git submodule update --init --recursive`
