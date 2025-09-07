@@ -53,6 +53,7 @@ free the memory
 
 /* SECTION: configuration */
 #if __cpp_concepts
+#include <concepts>
 #define CXB_USE_CXX_CONCEPTS
 #endif
 
@@ -381,6 +382,7 @@ struct Arena;
 struct String8;
 template <typename T>
 struct Array;
+struct Allocator;
 
 #ifdef CXB_USE_CXX_CONCEPTS
 template <typename A>
@@ -427,6 +429,8 @@ CXB_C_TYPE struct Arena {
 
     // TODO: freelist
     CXB_C_COMPAT_END
+
+    CXB_MAYBE_INLINE Allocator make_alloc();
 };
 
 CXB_C_EXPORT Arena* arena_make(ArenaParams params);
@@ -750,6 +754,11 @@ CXB_C_TYPE struct Allocator {
     }
 };
 
+Allocator make_arena_alloc(Arena* arena);
+CXB_MAYBE_INLINE Allocator Arena::make_alloc() {
+    return make_arena_alloc(this);
+}
+
 CXB_C_COMPAT_BEGIN
 extern Allocator heap_alloc;
 CXB_C_COMPAT_END
@@ -819,7 +828,7 @@ CXB_C_TYPE struct String8 {
 
         String8 c = *this;
         c.data = c.data + ii;
-        c.len = max(0ll, jj - ii + 1);
+        c.len = max<i64>(0, jj - ii + 1);
         c.not_null_term = ii + c.len == len ? this->not_null_term : true;
         return c;
     }
