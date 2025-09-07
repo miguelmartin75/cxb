@@ -82,6 +82,9 @@ CXB_C_COMPAT_END
 #include <limits>
 #include <new>
 #include <type_traits> // 27ms
+#if defined(__APPLE__)
+#include <TargetConditionals.h>
+#endif
 
 #ifdef __cplusplus
 #define CXB_C_EXPORT extern "C"
@@ -124,9 +127,45 @@ CXB_C_COMPAT_BEGIN
 #else
 #define BREAKPOINT() abort()
 #endif
+#if defined(__clang__) || defined(__GNUC__)
+#define LIKELY(x) __builtin_expect(!!(x), 1)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define LIKELY(x) (x)
+#define UNLIKELY(x) (x)
+#endif
 
-#define LIKELY(x) x
-#define UNLIKELY(x) x
+/* Platform detection */
+#if defined(__APPLE__)
+#define CXB_PLATFORM_DARWIN 1
+#if defined(TARGET_OS_OSX) && TARGET_OS_OSX
+#define CXB_PLATFORM_MACOS 1
+#endif
+#if defined(TARGET_OS_IOS) && TARGET_OS_IOS
+#define CXB_PLATFORM_IOS 1
+#endif
+#if defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+#define CXB_PLATFORM_IPHONE 1
+#endif
+#if defined(TARGET_OS_IPAD) && TARGET_OS_IPAD
+#define CXB_PLATFORM_IPAD 1
+#endif
+#if defined(TARGET_OS_WATCH) && TARGET_OS_WATCH
+#define CXB_PLATFORM_APPLE_WATCH 1
+#endif
+#endif
+
+#if defined(__linux__)
+#define CXB_PLATFORM_LINUX 1
+#endif
+
+#if defined(_WIN32) || defined(_WIN64)
+#define CXB_PLATFORM_WINDOWS 1
+#endif
+
+#if defined(CXB_PLATFORM_LINUX) || defined(CXB_PLATFORM_DARWIN)
+#define CXB_PLATFORM_UNIX 1
+#endif
 
 #define INTERNAL static
 #define GLOBAL static
