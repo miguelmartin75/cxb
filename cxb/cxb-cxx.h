@@ -376,6 +376,22 @@ static CXB_INLINE u64 pow2mod(u64 x, u64 b) {
     return x & (b - 1);
 }
 
+// ref: https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+static CXB_INLINE u64 round_up_pow2(u64 x) {
+    if(x <= 1) return 1;
+    x--;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+#if UINTPTR_MAX > 0xFFFFFFFFu
+    x |= x >> 32;
+#endif
+    x++;
+    return x;
+}
+
 /* SECTION: arena */
 struct Arena;
 struct String8;
@@ -2071,6 +2087,11 @@ struct HashMap {
     Hasher hasher;
 
     HashMap() : table{}, len{0}, hasher{} {}
+    HashMap(Arena* arena, size_t bucket_size) : table{}, len{0}, hasher{} {
+        size_t cap = (size_t) round_up_pow2(bucket_size);
+        if(cap < CXB_HM_MIN_CAP) cap = CXB_HM_MIN_CAP;
+        table.resize_fast(arena, cap);
+    }
     HashMap(Arena* arena, std::initializer_list<KvPair<K, V>> xs) : table{}, len{0}, hasher{} {
         extend(arena, Array<KvPair<K, V>>{xs});
     }
@@ -2115,22 +2136,36 @@ struct HashMap {
         return true;
     }
 
+    void _reserve(Arena* a, size_t cap) {
+        size_t capacity = cap < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : cap;
+        DEBUG_ASSERT(round_up_pow2(capacity) == capacity, "{} is not a power of 2", capacity);
+
+        Table old_table{};
+        old_table.data = table.data;
+        old_table.len = table.len;
+        table.data = nullptr;
+        table.len = 0;
+
+        // TODO: maybe optimize
+        table.resize_fast(a, capacity);
+        for(size_t i = 0; i < old_table.len; ++i) {
+            if(old_table[i].state == HM_STATE_OCCUPIED) {
+                ASSERT(put(a, {old_table[i].key, old_table[i].value}));
+            }
+        }
+    }
+
     void maybe_rehash(Arena* a) {
         if(needs_rehash()) {
             size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
-            Table old_table{};
-            old_table.data = table.data;
-            old_table.len = table.len;
-            table.data = nullptr;
-            table.len = 0;
+            reserve(a, capacity);
+        }
+    }
 
-            // TODO: maybe optimize
-            table.resize_fast(a, capacity);
-            for(size_t i = 0; i < old_table.len; ++i) {
-                if(old_table[i].state == HM_STATE_OCCUPIED) {
-                    ASSERT(put(a, {old_table[i].key, old_table[i].value}));
-                }
-            }
+    void reserve(Arena* a, size_t bucket_size) {
+        size_t cap = (size_t) round_up_pow2(bucket_size);
+        if(cap > table.len) {
+            _reserve(a, cap);
         }
     }
 
@@ -2228,6 +2263,13 @@ struct MHashMap : HashMap<K, V, Hasher> {
     Allocator* allocator;
 
     MHashMap(Allocator* allocator = &heap_alloc) : Base{}, allocator{allocator} {}
+    MHashMap(size_t bucket_size, Allocator* allocator = &heap_alloc) : Base{}, allocator{allocator} {
+        size_t cap = (size_t) round_up_pow2(bucket_size);
+        if(cap < CXB_HM_MIN_CAP) cap = CXB_HM_MIN_CAP;
+        this->table.data = allocator->calloc<Entry>(0, cap);
+        this->table.len = cap;
+        this->len = 0;
+    }
     MHashMap(std::initializer_list<Kv> xs, Allocator* allocator = &heap_alloc) : MHashMap(allocator) {
         extend(Array<Kv>{xs});
     }
@@ -2288,22 +2330,32 @@ struct MHashMap : HashMap<K, V, Hasher> {
     CXB_MAYBE_INLINE void maybe_rehash() {
         if(this->needs_rehash()) {
             size_t capacity = this->table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : this->table.len * 2;
-            Entry* old_data = this->table.data;
-            size_t old_cap = this->table.len;
-
-            this->table.data = allocator->calloc<Entry>(0, capacity);
-            this->table.len = capacity;
-            this->len = 0;
-
-            for(size_t i = 0; i < old_cap; ++i) {
-                if(old_data[i].state == HM_STATE_OCCUPIED) {
-                    put({move(old_data[i].key), move(old_data[i].value)});
-                    ::destroy(&old_data[i].key, 1);
-                    ::destroy(&old_data[i].value, 1);
-                }
-            }
-            if(old_data) allocator->free(old_data, old_cap);
+            _reserve(capacity);
         }
+    }
+
+    CXB_MAYBE_INLINE void _reserve(size_t capacity) {
+        Entry* old_data = this->table.data;
+        size_t old_cap = this->table.len;
+
+        this->table.data = allocator->calloc<Entry>(0, capacity);
+        this->table.len = capacity;
+        this->len = 0;
+
+        for(size_t i = 0; i < old_cap; ++i) {
+            if(old_data && old_data[i].state == HM_STATE_OCCUPIED) {
+                put({move(old_data[i].key), move(old_data[i].value)});
+                ::destroy(&old_data[i].key, 1);
+                ::destroy(&old_data[i].value, 1);
+            }
+        }
+        if(old_data) allocator->free(old_data, old_cap);
+    }
+
+    CXB_MAYBE_INLINE void reserve(size_t bucket_size) {
+        size_t cap = (size_t) round_up_pow2(bucket_size);
+        if(cap < CXB_HM_MIN_CAP) cap = CXB_HM_MIN_CAP;
+        if(!this->table.data || this->table.len != cap) _reserve(cap);
     }
 
     CXB_MAYBE_INLINE bool extend(Array<Kv> xs) {
@@ -2342,6 +2394,9 @@ struct AHashMap : MHashMap<K, V, Hasher> {
     using Kv = KvPair<K, V>;
 
     AHashMap(Allocator* allocator = &heap_alloc) : Base{allocator} {}
+    AHashMap(size_t bucket_size, Allocator* allocator = &heap_alloc) : Base{allocator} {
+        this->reserve(bucket_size);
+    }
     AHashMap(std::initializer_list<Kv> xs, Allocator* allocator = &heap_alloc) : Base{allocator} {
         this->extend(Array<Kv>{xs});
     }
