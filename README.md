@@ -8,7 +8,7 @@ An unorthodox C++ base library with a focus on performance & simplicity
 Current Header Compile Times:
 * `cxb-cxx.h`: 164±150ms on Apple M1 Max
 
-![coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)
+![coverage](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/codex/cxb/gh-pages/coverage.json)
 
 ## Development
 
