@@ -398,6 +398,8 @@ struct Arena;
 struct String8;
 template <typename T>
 struct Array;
+template <typename T, size_t N>
+struct StaticArray;
 struct Allocator;
 
 #ifdef CXB_USE_CXX_CONCEPTS
@@ -999,7 +1001,7 @@ struct Array {
 
     Array() : data{nullptr}, len{0} {}
     Array(T* data, size_t len) : data{data}, len{len} {}
-    Array(std::initializer_list<T> xs) : data{const_cast<T*>(xs.begin())}, len{xs.size()} {}
+    Array(std::initializer_list<T>) = delete;
     Array(Arena* a, std::initializer_list<T> xs) : data{nullptr}, len{0} {
         data = arena_push_fast<T>(a, xs.size());
         len = xs.size();
@@ -1100,15 +1102,42 @@ struct Array {
         array_pop_all(*this, arena);
     }
     CXB_INLINE void insert(Arena* arena, T value, size_t i) {
-        array_insert(*this, arena, Array<T>{{value}}, i);
+        StaticArray<T, 1> tmp{{value}};
+        array_insert(*this, arena, tmp, i);
     }
     CXB_INLINE void insert(Arena* arena, Array<T> to_insert, size_t i) {
+        array_insert(*this, arena, to_insert, i);
+    }
+    template <size_t N>
+    CXB_INLINE void insert(Arena* arena, const StaticArray<T, N>& to_insert, size_t i) {
         array_insert(*this, arena, to_insert, i);
     }
     CXB_INLINE void extend(Arena* arena, Array<T> to_append) {
         array_extend(*this, arena, to_append);
     }
+    template <size_t N>
+    CXB_INLINE void extend(Arena* arena, const StaticArray<T, N>& to_append) {
+        array_extend(*this, arena, to_append);
+    }
 };
+
+template <typename T, size_t N>
+struct StaticArray {
+    T data[N];
+    size_t len = N;
+
+    CXB_INLINE operator Array<T>() & {
+        return Array<T>{data, len};
+    }
+    CXB_INLINE operator Array<T>() && = delete;
+};
+
+template <typename T, size_t N>
+CXB_INLINE StaticArray<T, N> make_static_array(const T (&xs)[N]) {
+    StaticArray<T, N> sa{};
+    ::copy(sa.data, xs, N);
+    return sa;
+}
 
 // *SECTION*: formatting library
 
