@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
 #define CXB_EXPORT
 #define CXB_INTERNAL static
 #define COUNTOF_LIT(a) (size_t) (sizeof(a) / sizeof(*(a)))
@@ -94,8 +93,8 @@
 #endif
 
 #if ASAN_ENABLED
-CXB_C_IMPORT void __asan_poison_memory_region(void const volatile* addr, size_t size);
-CXB_C_IMPORT void __asan_unpoison_memory_region(void const volatile* addr, size_t size);
+void __asan_poison_memory_region(void const volatile* addr, size_t size);
+void __asan_unpoison_memory_region(void const volatile* addr, size_t size);
 #define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region((addr), (size))
 #define ASAN_UNPOISON_MEMORY_REGION(addr, size) __asan_unpoison_memory_region((addr), (size))
 #else
@@ -153,30 +152,47 @@ typedef _Atomic(u128) atomic_u128;
 #else
 #define CXB_INLINE inline
 #endif
-
 struct ArenaParams {
-    struct Arena {
-        struct ArenaTmp {
-            struct Allocator {
-                extern Allocator heap_alloc;
-
-                struct String8 {
-                    struct String8SplitIterator {
-                        struct Vec2f {
-                            struct Vec2i {
-                                struct Size2i {
-                                    struct Vec3f {
-                                        struct Vec3i {
-                                            struct Rect2f {
-                                                struct Rect2ui {
-                                                    struct Color4f {
-                                                        struct Color4i {
-                                                            struct Mat33f {
-                                                                struct Mat44f {
-                                                                    struct MString8 {
+};
+struct Arena {
+};
+struct ArenaTmp {
+};
+struct Allocator {
+};
+extern Allocator heap_alloc;
+struct String8 {
+};
+struct String8SplitIterator {
+};
+struct Vec2f {
+};
+struct Vec2i {
+};
+struct Size2i {
+};
+struct Vec3f {
+};
+struct Vec3i {
+};
+struct Rect2f {
+};
+struct Rect2ui {
+};
+struct Color4f {
+};
+struct Color4i {
+};
+struct Mat33f {
+};
+struct Mat44f {
+};
+struct MString8 {
+};
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
 #define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
 #define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .not_null_term = false})
-
-                                                                        struct Utf8Iter {
-                                                                            struct Utf8IterBatch {
+struct Utf8Iter {
+};
+struct Utf8IterBatch {
+};
