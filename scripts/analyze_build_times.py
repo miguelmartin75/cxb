@@ -59,8 +59,6 @@ def configure_cmake(build_dir: Path, source_dir: Path) -> bool:
         "-B", str(build_dir),
         "-S", str(source_dir),
         "-DCMAKE_BUILD_TYPE=Debug",
-        "-DCMAKE_C_COMPILER=clang",
-        "-DCMAKE_CXX_COMPILER=clang++",
         "-DCXB_BUILD_TESTS=ON",
         "-DCXB_BUILD_C_API_TESTS=ON",
         "-DCXB_BUILD_EXAMPLES=ON",
