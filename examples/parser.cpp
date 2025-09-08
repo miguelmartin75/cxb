@@ -52,9 +52,7 @@ C_EXPORT Module* module_make(String8 name, Arena* arena, Arena* tree) {
 
 C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path) {
     ParseFileResult res = {};
-    // TODO
-    /*
-    auto file = open_file(mod->arena, file_path);
+    auto file = open_memfile(mod->arena, file_path);
     if(file) {
         res.file_err = file.error;
         return res;
@@ -63,7 +61,7 @@ C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path) {
     mod->file = file.value;
     if(mod->tree == nullptr) {
         // TODO: test this ratio
-        u64 n_bytes = max((u64) (1 * mod->file->len), KB(64));
+        u64 n_bytes = max((u64) (1 * mod->file.data.len), KB(64));
         mod->tree = arena_make_nbytes(n_bytes);
     }
 
@@ -71,13 +69,12 @@ C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path) {
     Parser* parser = mod->parser;
     *parser = {};
     parser->idx = 0;
-    parser->buffer = S8_DATA((char*) mod->file->data, mod->file->len);
+    parser->buffer = mod->file.data.as_string8(false);
     parser->tree = mod->tree;
     parser->error_arena = mod->arena;
     mod->root = parse_module(mod->parser);
 
     res.num_errors = mod->parse_errors.len;
-    */
     return res;
 }
 
