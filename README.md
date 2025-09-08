@@ -26,6 +26,8 @@ Build with tests enabled and run the fuzz target:
 ./build/string_fuzz -max_total_time=60
 ```
 
+`string_fuzz` is only built when the compiler supports `-fsanitize=fuzzer`; builds without a libFuzzer runtime will skip this target.
+
 # TODOs
 - [ ] formatting
     - [x] print & format alternative (using fmtlib for floats)
