@@ -29,7 +29,7 @@ STD_HEADERS: List[str] = [
 ]
 
 # Relative path of the markdown file storing parse-time benchmarks for std headers.
-PARSE_TIMES_MD = Path(__file__).parent.parent / "tests/benchmarks" / "PARSE_TIMES.md"
+PARSE_TIMES_MD = Path(__file__).parent.parent / "tests/benchs" / "PARSE_TIMES.md"
 
 
 def run_command(cmd: List[str], cwd: Optional[Path] = None) -> Tuple[int, str, str]:
