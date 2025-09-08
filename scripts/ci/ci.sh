@@ -33,8 +33,9 @@ for compiler in "${compilers[@]}"; do
 
     build_dir="build/${compiler}-${build_type}"
     rm -rf "$build_dir"
-    cmake -B "$build_dir" -DCMAKE_BUILD_TYPE="${build_type}" -DCXB_BUILD_C_API_TESTS=ON
-    cmake --build "$build_dir" --config "${build_type}" -j
+    cmake -B "$build_dir" -DCMAKE_BUILD_TYPE="${build_type}" -DCXB_BUILD_C_API_TESTS=ON -DCXB_BUILD_TESTS=ON -DCXB_BUILD_FUZZERS=ON -DCXB_BUILD_TOOLS=ON
+    # cmake --build "$build_dir" --config "${build_type}" -j
+    cmake --build "$build_dir" --config "${build_type}"
 
     pushd "$build_dir" >/dev/null
     ctest --output-on-failure --verbose

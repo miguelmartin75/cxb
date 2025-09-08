@@ -13,7 +13,6 @@ Result<MemFile, FileOpenErr> open_memfile(Arena* arena, String8 filepath) {
     struct stat sb;
     fstat(fd, &sb);
 
-    // if (!S_ISREG(sb.st_mode)) {
     if(S_ISDIR(sb.st_mode)) {
         close(fd);
         result.error = FileOpenErr::IsNotFile;

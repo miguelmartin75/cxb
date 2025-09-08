@@ -8,8 +8,8 @@
 
 struct TestInit {
     TestInit() {
-        cxb_init(CxbRuntimeParams{.scratch_params = ArenaParams{.reserve_bytes = GB(1), .max_n_blocks = 0},
-                                  .perm_params = {}});
+        cxb_init(CxbRuntimeParams{.perm_params = {},
+                                  .scratch_params = ArenaParams{.reserve_bytes = GB(1), .max_n_blocks = 0}});
     }
 } init;
 
