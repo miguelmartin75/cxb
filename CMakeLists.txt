@@ -3,14 +3,15 @@ cmake_minimum_required(VERSION 3.19)
 project(cxb LANGUAGES C CXX VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS YES)
 
 option(CXB_BUILD_TOOLS "build tools?" OFF)
 option(CXB_BUILD_TESTS "enable tests?" OFF)
 option(CXB_BUILD_EXAMPLES "enable examples?" OFF)
-option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 option(CXB_BUILD_FUZZERS "build fuzzers?" OFF)
+option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 
 set(CXB_SRCS "cxb/cxb.cpp")
 set(CXB_DEPS_INCLUDE_DIRS deps/fmt/include deps/fmt/src)
@@ -22,29 +23,33 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wall -Wextra)
 endif()
 
-function(add_test_exe test_name test_source fsanitize)
-    add_executable(${test_name} ${test_source} ${CXB_SRCS})
+function(add_exe name sources)
+    add_executable(${name} ${sources} ${CXB_SRCS})
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
+    target_compile_options(${name} PRIVATE -std=c++23)
     # TODO: remove fmtlib dependency
-    target_include_directories(${test_name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
-    target_link_libraries(${test_name} PRIVATE Catch2::Catch2WithMain ${ARGN})
-    if(${fsanitize} AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-        target_compile_options(${test_name} PRIVATE
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+    if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+        target_compile_options(${name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
             -fno-omit-frame-pointer
+            -std=c++23
         )
-        target_link_options(${test_name} PRIVATE
+        target_link_options(${name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
         )
     endif()
 endfunction()
 
-function(add_exe name sources)
-    add_executable(${name} ${sources} ${CXB_SRCS})
+function(add_test_exe name test_source fsanitize)
+    add_executable(${name} ${test_source} ${CXB_SRCS})
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
     # TODO: remove fmtlib dependency
     target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
-    if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+    target_link_libraries(${name} PRIVATE Catch2::Catch2WithMain ${ARGN})
+    if(${fsanitize} AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
         target_compile_options(${name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
@@ -59,6 +64,7 @@ endfunction()
 
 function(add_fuzz_exe name sources)
     add_executable(${name} ${sources} ${CXB_SRCS})
+    set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
     # TODO: remove fmtlib dependency
     target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
     target_compile_options(${name} PRIVATE
@@ -73,7 +79,9 @@ endfunction()
 if(CXB_BUILD_EXAMPLES)
     set(INTERPRETER_SRCS examples/interpreter.cpp examples/parser.cpp examples/memfile.cpp)
     add_exe(interpreter "${INTERPRETER_SRCS}")
+endif()
 
+if(CXB_BUILD_TOOLS)
     add_exe(extract_capi scripts/extract_capi.cpp)
 endif()
 

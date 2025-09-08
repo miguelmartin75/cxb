@@ -53,6 +53,7 @@ free the memory
 
 /* SECTION: configuration */
 #if __cpp_concepts
+#include <concepts>
 #define CXB_USE_CXX_CONCEPTS
 #endif
 
@@ -538,7 +539,7 @@ inline void array_resize_fast(A& xs, Arena* arena, size_t new_size)
     if(UNLIKELY(new_size == xs.len)) return;
 
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
-                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
                  "array not allocated on arena");
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
                  "cannot resize unless array is at the end");
@@ -563,7 +564,7 @@ inline void array_resize(A& xs, Arena* arena, size_t new_size)
     if(UNLIKELY(new_size == xs.len)) return;
 
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
-                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
                  "array not allocated on arena");
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
                  "cannot resize unless array is at the end");
@@ -590,9 +591,9 @@ inline void array_resize(A& xs, Arena* arena, size_t new_size, T default_value)
     if(UNLIKELY(new_size == xs.len)) return;
 
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
-                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
                  "array not allocated on arena");
-    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || ((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos)),
                  "cannot resize unless array is at the end");
     if(new_size > xs.len) {
         T* data = arena_push<T>(arena, new_size - xs.len, default_value);
@@ -611,7 +612,7 @@ inline void array_push_back(A& xs, Arena* arena, T value)
 #endif
 {
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
-                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
                  "array not allocated on arena");
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
                  "cannot push unless array is at the end");
@@ -629,9 +630,14 @@ inline void array_emplace_back(A& xs, Arena* arena, Args&&... args)
 {
     using T = std::remove_reference_t<decltype(xs.data[0])>;
 
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    arena_push_bytes(arena, sizeof(T), alignof(T));
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
+                 "array not allocated on arena");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || ((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos)),
+                 "cannot push unless array is at the end");
+
+    void* data = arena_push_bytes(arena, sizeof(T), alignof(T));
+    xs.data = UNLIKELY(xs.data == nullptr) ? (T*) data : xs.data;
     xs.data[xs.len] = T{forward<Args>(args)...};
     xs.len += 1;
 }
@@ -642,8 +648,11 @@ inline void array_pop_back(A& xs, Arena* arena)
     requires ArrayLike<A>
 #endif
 {
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
+                 "array not allocated on arena");
+    DEBUG_ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot pop unless array is at the end");
     ::destroy(&xs.data[xs.len - 1], 1);
     arena_pop_to(arena, arena->pos - sizeof(xs.data[0]));
     xs.len -= 1;
@@ -657,9 +666,12 @@ inline void array_insert(A& xs, Arena* arena, const B& to_insert, size_t i)
 {
     using T = std::remove_reference_t<decltype(xs.data[0])>;
 
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot push unless array is at the end");
-    ASSERT(i <= xs.len, "insert position out of bounds");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
+                 "array not allocated on arena");
+    DEBUG_ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot push unless array is at the end");
+    DEBUG_ASSERT(i <= xs.len, "insert position out of bounds");
 
     arena_push_bytes(arena, to_insert.len * sizeof(T), alignof(T));
 
@@ -679,7 +691,7 @@ inline void array_extend(A& xs, Arena* arena, const B& to_append)
     using T = std::remove_reference_t<decltype(xs.data[0])>;
 
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
-                     (void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end,
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
                  "array not allocated on arena");
     DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) || (void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
                  "cannot extend unless array is at the end");
@@ -699,8 +711,11 @@ inline void array_pop_all(A& xs, Arena* arena)
     requires ArrayLike<A>
 #endif
 {
-    ASSERT((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end, "array not allocated on arena");
-    ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos), "cannot pop unless array is at the end");
+    DEBUG_ASSERT(UNLIKELY(xs.data == nullptr) ||
+                     ((void*) xs.data >= (void*) arena->start && (void*) xs.data < arena->end),
+                 "array not allocated on arena");
+    DEBUG_ASSERT((void*) (xs.data + xs.len) == (void*) (arena->start + arena->pos),
+                 "cannot pop unless array is at the end");
     arena_pop_to(arena, arena->pos - (sizeof(xs.data[0]) * xs.len));
     xs.data = nullptr;
     xs.len = 0;
