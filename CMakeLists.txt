@@ -26,7 +26,6 @@ endif()
 function(add_exe name sources)
     add_executable(${name} ${sources} ${CXB_SRCS})
     set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
-    target_compile_options(${name} PRIVATE -std=c++23)
     # TODO: remove fmtlib dependency
     target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
     if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
@@ -44,7 +43,6 @@ endfunction()
 
 function(add_test_exe name test_source fsanitize)
     add_executable(${name} ${test_source} ${CXB_SRCS})
-    set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
     # TODO: remove fmtlib dependency
     target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
     target_link_libraries(${name} PRIVATE Catch2::Catch2WithMain ${ARGN})
