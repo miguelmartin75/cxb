@@ -322,6 +322,52 @@ TEST_CASE("Utf8Iterator with unicode", "[Utf8Iterator]") {
     end_scratch(scratch);
 }
 
+TEST_CASE("String8SplitIterator basic usage", "[String8][Split]") {
+    String8 s = S8_LIT("foo,bar,baz");
+    String8 expected[] = {S8_LIT("foo"), S8_LIT("bar"), S8_LIT("baz")};
+    String8SplitIterator it = string8_split(s, S8_LIT(","));
+    String8 part;
+    for(int i = 0; i < 3; ++i) {
+        REQUIRE(it.next(part));
+        REQUIRE(part == expected[i]);
+    }
+    REQUIRE_FALSE(it.next(part));
+}
+
+TEST_CASE("String8SplitIterator range and collect", "[String8][Split]") {
+    String8 s = S8_LIT("one two three");
+    String8 expected[] = {S8_LIT("one"), S8_LIT("two"), S8_LIT("three")};
+    size_t idx = 0;
+    for(String8 part : string8_split(s, S8_LIT(" "))) {
+        REQUIRE(part == expected[idx++]);
+    }
+    REQUIRE(idx == 3);
+
+    ArenaTmp scratch = begin_scratch();
+    Array<String8> parts1 = string8_split(s, S8_LIT(" ")).collect(scratch.arena);
+    REQUIRE(parts1.len == 3);
+    REQUIRE(parts1[0] == expected[0]);
+    REQUIRE(parts1[1] == expected[1]);
+    REQUIRE(parts1[2] == expected[2]);
+
+    Array<String8> parts2 = string8_split_collect(scratch.arena, string8_split(s, S8_LIT(" ")));
+    REQUIRE(parts2.len == 3);
+    REQUIRE(parts2[0] == expected[0]);
+    REQUIRE(parts2[1] == expected[1]);
+    REQUIRE(parts2[2] == expected[2]);
+    end_scratch(scratch);
+}
+
+TEST_CASE("string8_split_any splits on any matching character", "[String8][Split]") {
+    String8 s = S8_LIT("one,two;three four");
+    String8 expected[] = {S8_LIT("one"), S8_LIT("two"), S8_LIT("three"), S8_LIT("four")};
+    size_t idx = 0;
+    for(String8 part : string8_split_any(s, S8_LIT(",; "))) {
+        REQUIRE(part == expected[idx++]);
+    }
+    REQUIRE(idx == 4);
+}
+
 TEST_CASE("string8_parse floating point", "[String8][Parse]") {
     String8 s = S8_LIT("3.14f");
     auto res = string8_parse<f64>(s);
