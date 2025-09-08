@@ -307,6 +307,8 @@ void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i) {
 }
 
 void string8_extend(String8& str, Arena* arena, String8 to_append) {
+    if(to_append.len == 0) return;
+
     ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
            "string not allocated on arena");
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
@@ -318,6 +320,67 @@ void string8_extend(String8& str, Arena* arena, String8 to_append) {
     size_t old_len = str.len;
     str.len += to_append.len;
     memcpy(str.data + old_len, to_append.data, to_append.len);
+}
+
+CXB_C_EXPORT bool string8_split_next(String8SplitIterator* iter, String8* out) {
+    if(iter->pos > iter->s.len) return false;
+
+    size_t start = iter->pos;
+
+    if(iter->any) {
+        while(iter->pos < iter->s.len) {
+            char c = iter->s[iter->pos];
+            bool match = false;
+            for(size_t i = 0; i < iter->delim.len; ++i) {
+                if(c == iter->delim[i]) {
+                    match = true;
+                    break;
+                }
+            }
+            if(match) break;
+            iter->pos += 1;
+        }
+
+        size_t end = iter->pos;
+        bool at_end = end == iter->s.len;
+        *out = String8{
+            .data = iter->s.data + start,
+            .len = end - start,
+            .not_null_term = at_end ? iter->s.not_null_term : true,
+        };
+
+        if(iter->pos < iter->s.len) {
+            iter->pos += 1;
+        } else {
+            iter->pos = iter->s.len + 1;
+        }
+
+        return true;
+    }
+
+    while(iter->pos < iter->s.len) {
+        if(iter->pos + iter->delim.len <= iter->s.len &&
+           memcmp(iter->s.data + iter->pos, iter->delim.data, iter->delim.len) == 0) {
+            break;
+        }
+        iter->pos += 1;
+    }
+
+    size_t end = iter->pos;
+    bool at_end = end == iter->s.len;
+    *out = String8{
+        .data = iter->s.data + start,
+        .len = end - start,
+        .not_null_term = at_end ? iter->s.not_null_term : true,
+    };
+
+    if(iter->pos < iter->s.len) {
+        iter->pos += iter->delim.len;
+    } else {
+        iter->pos = iter->s.len + 1;
+    }
+
+    return true;
 }
 
 thread_local ThreadLocalRuntime cxb_runtime = {};
