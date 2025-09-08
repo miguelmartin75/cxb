@@ -75,6 +75,7 @@ CXB_C_COMPAT_BEGIN
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h> // atof
 #include <string.h>
 CXB_C_COMPAT_END
 

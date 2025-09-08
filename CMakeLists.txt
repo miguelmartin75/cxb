@@ -61,15 +61,13 @@ function(add_fuzz_exe name sources)
     add_executable(${name} ${sources} ${CXB_SRCS})
     # TODO: remove fmtlib dependency
     target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
-    if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
-        target_compile_options(${name} PRIVATE
-            -fsanitize=fuzzer,address,undefined
-            -fno-omit-frame-pointer
-        )
-        target_link_options(${name} PRIVATE
-            -fsanitize=fuzzer,address,undefined
-        )
-    endif()
+    target_compile_options(${name} PRIVATE
+        -fsanitize=fuzzer,address,undefined
+        -fno-omit-frame-pointer
+    )
+    target_link_options(${name} PRIVATE
+        -fsanitize=fuzzer,address,undefined
+    )
 endfunction()
 
 if(CXB_BUILD_EXAMPLES)
@@ -102,20 +100,6 @@ if(CXB_BUILD_TESTS)
     add_test(NAME test_hm COMMAND test_hm)
     add_test(NAME test_algos COMMAND test_algos)
 
-    include(CheckCXXCompilerFlag)
-    check_cxx_compiler_flag("-fsanitize=fuzzer" CXB_HAS_FUZZER)
-    if(CXB_HAS_FUZZER)
-        add_executable(string_fuzz tests/fuzz/string_fuzz.cpp ${CXB_SRCS})
-        target_include_directories(string_fuzz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
-        target_compile_options(string_fuzz PRIVATE
-            -fsanitize=fuzzer,address,undefined
-            -fno-omit-frame-pointer
-        )
-        target_link_options(string_fuzz PRIVATE
-            -fsanitize=fuzzer,address,undefined
-        )
-    endif()
-
     # if(CXB_BUILD_C_API_TESTS)
     if(0)  # TODO
         # Pure C test
@@ -133,6 +117,11 @@ if(CXB_BUILD_TESTS)
     endif()
 endif()
 
-if(CXB_BUILD_FUZZERS)
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-fsanitize=fuzzer" CXB_HAS_FUZZER)
+if(CXB_BUILD_FUZZERS AND CXB_HAS_FUZZER)
     add_fuzz_exe(hashmap_fuzz tests/fuzz/hashmap_fuzz.cpp)
+    add_fuzz_exe(string_fuzz tests/fuzz/string_fuzz.cpp)
+elseif(CXB_BUILD_FUZZERS)
+    message(WARNING "CXB_BUILD_FUZZERS is ON, but compiler does not support -fsanitize=fuzzer (CXB_HAS_FUZZER=${CXB_HAS_FUZZER})")
 endif()
