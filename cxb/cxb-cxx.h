@@ -1079,7 +1079,7 @@ CXB_MAYBE_INLINE std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> s
 
     ArenaTmp tmp = begin_scratch();
     result.value = atof(str.c_str_maybe_copy(tmp.arena));
-    result.n_consumed = str.len - 1; // TODO
+    result.n_consumed = str.len; // TODO
     result.exists = true;
     end_scratch(tmp);
     return result;
@@ -1099,9 +1099,21 @@ struct Array {
         ::copy(data, xs.begin(), xs.size());
     }
     Array(const Array<T>& o) : data{o.data}, len{o.len} {}
+    Array<T>& operator=(const Array<T>& o) {
+        data = o.data;
+        len = o.len;
+        return *this;
+    }
     Array(Array<T>&& o) : data{o.data}, len{o.len} {
         o.data = nullptr;
         o.len = 0;
+    }
+    Array<T>& operator=(Array<T>&& o) {
+        data = o.data;
+        len = o.len;
+        o.data = nullptr;
+        o.len = 0;
+        return *this;
     }
     ~Array() = default;
 
