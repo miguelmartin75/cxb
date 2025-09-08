@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     enum State {
         STATE_NONE,
         STATE_IN_COMPAT_BLOCK,
-    } state = NONE;
+    } state = STATE_NONE;
 
     String8 in_data_str = in_f.value.data.as_string8();
     auto line_iter = in_data_str.split("\n"_s8);
@@ -34,17 +34,25 @@ int main(int argc, char* argv[]) {
     println(out_f, "#pragma once\n");
     while(line_iter.next(line)) {
         if(line.starts_with("CXB_C_IMPORT"_s8)) {
-            println("line={}, state={}", line, (int) state);
-            println(out_f, "{}", line.trim_all("CXB_C_TYPE"_s8).trim(" "_s8));
+            println(out_f, "{}", line.trim_all_left("CXB_C_IMPORT"_s8).trim(" "_s8));
         } else if(line.starts_with("CXB_C_TYPE"_s8)) {
             scope = SCOPE_TYPE;
-            println(out_f, "{}", line.trim_all("CXB_C_TYPE"_s8).trim(" "_s8));
-            continue;
+            println(out_f, "{}", line.trim_all_left("CXB_C_TYPE"_s8).trim(" "_s8));
         } else if(line.starts_with("};"_s8)) {
             if(scope == SCOPE_TYPE) {
                 scope = SCOPE_GLOBAL;
                 println(out_f, "{}", line.trim(" "_s8));
             }
+        } else if(line.starts_with("CXB_C_COMPAT_END"_s8)) {
+            if(state != STATE_IN_COMPAT_BLOCK) {
+                println(stderr, "CXB_C_COMPAT_END must be before CXB_C_COMPAT_BEGIN");
+                return 3;
+            }
+            if(line != "CXB_C_COMPAT_END"_s8) {
+                println(stderr, "CXB_C_COMPAT_END should be on a seperate line");
+                return 4;
+            }
+            state = STATE_NONE;
         } else if(line.starts_with("CXB_C_COMPAT_BEGIN"_s8)) {
             if(state == STATE_IN_COMPAT_BLOCK) {
                 println(stderr, "nested CXB_C_COMPAT_BEGIN / CXB_C_COMPAT_END block not supported");
@@ -52,28 +60,11 @@ int main(int argc, char* argv[]) {
             }
             if(line != "CXB_C_COMPAT_BEGIN"_s8) {
                 println(stderr, "CXB_C_COMPAT_BEGIN should be on a seperate line");
-                return 3;
-            }
-            bool has_any = false;
-            while(line_iter.next(line) && !line.starts_with("CXB_C_COMPAT_END"_s8)) {
-                println(out_f, "{}", line);
-                has_any = true;
-            }
-            if(has_any) {
-                println(out_f, "");
-                (void) line_iter.next(line);
-            } else {
-                println(stderr, "CXB_C_COMPAT_BEGIN / CXB_C_COMPAT_END has no content");
                 return 4;
             }
-        }
-
-        // go to end of type decl
-        if(state == TYPE_SCOPE) {
-            while(line_iter.next(line) && !line.starts_with("};"_s8)) {
-                continue;
-            }
-            state = GLOBAL_SCOPE;
+            state = STATE_IN_COMPAT_BLOCK;
+        } else if (state == STATE_IN_COMPAT_BLOCK) {
+            println(out_f, "{}", line);
         }
     }
 
