@@ -52,6 +52,8 @@ C_EXPORT Module* module_make(String8 name, Arena* arena, Arena* tree) {
 
 C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path) {
     ParseFileResult res = {};
+    // TODO
+    /*
     auto file = open_file(mod->arena, file_path);
     if(file) {
         res.file_err = file.error;
@@ -75,6 +77,7 @@ C_EXPORT ParseFileResult module_parse_file(Module* mod, String8 file_path) {
     mod->root = parse_module(mod->parser);
 
     res.num_errors = mod->parse_errors.len;
+    */
     return res;
 }
 

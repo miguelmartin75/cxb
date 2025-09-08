@@ -53,7 +53,6 @@ free the memory
 
 /* SECTION: configuration */
 #if __cpp_concepts
-#include <concepts>
 #define CXB_USE_CXX_CONCEPTS
 #endif
 
@@ -79,7 +78,6 @@ CXB_C_COMPAT_BEGIN
 #include <string.h>
 CXB_C_COMPAT_END
 
-#include <charconv>
 #include <initializer_list>
 #include <limits>
 #include <new>
@@ -901,6 +899,16 @@ CXB_C_TYPE struct String8 {
         return not_null_term ? nullptr : data;
     }
 
+    CXB_MAYBE_INLINE const char* c_str_maybe_copy(Arena* a) const {
+        if(not_null_term) {
+            char* new_data = arena_push_fast<char>(a, len + 1);
+            ::copy(new_data, data, len);
+            new_data[len] = '\0';
+            return new_data;
+        }
+        return data;
+    }
+
     CXB_MAYBE_INLINE int compare(const String8& o) const {
         int result = memcmp(data, o.data, len < o.len ? len : o.len);
         if(result == 0) {
@@ -1044,16 +1052,12 @@ CXB_MAYBE_INLINE std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> s
                                                                                              u64 base = 10) {
     ASSERT(base == 10, "only base 10 supported for floats");
     ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
-    const char* begin = str.data;
-    const char* end = str.data + str.len;
-    auto fc = std::from_chars(begin, end, result.value);
-    if(fc.ec == std::errc()) {
-        result.n_consumed = (size_t) (fc.ptr - begin);
-        result.exists = result.n_consumed > 0;
-    } else {
-        result.exists = false;
-        result.n_consumed = 0;
-    }
+
+    ArenaTmp tmp = begin_scratch();
+    result.value = atof(str.c_str_maybe_copy(tmp.arena));
+    result.n_consumed = str.len - 1;  // TODO
+    result.exists = true;
+    end_scratch(tmp);
     return result;
 }
 
@@ -1181,6 +1185,13 @@ struct Array {
     template <size_t N>
     CXB_INLINE void extend(Arena* arena, const StaticArray<T, N>& to_append) {
         array_extend(*this, arena, to_append);
+    }
+
+    // Convert Array<char> view into String8. Only participates when T == char.
+    template <typename U = T, typename = std::enable_if_t<std::is_same_v<U, char>>>
+    CXB_MAYBE_INLINE String8 as_string8(bool nt_len = true) const {
+        bool is_nt = (len > 0 && data[len - 1] == '\0');
+        return String8{.data = data, .len = len - (is_nt && nt_len), .not_null_term = !is_nt};
     }
 };
 
@@ -2139,6 +2150,14 @@ CXB_INLINE void println(const char* fmt, const Args&... args) {
     ArenaTmp a = begin_scratch();
     String8 str = format(a.arena, fmt, args...);
     print("{}\n", str);
+    end_scratch(a);
+}
+
+template <typename... Args>
+CXB_INLINE void println(FILE* f, const char* fmt, const Args&... args) {
+    ArenaTmp a = begin_scratch();
+    String8 str = format(a.arena, fmt, args...);
+    print(f, "{}\n", str);
     end_scratch(a);
 }
 

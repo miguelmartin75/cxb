@@ -6,8 +6,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-Result<File*, FileOpenErr> open_file(Arena* arena, String8 filepath) {
-    Result<File*, FileOpenErr> result = {};
+Result<File, FileOpenErr> open_file(Arena* arena, String8 filepath) {
+    Result<File, FileOpenErr> result = {};
 
     int fd = open(filepath.data, O_RDONLY);
     struct stat sb;
@@ -26,15 +26,14 @@ Result<File*, FileOpenErr> open_file(Arena* arena, String8 filepath) {
         return result;
     }
 
-    result.value = arena_push<File>(arena);
-    result.value->filepath = arena_push_string8(arena, filepath);
-    result.value->data = data;
-    result.value->len = sb.st_size;
+    result.value.filepath = arena_push_string8(arena, filepath);
+    result.value.data.data = data;
+    result.value.data.len = sb.st_size;
     return result;
 }
 
-void close_file(File* file) {
-    munmap(file->data, file->len);
-    file->data = nullptr;
-    file->len = 0;
+void close_file(File& file) {
+    munmap(file.data.data, file.data.len);
+    file.data.data = nullptr;
+    file.data.len = 0;
 }
