@@ -396,6 +396,7 @@ static CXB_INLINE u64 round_up_pow2(u64 x) {
 /* SECTION: arena */
 struct Arena;
 struct String8;
+struct String8SplitIterator;
 template <typename T>
 struct Array;
 struct Allocator;
@@ -903,6 +904,9 @@ CXB_C_TYPE struct String8 {
         string8_extend(*this, arena, to_append);
     }
 
+    CXB_INLINE String8SplitIterator split(String8 delim) const;
+    CXB_INLINE String8SplitIterator split_any(String8 chars) const;
+
     // *SECTION*: parsing
     template <typename T>
     CXB_INLINE std::enable_if_t<std::is_integral_v<T> || std::is_floating_point_v<T>, ParseResult<T>> parse(
@@ -1092,6 +1096,79 @@ struct Array {
         array_extend(*this, arena, to_append);
     }
 };
+
+// *SECTION*: String8 splitting
+
+CXB_C_EXPORT bool string8_split_next(String8SplitIterator* iter, String8* out);
+Array<String8> string8_split_collect(Arena* arena, String8SplitIterator iter);
+
+CXB_C_TYPE struct String8SplitIterator {
+    CXB_C_COMPAT_BEGIN
+    String8 s;
+    String8 delim;
+    u64 pos;
+    String8 curr;
+    bool any;
+    CXB_C_COMPAT_END
+
+#ifdef __cplusplus
+    CXB_INLINE bool next(String8& out) {
+        bool has = string8_split_next(this, &out);
+        if(has) curr = out;
+        return has;
+    }
+    CXB_INLINE String8SplitIterator begin() {
+        string8_split_next(this, &curr);
+        return *this;
+    }
+    CXB_INLINE String8SplitIterator end() const {
+        return String8SplitIterator{.s = s, .delim = delim, .pos = s.len + 1, .curr = {}, .any = any};
+    }
+    CXB_INLINE bool operator!=(const String8SplitIterator& o) const {
+        return curr.data != o.curr.data;
+    }
+    CXB_INLINE String8 operator*() const {
+        return curr;
+    }
+    CXB_INLINE String8SplitIterator& operator++() {
+        if(!string8_split_next(this, &curr)) {
+            curr = {};
+            pos = s.len + 1;
+        }
+        return *this;
+    }
+    CXB_INLINE Array<String8> collect(Arena* arena) {
+        return string8_split_collect(arena, *this);
+    }
+#endif // __cplusplus
+};
+
+CXB_INLINE String8SplitIterator string8_split(String8 s, String8 delim) {
+    ASSERT(UNLIKELY(delim.len != 0), "delimiter is an empty string");
+    return String8SplitIterator{.s = s, .delim = delim, .pos = 0, .curr = {}, .any = false};
+}
+
+CXB_INLINE String8SplitIterator string8_split_any(String8 s, String8 chars) {
+    ASSERT(UNLIKELY(chars.len != 0), "delimiter is an empty string");
+    return String8SplitIterator{.s = s, .delim = chars, .pos = 0, .curr = {}, .any = true};
+}
+
+CXB_INLINE Array<String8> string8_split_collect(Arena* arena, String8SplitIterator iter) {
+    Array<String8> out{};
+    String8 part;
+    while(string8_split_next(&iter, &part)) {
+        array_push_back(out, arena, part);
+    }
+    return out;
+}
+
+CXB_INLINE String8SplitIterator String8::split(String8 delim) const {
+    return string8_split(*this, delim);
+}
+
+CXB_INLINE String8SplitIterator String8::split_any(String8 chars) const {
+    return string8_split_any(*this, chars);
+}
 
 // *SECTION*: formatting library
 
