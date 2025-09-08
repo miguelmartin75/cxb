@@ -61,9 +61,9 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
-  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp",
-  "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp",
-  "output": "CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o"
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp",
+  "output": "CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o"
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
@@ -73,9 +73,9 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
-  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_string_header.cpp",
-  "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_string_header.cpp",
-  "output": "CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.o"
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_string_header.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_string_header.cpp",
+  "output": "CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o"
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
@@ -85,9 +85,9 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
-  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_std_headers.dir/tests/benchmarks/bench_std_headers.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_std_headers.cpp",
-  "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_std_headers.cpp",
-  "output": "CMakeFiles/bench_std_headers.dir/tests/benchmarks/bench_std_headers.cpp.o"
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_std_headers.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_std_headers.cpp",
+  "output": "CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.o"
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
@@ -97,9 +97,9 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
-  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_hm.cpp",
-  "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_hm.cpp",
-  "output": "CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.o"
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_hm.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_hm.cpp",
+  "output": "CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o"
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
@@ -109,9 +109,9 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
-  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_algos.cpp",
-  "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_algos.cpp",
-  "output": "CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o"
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_algos.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_algos.cpp",
+  "output": "CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o"
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",

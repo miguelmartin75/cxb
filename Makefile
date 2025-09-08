@@ -333,125 +333,125 @@ cxb/cxb.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/cxb/cxb.cpp.s
 .PHONY : cxb/cxb.cpp.s
 
-tests/benchmarks/bench_algos.o: tests/benchmarks/bench_algos.cpp.o
-.PHONY : tests/benchmarks/bench_algos.o
+tests/benchs/bench_algos.o: tests/benchs/bench_algos.cpp.o
+.PHONY : tests/benchs/bench_algos.o
 
 # target to build an object file
-tests/benchmarks/bench_algos.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o
-.PHONY : tests/benchmarks/bench_algos.cpp.o
+tests/benchs/bench_algos.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o
+.PHONY : tests/benchs/bench_algos.cpp.o
 
-tests/benchmarks/bench_algos.i: tests/benchmarks/bench_algos.cpp.i
-.PHONY : tests/benchmarks/bench_algos.i
+tests/benchs/bench_algos.i: tests/benchs/bench_algos.cpp.i
+.PHONY : tests/benchs/bench_algos.i
 
 # target to preprocess a source file
-tests/benchmarks/bench_algos.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.i
-.PHONY : tests/benchmarks/bench_algos.cpp.i
+tests/benchs/bench_algos.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.i
+.PHONY : tests/benchs/bench_algos.cpp.i
 
-tests/benchmarks/bench_algos.s: tests/benchmarks/bench_algos.cpp.s
-.PHONY : tests/benchmarks/bench_algos.s
+tests/benchs/bench_algos.s: tests/benchs/bench_algos.cpp.s
+.PHONY : tests/benchs/bench_algos.s
 
 # target to generate assembly for a file
-tests/benchmarks/bench_algos.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.s
-.PHONY : tests/benchmarks/bench_algos.cpp.s
+tests/benchs/bench_algos.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.s
+.PHONY : tests/benchs/bench_algos.cpp.s
 
-tests/benchmarks/bench_hm.o: tests/benchmarks/bench_hm.cpp.o
-.PHONY : tests/benchmarks/bench_hm.o
+tests/benchs/bench_hm.o: tests/benchs/bench_hm.cpp.o
+.PHONY : tests/benchs/bench_hm.o
 
 # target to build an object file
-tests/benchmarks/bench_hm.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.o
-.PHONY : tests/benchmarks/bench_hm.cpp.o
+tests/benchs/bench_hm.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o
+.PHONY : tests/benchs/bench_hm.cpp.o
 
-tests/benchmarks/bench_hm.i: tests/benchmarks/bench_hm.cpp.i
-.PHONY : tests/benchmarks/bench_hm.i
+tests/benchs/bench_hm.i: tests/benchs/bench_hm.cpp.i
+.PHONY : tests/benchs/bench_hm.i
 
 # target to preprocess a source file
-tests/benchmarks/bench_hm.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.i
-.PHONY : tests/benchmarks/bench_hm.cpp.i
+tests/benchs/bench_hm.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.i
+.PHONY : tests/benchs/bench_hm.cpp.i
 
-tests/benchmarks/bench_hm.s: tests/benchmarks/bench_hm.cpp.s
-.PHONY : tests/benchmarks/bench_hm.s
+tests/benchs/bench_hm.s: tests/benchs/bench_hm.cpp.s
+.PHONY : tests/benchs/bench_hm.s
 
 # target to generate assembly for a file
-tests/benchmarks/bench_hm.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.s
-.PHONY : tests/benchmarks/bench_hm.cpp.s
+tests/benchs/bench_hm.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.s
+.PHONY : tests/benchs/bench_hm.cpp.s
 
-tests/benchmarks/bench_std_headers.o: tests/benchmarks/bench_std_headers.cpp.o
-.PHONY : tests/benchmarks/bench_std_headers.o
+tests/benchs/bench_std_headers.o: tests/benchs/bench_std_headers.cpp.o
+.PHONY : tests/benchs/bench_std_headers.o
 
 # target to build an object file
-tests/benchmarks/bench_std_headers.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/tests/benchmarks/bench_std_headers.cpp.o
-.PHONY : tests/benchmarks/bench_std_headers.cpp.o
+tests/benchs/bench_std_headers.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.o
+.PHONY : tests/benchs/bench_std_headers.cpp.o
 
-tests/benchmarks/bench_std_headers.i: tests/benchmarks/bench_std_headers.cpp.i
-.PHONY : tests/benchmarks/bench_std_headers.i
+tests/benchs/bench_std_headers.i: tests/benchs/bench_std_headers.cpp.i
+.PHONY : tests/benchs/bench_std_headers.i
 
 # target to preprocess a source file
-tests/benchmarks/bench_std_headers.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/tests/benchmarks/bench_std_headers.cpp.i
-.PHONY : tests/benchmarks/bench_std_headers.cpp.i
+tests/benchs/bench_std_headers.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.i
+.PHONY : tests/benchs/bench_std_headers.cpp.i
 
-tests/benchmarks/bench_std_headers.s: tests/benchmarks/bench_std_headers.cpp.s
-.PHONY : tests/benchmarks/bench_std_headers.s
+tests/benchs/bench_std_headers.s: tests/benchs/bench_std_headers.cpp.s
+.PHONY : tests/benchs/bench_std_headers.s
 
 # target to generate assembly for a file
-tests/benchmarks/bench_std_headers.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/tests/benchmarks/bench_std_headers.cpp.s
-.PHONY : tests/benchmarks/bench_std_headers.cpp.s
+tests/benchs/bench_std_headers.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.s
+.PHONY : tests/benchs/bench_std_headers.cpp.s
 
-tests/benchmarks/bench_string.o: tests/benchmarks/bench_string.cpp.o
-.PHONY : tests/benchmarks/bench_string.o
+tests/benchs/bench_string.o: tests/benchs/bench_string.cpp.o
+.PHONY : tests/benchs/bench_string.o
 
 # target to build an object file
-tests/benchmarks/bench_string.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o
-.PHONY : tests/benchmarks/bench_string.cpp.o
+tests/benchs/bench_string.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o
+.PHONY : tests/benchs/bench_string.cpp.o
 
-tests/benchmarks/bench_string.i: tests/benchmarks/bench_string.cpp.i
-.PHONY : tests/benchmarks/bench_string.i
+tests/benchs/bench_string.i: tests/benchs/bench_string.cpp.i
+.PHONY : tests/benchs/bench_string.i
 
 # target to preprocess a source file
-tests/benchmarks/bench_string.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.i
-.PHONY : tests/benchmarks/bench_string.cpp.i
+tests/benchs/bench_string.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.i
+.PHONY : tests/benchs/bench_string.cpp.i
 
-tests/benchmarks/bench_string.s: tests/benchmarks/bench_string.cpp.s
-.PHONY : tests/benchmarks/bench_string.s
+tests/benchs/bench_string.s: tests/benchs/bench_string.cpp.s
+.PHONY : tests/benchs/bench_string.s
 
 # target to generate assembly for a file
-tests/benchmarks/bench_string.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.s
-.PHONY : tests/benchmarks/bench_string.cpp.s
+tests/benchs/bench_string.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.s
+.PHONY : tests/benchs/bench_string.cpp.s
 
-tests/benchmarks/bench_string_header.o: tests/benchmarks/bench_string_header.cpp.o
-.PHONY : tests/benchmarks/bench_string_header.o
+tests/benchs/bench_string_header.o: tests/benchs/bench_string_header.cpp.o
+.PHONY : tests/benchs/bench_string_header.o
 
 # target to build an object file
-tests/benchmarks/bench_string_header.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.o
-.PHONY : tests/benchmarks/bench_string_header.cpp.o
+tests/benchs/bench_string_header.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o
+.PHONY : tests/benchs/bench_string_header.cpp.o
 
-tests/benchmarks/bench_string_header.i: tests/benchmarks/bench_string_header.cpp.i
-.PHONY : tests/benchmarks/bench_string_header.i
+tests/benchs/bench_string_header.i: tests/benchs/bench_string_header.cpp.i
+.PHONY : tests/benchs/bench_string_header.i
 
 # target to preprocess a source file
-tests/benchmarks/bench_string_header.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.i
-.PHONY : tests/benchmarks/bench_string_header.cpp.i
+tests/benchs/bench_string_header.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.i
+.PHONY : tests/benchs/bench_string_header.cpp.i
 
-tests/benchmarks/bench_string_header.s: tests/benchmarks/bench_string_header.cpp.s
-.PHONY : tests/benchmarks/bench_string_header.s
+tests/benchs/bench_string_header.s: tests/benchs/bench_string_header.cpp.s
+.PHONY : tests/benchs/bench_string_header.s
 
 # target to generate assembly for a file
-tests/benchmarks/bench_string_header.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.s
-.PHONY : tests/benchmarks/bench_string_header.cpp.s
+tests/benchs/bench_string_header.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.s
+.PHONY : tests/benchs/bench_string_header.cpp.s
 
 tests/test_algos.o: tests/test_algos.cpp.o
 .PHONY : tests/test_algos.o
@@ -597,21 +597,21 @@ help:
 	@echo "... cxb/cxb.o"
 	@echo "... cxb/cxb.i"
 	@echo "... cxb/cxb.s"
-	@echo "... tests/benchmarks/bench_algos.o"
-	@echo "... tests/benchmarks/bench_algos.i"
-	@echo "... tests/benchmarks/bench_algos.s"
-	@echo "... tests/benchmarks/bench_hm.o"
-	@echo "... tests/benchmarks/bench_hm.i"
-	@echo "... tests/benchmarks/bench_hm.s"
-	@echo "... tests/benchmarks/bench_std_headers.o"
-	@echo "... tests/benchmarks/bench_std_headers.i"
-	@echo "... tests/benchmarks/bench_std_headers.s"
-	@echo "... tests/benchmarks/bench_string.o"
-	@echo "... tests/benchmarks/bench_string.i"
-	@echo "... tests/benchmarks/bench_string.s"
-	@echo "... tests/benchmarks/bench_string_header.o"
-	@echo "... tests/benchmarks/bench_string_header.i"
-	@echo "... tests/benchmarks/bench_string_header.s"
+	@echo "... tests/benchs/bench_algos.o"
+	@echo "... tests/benchs/bench_algos.i"
+	@echo "... tests/benchs/bench_algos.s"
+	@echo "... tests/benchs/bench_hm.o"
+	@echo "... tests/benchs/bench_hm.i"
+	@echo "... tests/benchs/bench_hm.s"
+	@echo "... tests/benchs/bench_std_headers.o"
+	@echo "... tests/benchs/bench_std_headers.i"
+	@echo "... tests/benchs/bench_std_headers.s"
+	@echo "... tests/benchs/bench_string.o"
+	@echo "... tests/benchs/bench_string.i"
+	@echo "... tests/benchs/bench_string.s"
+	@echo "... tests/benchs/bench_string_header.o"
+	@echo "... tests/benchs/bench_string_header.i"
+	@echo "... tests/benchs/bench_string_header.s"
 	@echo "... tests/test_algos.o"
 	@echo "... tests/test_algos.i"
 	@echo "... tests/test_algos.s"

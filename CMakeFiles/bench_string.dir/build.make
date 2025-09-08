@@ -72,19 +72,19 @@ include CMakeFiles/bench_string.dir/flags.make
 CMakeFiles/bench_string.dir/codegen:
 .PHONY : CMakeFiles/bench_string.dir/codegen
 
-CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o: CMakeFiles/bench_string.dir/flags.make
-CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o: /home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp
-CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o: CMakeFiles/bench_string.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o"
-	/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o -MF CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o.d -o CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp
+CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o: CMakeFiles/bench_string.dir/flags.make
+CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o: /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp
+CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o: CMakeFiles/bench_string.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o"
+	/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o -MF CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o.d -o CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp
 
-CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.i"
-	/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp > CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.i
+CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.i"
+	/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp > CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.i
 
-CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.s"
-	/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp -o CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.s
+CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.s"
+	/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp -o CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.s
 
 CMakeFiles/bench_string.dir/cxb/cxb.cpp.o: CMakeFiles/bench_string.dir/flags.make
 CMakeFiles/bench_string.dir/cxb/cxb.cpp.o: /home/runner/work/cxb/cxb/cxb/cxb.cpp
@@ -102,13 +102,13 @@ CMakeFiles/bench_string.dir/cxb/cxb.cpp.s: cmake_force
 
 # Object files for target bench_string
 bench_string_OBJECTS = \
-"CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o" \
+"CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o" \
 "CMakeFiles/bench_string.dir/cxb/cxb.cpp.o"
 
 # External object files for target bench_string
 bench_string_EXTERNAL_OBJECTS =
 
-bench_string: CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o
+bench_string: CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o
 bench_string: CMakeFiles/bench_string.dir/cxb/cxb.cpp.o
 bench_string: CMakeFiles/bench_string.dir/build.make
 bench_string: CMakeFiles/bench_string.dir/compiler_depend.ts

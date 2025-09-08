@@ -9,7 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/runner/work/cxb/cxb/cxb/cxb.cpp" "CMakeFiles/bench_string.dir/cxb/cxb.cpp.o" "gcc" "CMakeFiles/bench_string.dir/cxb/cxb.cpp.o.d"
-  "/home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp" "CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o" "gcc" "CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o.d"
+  "/home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp" "CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o" "gcc" "CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o.d"
   "" "bench_string" "gcc" "CMakeFiles/bench_string.dir/link.d"
   )
 

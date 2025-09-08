@@ -2,8 +2,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/bench_hm.dir/link.d"
   "CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o"
   "CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o.d"
-  "CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.o"
-  "CMakeFiles/bench_hm.dir/tests/benchmarks/bench_hm.cpp.o.d"
+  "CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o"
+  "CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o.d"
   "bench_hm"
   "bench_hm.pdb"
 )

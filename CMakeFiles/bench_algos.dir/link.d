@@ -2,7 +2,7 @@ bench_algos: \
   /nix/store/q4wq65gl3r8fy746v9bbwgx4gzn0r2kl-glibc-2.40-66/lib/Scrt1.o \
   /nix/store/q4wq65gl3r8fy746v9bbwgx4gzn0r2kl-glibc-2.40-66/lib/crti.o \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/crtbeginS.o \
-  CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o \
+  CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o \
   CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o \
   deps/Catch2/src/libCatch2Maind.a \
   deps/Catch2/src/libCatch2d.a \
@@ -40,7 +40,7 @@ bench_algos: \
 
 /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/lib/gcc/x86_64-unknown-linux-gnu/14.3.0/crtbeginS.o:
 
-CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o:
+CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o:
 
 CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o:
 

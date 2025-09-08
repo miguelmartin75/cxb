@@ -7,7 +7,7 @@ bench_string_header: \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/lib/linux/libclang_rt.asan_static-x86_64.a \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/lib/linux/libclang_rt.asan-x86_64.a \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/lib/linux/libclang_rt.asan_cxx-x86_64.a \
-  CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.o \
+  CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o \
   CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.o \
   deps/Catch2/src/libCatch2Maind.a \
   deps/Catch2/src/libCatch2d.a \
@@ -65,7 +65,7 @@ bench_string_header: \
 
 /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/lib/linux/libclang_rt.asan_cxx-x86_64.a:
 
-CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.o:
+CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o:
 
 CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.o:
 
