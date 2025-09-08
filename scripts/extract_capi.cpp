@@ -43,13 +43,13 @@ int main(int argc, char* argv[]) {
                 scope = SCOPE_GLOBAL;
                 println(out_f, "{}", line.trim(" "_s8));
             }
-        } else if(line.trim(" "_s8, true, false).starts_with("CXB_C_COMPAT_END"_s8)) {
+        } else if(line.trim_left(" "_s8).starts_with("CXB_C_COMPAT_END"_s8)) {
             if(state != STATE_IN_COMPAT_BLOCK) {
                 println(stderr, "CXB_C_COMPAT_END must be before CXB_C_COMPAT_BEGIN");
                 return 3;
             }
             state = STATE_NONE;
-        } else if(line.trim(" "_s8, true, false).starts_with("CXB_C_COMPAT_BEGIN"_s8)) {
+        } else if(line.trim_left(" "_s8).starts_with("CXB_C_COMPAT_BEGIN"_s8)) {
             if(state == STATE_IN_COMPAT_BLOCK) {
                 println(stderr, "nested CXB_C_COMPAT_BEGIN / CXB_C_COMPAT_END block not supported");
                 return 3;
