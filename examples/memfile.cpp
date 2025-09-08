@@ -6,8 +6,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-Result<File, FileOpenErr> open_file(Arena* arena, String8 filepath) {
-    Result<File, FileOpenErr> result = {};
+Result<MemFile, FileOpenErr> open_memfile(Arena* arena, String8 filepath) {
+    Result<MemFile, FileOpenErr> result = {};
 
     int fd = open(filepath.data, O_RDONLY);
     struct stat sb;
@@ -32,7 +32,7 @@ Result<File, FileOpenErr> open_file(Arena* arena, String8 filepath) {
     return result;
 }
 
-void close_file(File& file) {
+void close_memfile(MemFile& file) {
     munmap(file.data.data, file.data.len);
     file.data.data = nullptr;
     file.data.len = 0;

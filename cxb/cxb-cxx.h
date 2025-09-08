@@ -1211,7 +1211,6 @@ struct Array {
         array_extend(*this, arena, to_append);
     }
 
-    // Convert Array<char> view into String8. Only participates when T == char.
     template <typename U = T, typename = std::enable_if_t<std::is_same_v<U, char>>>
     CXB_MAYBE_INLINE String8 as_string8(bool nt_len = true) const {
         bool is_nt = (len > 0 && data[len - 1] == '\0');
@@ -2142,7 +2141,6 @@ CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading, boo
 }
 
 CXB_PURE String8 string8_trim_all(const String8& s, String8 chars, bool leading, bool trailing) {
-    // If chars is empty, avoid infinite loops; return input unchanged.
     if(chars.len == 0) return s;
 
     size_t start = 0;
