@@ -10,6 +10,6 @@ cmake --build build
 Run a fuzz target (CI smoke test):
 
 ```
-./build/hashmap_fuzz -max_total_time=60
+./build/fuzz_hashmap -max_total_time=60
 ```
 
