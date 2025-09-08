@@ -34,7 +34,6 @@ function(add_exe name sources)
             -fsanitize=address
             -fsanitize=undefined
             -fno-omit-frame-pointer
-            -std=c++23
         )
         target_link_options(${name} PRIVATE
             -fsanitize=address

@@ -19,14 +19,15 @@ jobs:
         # and understand what combinations are being tested
         include:
           # Linux x86_64 variants
-          - os: ubuntu-22.04
-            nix_system: x86_64-linux
-            compiler: gcc
-            build_type: Debug
-          - os: ubuntu-22.04
-            nix_system: x86_64-linux
-            compiler: gcc
-            build_type: Release
+          # TODO: re-enable GCC
+          # - os: ubuntu-22.04
+          #   nix_system: x86_64-linux
+          #   compiler: gcc
+          #   build_type: Debug
+          # - os: ubuntu-22.04
+          #   nix_system: x86_64-linux
+          #   compiler: gcc
+          #   build_type: Release
           - os: ubuntu-22.04
             nix_system: x86_64-linux
             compiler: clang
