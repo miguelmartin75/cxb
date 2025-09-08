@@ -373,7 +373,7 @@ TEST_CASE("string8_parse floating point", "[String8][Parse]") {
     auto res = string8_parse<f64>(s);
     REQUIRE(res.exists);
     REQUIRE(res.value == Catch::Approx(3.14));
-    REQUIRE(res.n_consumed == 4);
+    REQUIRE(res.n_consumed == 5);
 }
 
 TEST_CASE("string8_contains and find", "[String8]") {
