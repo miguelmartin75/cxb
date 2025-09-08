@@ -322,6 +322,52 @@ TEST_CASE("Utf8Iterator with unicode", "[Utf8Iterator]") {
     end_scratch(scratch);
 }
 
+TEST_CASE("String8SplitIterator basic usage", "[String8][Split]") {
+    String8 s = S8_LIT("foo,bar,baz");
+    String8 expected[] = {S8_LIT("foo"), S8_LIT("bar"), S8_LIT("baz")};
+    String8SplitIterator it = string8_split(s, S8_LIT(","));
+    String8 part;
+    for(int i = 0; i < 3; ++i) {
+        REQUIRE(it.next(part));
+        REQUIRE(part == expected[i]);
+    }
+    REQUIRE_FALSE(it.next(part));
+}
+
+TEST_CASE("String8SplitIterator range and collect", "[String8][Split]") {
+    String8 s = S8_LIT("one two three");
+    String8 expected[] = {S8_LIT("one"), S8_LIT("two"), S8_LIT("three")};
+    size_t idx = 0;
+    for(String8 part : string8_split(s, S8_LIT(" "))) {
+        REQUIRE(part == expected[idx++]);
+    }
+    REQUIRE(idx == 3);
+
+    ArenaTmp scratch = begin_scratch();
+    Array<String8> parts1 = string8_split(s, S8_LIT(" ")).collect(scratch.arena);
+    REQUIRE(parts1.len == 3);
+    REQUIRE(parts1[0] == expected[0]);
+    REQUIRE(parts1[1] == expected[1]);
+    REQUIRE(parts1[2] == expected[2]);
+
+    Array<String8> parts2 = string8_split_collect(scratch.arena, string8_split(s, S8_LIT(" ")));
+    REQUIRE(parts2.len == 3);
+    REQUIRE(parts2[0] == expected[0]);
+    REQUIRE(parts2[1] == expected[1]);
+    REQUIRE(parts2[2] == expected[2]);
+    end_scratch(scratch);
+}
+
+TEST_CASE("string8_split_any splits on any matching character", "[String8][Split]") {
+    String8 s = S8_LIT("one,two;three four");
+    String8 expected[] = {S8_LIT("one"), S8_LIT("two"), S8_LIT("three"), S8_LIT("four")};
+    size_t idx = 0;
+    for(String8 part : string8_split_any(s, S8_LIT(",; "))) {
+        REQUIRE(part == expected[idx++]);
+    }
+    REQUIRE(idx == 4);
+}
+
 TEST_CASE("string8_parse floating point", "[String8][Parse]") {
     String8 s = S8_LIT("3.14f");
     auto res = string8_parse<f64>(s);
@@ -351,10 +397,50 @@ TEST_CASE("string8_trim", "[String8]") {
     REQUIRE(s.trim(S8_LIT("\t "), false, true) == S8_LIT("   abc"));
 }
 
+TEST_CASE("String8 trim_left/right members", "[String8]") {
+    String8 s = S8_LIT("   abc \t");
+    REQUIRE(s.trim_left(S8_LIT("\t ")) == S8_LIT("abc \t"));
+    REQUIRE(s.trim_right(S8_LIT("\t ")) == S8_LIT("   abc"));
+}
+
+TEST_CASE("string8_trim_all trims full substring at edges", "[String8]") {
+    String8 s = S8_LIT("abcabcXabcabc");
+    String8 chars = S8_LIT("abc");
+    REQUIRE(string8_trim_all(s, chars) == S8_LIT("X"));
+    REQUIRE(string8_trim_all(s, chars, true, false) == S8_LIT("Xabcabc"));
+    REQUIRE(string8_trim_all(s, chars, false, true) == S8_LIT("abcabcX"));
+
+    String8 s2 = S8_LIT("abXabc");
+    REQUIRE(string8_trim_all(s2, chars) == S8_LIT("abX"));
+    REQUIRE(s.trim_all(chars) == S8_LIT("X"));
+}
+
+TEST_CASE("String8 trim_all_left/right members", "[String8]") {
+    String8 s = S8_LIT("abcabcXabcabc");
+    String8 chars = S8_LIT("abc");
+    REQUIRE(s.trim_all_left(chars) == S8_LIT("Xabcabc"));
+    REQUIRE(s.trim_all_right(chars) == S8_LIT("abcabcX"));
+}
+
 TEST_CASE("string8_contains_chars", "[String8]") {
     String8 s = S8_LIT("hello world");
     REQUIRE(string8_contains_chars(s, S8_LIT("ow")));
     REQUIRE_FALSE(string8_contains_chars(s, S8_LIT("xyz")));
     REQUIRE(s.contains_chars(S8_LIT("hw")));
     REQUIRE_FALSE(s.contains_chars(S8_LIT("xyz")));
+}
+
+TEST_CASE("string8_starts_with and ends_with", "[String8]") {
+    String8 s = S8_LIT("hello world");
+    REQUIRE(string8_starts_with(s, S8_LIT("hello")));
+    REQUIRE_FALSE(string8_starts_with(s, S8_LIT("world")));
+    REQUIRE(string8_starts_with(s, S8_LIT(""))); // empty prefix
+    REQUIRE(s.starts_with(S8_LIT("hello")));
+    REQUIRE_FALSE(s.starts_with(S8_LIT("hella")));
+
+    REQUIRE(string8_ends_with(s, S8_LIT("world")));
+    REQUIRE_FALSE(string8_ends_with(s, S8_LIT("hello")));
+    REQUIRE(string8_ends_with(s, S8_LIT(""))); // empty suffix
+    REQUIRE(s.ends_with(S8_LIT("world")));
+    REQUIRE_FALSE(s.ends_with(S8_LIT("world!")));
 }

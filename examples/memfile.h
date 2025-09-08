@@ -1,9 +1,8 @@
+#pragma once
 #include <cxb/cxb.h>
 
-struct File {
-    void* data;
-    size_t len;
-
+struct MemFile {
+    Array<char> data;
     String8 filepath;
 };
 
@@ -14,5 +13,5 @@ enum class FileOpenErr {
     Cnt,
 };
 
-Result<File*, FileOpenErr> open_file(Arena* arena, String8 filepath);
-void close_file(File* file);
+Result<MemFile, FileOpenErr> open_memfile(Arena* arena, String8 filepath);
+void close_memfile(MemFile& file);

@@ -53,7 +53,6 @@ free the memory
 
 /* SECTION: configuration */
 #if __cpp_concepts
-#include <concepts>
 #define CXB_USE_CXX_CONCEPTS
 #endif
 
@@ -79,7 +78,6 @@ CXB_C_COMPAT_BEGIN
 #include <string.h>
 CXB_C_COMPAT_END
 
-#include <charconv>
 #include <initializer_list>
 #include <limits>
 #include <new>
@@ -397,6 +395,7 @@ static CXB_INLINE u64 round_up_pow2(u64 x) {
 /* SECTION: arena */
 struct Arena;
 struct String8;
+struct String8SplitIterator;
 template <typename T>
 struct Array;
 template <typename T, size_t N>
@@ -425,6 +424,9 @@ CXB_PURE bool string8_contains(const String8& s, String8 needle);
 CXB_PURE bool string8_contains_chars(const String8& s, String8 chars);
 CXB_PURE size_t string8_find(const String8& s, String8 needle);
 CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading = true, bool trailing = true);
+CXB_PURE String8 string8_trim_all(const String8& s, String8 chars, bool leading = true, bool trailing = true);
+CXB_PURE bool string8_starts_with(const String8& s, String8 prefix);
+CXB_PURE bool string8_ends_with(const String8& s, String8 suffix);
 
 template <typename T>
 Array<T> arena_push_array(Arena* arena, size_t n);
@@ -900,6 +902,16 @@ CXB_C_TYPE struct String8 {
         return not_null_term ? nullptr : data;
     }
 
+    CXB_MAYBE_INLINE const char* c_str_maybe_copy(Arena* a) const {
+        if(not_null_term) {
+            char* new_data = arena_push_fast<char>(a, len + 1);
+            ::copy(new_data, data, len);
+            new_data[len] = '\0';
+            return new_data;
+        }
+        return data;
+    }
+
     CXB_MAYBE_INLINE int compare(const String8& o) const {
         int result = memcmp(data, o.data, len < o.len ? len : o.len);
         if(result == 0) {
@@ -937,8 +949,29 @@ CXB_C_TYPE struct String8 {
     CXB_INLINE size_t find(String8 needle) const {
         return string8_find(*this, needle);
     }
+    CXB_INLINE bool starts_with(String8 prefix) const {
+        return string8_starts_with(*this, prefix);
+    }
+    CXB_INLINE bool ends_with(String8 suffix) const {
+        return string8_ends_with(*this, suffix);
+    }
     CXB_INLINE String8 trim(String8 chars, bool leading = true, bool trailing = true) const {
         return string8_trim(*this, chars, leading, trailing);
+    }
+    CXB_INLINE String8 trim_all(String8 chars, bool leading = true, bool trailing = true) const {
+        return string8_trim_all(*this, chars, leading, trailing);
+    }
+    CXB_INLINE String8 trim_left(String8 chars) const {
+        return string8_trim(*this, chars, true, false);
+    }
+    CXB_INLINE String8 trim_right(String8 chars) const {
+        return string8_trim(*this, chars, false, true);
+    }
+    CXB_INLINE String8 trim_all_left(String8 chars) const {
+        return string8_trim_all(*this, chars, true, false);
+    }
+    CXB_INLINE String8 trim_all_right(String8 chars) const {
+        return string8_trim_all(*this, chars, false, true);
     }
 
     // ** SECTION: arena UFCS
@@ -963,6 +996,9 @@ CXB_C_TYPE struct String8 {
     CXB_INLINE void extend(Arena* arena, String8 to_append) {
         string8_extend(*this, arena, to_append);
     }
+
+    CXB_INLINE String8SplitIterator split(String8 delim) const;
+    CXB_INLINE String8SplitIterator split_any(String8 chars) const;
 
     // *SECTION*: parsing
     template <typename T>
@@ -1040,16 +1076,12 @@ CXB_MAYBE_INLINE std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> s
                                                                                              u64 base = 10) {
     ASSERT(base == 10, "only base 10 supported for floats");
     ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
-    const char* begin = str.data;
-    const char* end = str.data + str.len;
-    auto fc = std::from_chars(begin, end, result.value);
-    if(fc.ec == std::errc()) {
-        result.n_consumed = (size_t) (fc.ptr - begin);
-        result.exists = result.n_consumed > 0;
-    } else {
-        result.exists = false;
-        result.n_consumed = 0;
-    }
+
+    ArenaTmp tmp = begin_scratch();
+    result.value = atof(str.c_str_maybe_copy(tmp.arena));
+    result.n_consumed = str.len; // TODO
+    result.exists = true;
+    end_scratch(tmp);
     return result;
 }
 
@@ -1067,9 +1099,21 @@ struct Array {
         ::copy(data, xs.begin(), xs.size());
     }
     Array(const Array<T>& o) : data{o.data}, len{o.len} {}
+    Array<T>& operator=(const Array<T>& o) {
+        data = o.data;
+        len = o.len;
+        return *this;
+    }
     Array(Array<T>&& o) : data{o.data}, len{o.len} {
         o.data = nullptr;
         o.len = 0;
+    }
+    Array<T>& operator=(Array<T>&& o) {
+        data = o.data;
+        len = o.len;
+        o.data = nullptr;
+        o.len = 0;
+        return *this;
     }
     ~Array() = default;
 
@@ -1178,8 +1222,88 @@ struct Array {
     CXB_INLINE void extend(Arena* arena, const StaticArray<T, N>& to_append) {
         array_extend(*this, arena, to_append);
     }
+
+    template <typename U = T, typename = std::enable_if_t<std::is_same_v<U, char>>>
+    CXB_MAYBE_INLINE String8 as_string8(bool nt_len = true) const {
+        bool is_nt = (len > 0 && data[len - 1] == '\0');
+        return String8{.data = data, .len = len - (is_nt && nt_len), .not_null_term = !is_nt};
+    }
 };
 
+// *SECTION*: String8 splitting
+
+CXB_C_EXPORT bool string8_split_next(String8SplitIterator* iter, String8* out);
+Array<String8> string8_split_collect(Arena* arena, String8SplitIterator iter);
+
+CXB_C_TYPE struct String8SplitIterator {
+    CXB_C_COMPAT_BEGIN
+    String8 s;
+    String8 delim;
+    u64 pos;
+    String8 curr;
+    bool any;
+    CXB_C_COMPAT_END
+
+#ifdef __cplusplus
+    CXB_INLINE bool next(String8& out) {
+        bool has = string8_split_next(this, &out);
+        if(has) curr = out;
+        return has;
+    }
+    CXB_INLINE String8SplitIterator begin() {
+        string8_split_next(this, &curr);
+        return *this;
+    }
+    CXB_INLINE String8SplitIterator end() const {
+        return String8SplitIterator{.s = s, .delim = delim, .pos = s.len + 1, .curr = {}, .any = any};
+    }
+    CXB_INLINE bool operator!=(const String8SplitIterator& o) const {
+        return curr.data != o.curr.data;
+    }
+    CXB_INLINE String8 operator*() const {
+        return curr;
+    }
+    CXB_INLINE String8SplitIterator& operator++() {
+        if(!string8_split_next(this, &curr)) {
+            curr = {};
+            pos = s.len + 1;
+        }
+        return *this;
+    }
+    CXB_INLINE Array<String8> collect(Arena* arena) {
+        return string8_split_collect(arena, *this);
+    }
+#endif // __cplusplus
+};
+
+CXB_INLINE String8SplitIterator string8_split(String8 s, String8 delim) {
+    ASSERT(UNLIKELY(delim.len != 0), "delimiter is an empty string");
+    return String8SplitIterator{.s = s, .delim = delim, .pos = 0, .curr = {}, .any = false};
+}
+
+CXB_INLINE String8SplitIterator string8_split_any(String8 s, String8 chars) {
+    ASSERT(UNLIKELY(chars.len != 0), "delimiter is an empty string");
+    return String8SplitIterator{.s = s, .delim = chars, .pos = 0, .curr = {}, .any = true};
+}
+
+CXB_INLINE Array<String8> string8_split_collect(Arena* arena, String8SplitIterator iter) {
+    Array<String8> out{};
+    String8 part;
+    while(string8_split_next(&iter, &part)) {
+        array_push_back(out, arena, part);
+    }
+    return out;
+}
+
+CXB_INLINE String8SplitIterator String8::split(String8 delim) const {
+    return string8_split(*this, delim);
+}
+
+CXB_INLINE String8SplitIterator String8::split_any(String8 chars) const {
+    return string8_split_any(*this, chars);
+}
+
+// *SECTION*: formatting library
 template <typename T, size_t N>
 struct StaticArray {
     T data[N];
@@ -1982,6 +2106,18 @@ CXB_PURE bool string8_contains(const String8& s, String8 needle) {
     return string8_find(s, needle) != SIZE_MAX;
 }
 
+CXB_PURE bool string8_starts_with(const String8& s, String8 prefix) {
+    if(prefix.len > s.len) return false;
+    if(prefix.len == 0) return true;
+    return memcmp(s.data, prefix.data, prefix.len) == 0;
+}
+
+CXB_PURE bool string8_ends_with(const String8& s, String8 suffix) {
+    if(suffix.len > s.len) return false;
+    if(suffix.len == 0) return true;
+    return memcmp(s.data + (s.len - suffix.len), suffix.data, suffix.len) == 0;
+}
+
 CXB_PURE static bool _string8_contains_char(String8 chars, char c) {
     for(size_t i = 0; i < chars.len; ++i) {
         if(chars.data[i] == c) {
@@ -2011,6 +2147,24 @@ CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading, boo
     if(trailing) {
         while(end > start && _string8_contains_char(chars, s.data[end - 1])) {
             end--;
+        }
+    }
+    return s.slice((i64) start, start < end ? (i64) end - 1 : (i64) start - 1);
+}
+
+CXB_PURE String8 string8_trim_all(const String8& s, String8 chars, bool leading, bool trailing) {
+    if(chars.len == 0) return s;
+
+    size_t start = 0;
+    size_t end = s.len;
+    if(leading) {
+        while(end - start >= chars.len && memcmp(s.data + start, chars.data, chars.len) == 0) {
+            start += chars.len;
+        }
+    }
+    if(trailing) {
+        while(end - start >= chars.len && memcmp(s.data + (end - chars.len), chars.data, chars.len) == 0) {
+            end -= chars.len;
         }
     }
     return s.slice((i64) start, start < end ? (i64) end - 1 : (i64) start - 1);
@@ -2061,6 +2215,14 @@ CXB_INLINE void println(const char* fmt, const Args&... args) {
     ArenaTmp a = begin_scratch();
     String8 str = format(a.arena, fmt, args...);
     print("{}\n", str);
+    end_scratch(a);
+}
+
+template <typename... Args>
+CXB_INLINE void println(FILE* f, const char* fmt, const Args&... args) {
+    ArenaTmp a = begin_scratch();
+    String8 str = format(a.arena, fmt, args...);
+    print(f, "{}\n", str);
     end_scratch(a);
 }
 
