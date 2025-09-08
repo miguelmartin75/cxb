@@ -18,6 +18,16 @@ For development setup, building, and testing see [docs/DEVELOPMENT.md](docs/DEVE
 
 Run `./scripts/ci/coverage.sh` to build the project with clang coverage instrumentation and generate `coverage.txt`. CI uploads this report as an artifact for the Linux clang Debug job.
 
+## Fuzzing
+
+Build fuzz targets and run a short smoke test:
+
+```
+cmake -S . -B build -DCXB_BUILD_FUZZERS=ON
+cmake --build build
+./build/hashmap_fuzz -max_total_time=60
+```
+
 # TODOs
 - [ ] formatting
     - [x] print & format alternative (using fmtlib for floats)

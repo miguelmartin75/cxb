@@ -10,6 +10,7 @@ option(CXB_BUILD_TOOLS "build tools?" OFF)
 option(CXB_BUILD_TESTS "enable tests?" OFF)
 option(CXB_BUILD_EXAMPLES "enable examples?" OFF)
 option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
+option(CXB_BUILD_FUZZERS "build fuzzers?" OFF)
 
 set(CXB_SRCS "cxb/cxb.cpp")
 set(CXB_DEPS_INCLUDE_DIRS deps/fmt/include deps/fmt/src)
@@ -52,6 +53,21 @@ function(add_exe name sources)
         target_link_options(${name} PRIVATE
             -fsanitize=address
             -fsanitize=undefined
+        )
+    endif()
+endfunction()
+
+function(add_fuzz_exe name sources)
+    add_executable(${name} ${sources} ${CXB_SRCS})
+    # TODO: remove fmtlib dependency
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+    if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+        target_compile_options(${name} PRIVATE
+            -fsanitize=fuzzer,address,undefined
+            -fno-omit-frame-pointer
+        )
+        target_link_options(${name} PRIVATE
+            -fsanitize=fuzzer,address,undefined
         )
     endif()
 endfunction()
@@ -101,4 +117,8 @@ if(CXB_BUILD_TESTS)
         add_test(NAME test_c_api_c COMMAND test_c_api_c)
         add_test(NAME test_c_api_cpp COMMAND test_c_api_cpp)
     endif()
+endif()
+
+if(CXB_BUILD_FUZZERS)
+    add_fuzz_exe(hashmap_fuzz tests/fuzz/hashmap_fuzz.cpp)
 endif()
