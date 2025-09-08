@@ -90,10 +90,17 @@ TEST_CASE("array insert", "[Arena]") {
     xs.push_back(arena, 10);
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
 
-    xs.extend(arena, {20, 30, 50, 80});
+    auto more = make_static_array<int>({20, 30, 50, 80});
+    xs.extend(arena, more);
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (xs.data + xs.len));
-
     REQUIRE(xs.len == 5);
+
+    auto insert_vals = make_static_array<int>({40, 60});
+    xs.insert(arena, insert_vals, 2);
+    REQUIRE(xs.len == 7);
+    REQUIRE(xs[2] == 40);
+    REQUIRE(xs[3] == 60);
+    REQUIRE(xs[4] == 30);
 }
 
 TEST_CASE("String8 arena member functions", "[String8][Arena]") {

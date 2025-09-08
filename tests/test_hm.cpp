@@ -19,12 +19,8 @@ TEST_CASE("basic", "[HashMap]") {
     }
 
     REQUIRE(kvs.len == 1);
-    REQUIRE(kvs.extend(a,
-                       {
-                           {7, 9},
-                           {3, 5},
-                           {11, 9},
-                       }));
+    auto kv_arr = make_static_array<KvPair<int, int>>({{7, 9}, {3, 5}, {11, 9}});
+    REQUIRE(kvs.extend(a, kv_arr));
     REQUIRE(kvs.contains(1));
     REQUIRE(kvs.contains(7));
     REQUIRE(kvs.contains(3));
