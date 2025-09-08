@@ -47,7 +47,7 @@ Run `./scripts/ci/coverage.sh` to build the project with clang coverage instrume
     - [ ] (P1) C++ specific code in `cxb` namespace
     - [ ] (P1) MHashMap<K, V>: don't inherit from HashMap<K, V, Hasher>
     - [ ] (P2) Group and move M/A prefixed types to bottom of header-file
-    - [ ] (P2) `git mv tests/benchmarks tests/benchs` with CMakeLists.txt changes
+    - [x] (P2) `git mv tests/benchmarks tests/benchs` with CMakeLists.txt changes
     - [x] (P2) `tests/fuzz/*_fuzz.cpp` -> `tests/fuzz/fuzz_*.cpp` with CMakeLists.txt changes
     - [ ] (P2) remove fmtlib dependency
         - [ ] Write the Dragonbox float conversion algorithm
