@@ -152,47 +152,126 @@ typedef _Atomic(u128) atomic_u128;
 #else
 #define CXB_INLINE inline
 #endif
+
 struct ArenaParams {
+    size_t reserve_bytes;
+    size_t max_n_blocks;
 };
+
 struct Arena {
+    char* start;
+    char* end;
+    size_t pos;
+    ArenaParams params;
+
+    // chaining
+    Arena* next;
+    Arena* prev;
+    size_t n_blocks;
+
+    // TODO: freelist
 };
+
 struct ArenaTmp {
+    Arena* arena;
+    u64 pos;
 };
+
 struct Allocator {
+    void* (*alloc_proc)(void* head, size_t n_bytes, size_t alignment, size_t old_n_bytes, bool fill_zeros, void* data);
+    void (*free_proc)(void* head, size_t n_bytes, void* data);
+    void (*free_all_proc)(void* data);
+    void* data;
 };
 extern Allocator heap_alloc;
+
 struct String8 {
+    char* data;
+    union {
+        struct {
+            size_t len : 63;
+            bool not_null_term : 1;
+        };
+        size_t metadata;
+    };
 };
+
 struct String8SplitIterator {
+    String8 s;
+    String8 delim;
+    u64 pos;
+    String8 curr;
+    bool any;
 };
+
 struct Vec2f {
+    f32 x, y;
 };
+
 struct Vec2i {
+    i32 x, y;
 };
+
 struct Size2i {
+    i32 w, h;
 };
+
 struct Vec3f {
+    f32 x, y, z;
 };
+
 struct Vec3i {
+    i32 x, y, z;
 };
+
 struct Rect2f {
+    f32 x, y;
+    f32 w, h;
 };
+
 struct Rect2ui {
+    u32 x, y;
+    u32 w, h;
 };
+
 struct Color4f {
+    f32 r, g, b, a;
 };
+
 struct Color4i {
+    byte8 r, g, b, a;
 };
+
 struct Mat33f {
+    f32 arr[9];
 };
+
 struct Mat44f {
+    f32 arr[16];
 };
+
 struct MString8 {
+    char* data;
+    union {
+        struct {
+            size_t len : 63;
+            bool not_null_term : 1;
+        };
+        size_t metadata;
+    };
+    size_t capacity;
+    Allocator* allocator;
 };
 #define S8_LIT(s) (String8{.data = (char*) &(s)[0], .len = LENGTHOF_LIT(s), .not_null_term = false})
 #define S8_DATA(c, l) (String8{.data = (char*) &(c)[0], .len = (l), .not_null_term = false})
 #define S8_CSTR(s) (String8{.data = (char*) (s), .len = (size_t) strlen(s), .not_null_term = false})
+
 struct Utf8Iter {
+    String8 s;
+    u64 pos;
 };
+
 struct Utf8IterBatch {
+    u32 data[512];
+    u64 len;
 };

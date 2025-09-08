@@ -248,7 +248,7 @@ struct ParseErrorArray {
 struct Parser;
 struct Module {
     String8 name;
-    File* file;
+    MemFile file;
 
     AstNode* root;
 
