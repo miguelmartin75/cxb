@@ -1,6 +1,6 @@
-test_array 1 0.0174802
-test_string 1 0.0184785
-test_arena 1 0.0169204
-test_hm 1 0.0168403
-test_algos 1 0.0168627
+test_array 1 0.0168183
+test_string 1 0.0172241
+test_arena 1 0.0165796
+test_hm 1 0.0165474
+test_algos 1 0.0166169
 ---
