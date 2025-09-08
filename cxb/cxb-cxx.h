@@ -2468,6 +2468,7 @@ struct HashMap {
     }
 
     Iterator begin() {
+        // TODO: enable clang-format to form the below lines into one line and then delete this comment
         return Iterator{
             .hm = *this,
             .idx = 0,
