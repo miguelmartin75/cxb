@@ -703,6 +703,47 @@ inline void array_pop_all(A& xs, Arena* arena)
     xs.len = 0;
 }
 
+/* SECTION: algorithms */
+struct LessThan {
+    template <typename T>
+    bool operator()(const T& a, const T& b) const {
+        return a < b;
+    }
+};
+
+template <typename T, typename Compare>
+static void merge_sort_impl(T* data, T* tmp, u64 left, u64 right, const Compare& cmp) {
+    if(right - left <= 1) return;
+
+    u64 mid = left + ((right - left) >> 1);
+    merge_sort_impl(data, tmp, left, mid, cmp);
+    merge_sort_impl(data, tmp, mid, right, cmp);
+
+    u64 i = left;
+    u64 j = mid;
+    u64 k = 0;
+    while(i < mid && j < right) {
+        if(cmp(data[j], data[i])) {
+            tmp[k++] = ::move(data[j++]);
+        } else {
+            tmp[k++] = ::move(data[i++]);
+        }
+    }
+    while(i < mid) tmp[k++] = ::move(data[i++]);
+    while(j < right) tmp[k++] = ::move(data[j++]);
+    for(u64 t = 0; t < k; ++t) {
+        data[left + t] = ::move(tmp[t]);
+    }
+}
+
+template <typename T, typename Compare = LessThan>
+inline void merge_sort(T* data, u64 len, const Compare& cmp = Compare{}) {
+    if(len <= 1) return;
+    AArenaTmp scratch = begin_scratch();
+    T* tmp = arena_push_fast<T>(scratch.arena, len);
+    merge_sort_impl(data, tmp, 0, len, cmp);
+}
+
 /* SECTION: general allocation */
 CXB_C_TYPE struct Allocator {
     CXB_C_COMPAT_BEGIN
@@ -1156,8 +1197,6 @@ CXB_INLINE StaticArray<T, N> make_static_array(const T (&xs)[N]) {
     ::copy(sa.data, xs, N);
     return sa;
 }
-
-// *SECTION*: formatting library
 
 CXB_C_TYPE struct Vec2f {
     CXB_C_COMPAT_BEGIN
@@ -1983,6 +2022,7 @@ CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading, boo
 #include "cxb.cpp"
 #endif
 
+// *SECTION*: formatting library
 template <typename T, typename... Args>
 void _format_impl(Arena* a, String8& dst, const char* fmt, const T& first, const Args&... rest);
 
