@@ -42,8 +42,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
                 break;
             }
             case 3: {
-                Array<u32> codepoints = decode_string8(arena, str);
+                ArenaTmp decode_scratch = begin_scratch();
+                Array<u32> codepoints = decode_string8(decode_scratch.arena, str);
                 (void) codepoints;
+                end_scratch(decode_scratch);
                 break;
             }
             case 4: {

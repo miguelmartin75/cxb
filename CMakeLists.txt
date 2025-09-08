@@ -86,9 +86,9 @@ if(CXB_BUILD_TESTS)
     add_test(NAME test_hm COMMAND test_hm)
     add_test(NAME test_algos COMMAND test_algos)
 
-    add_executable(string_fuzz tests/fuzz/string_fuzz.cpp ${CXB_SRCS})
-    target_include_directories(string_fuzz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+        add_executable(string_fuzz tests/fuzz/string_fuzz.cpp ${CXB_SRCS})
+        target_include_directories(string_fuzz PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
         target_compile_options(string_fuzz PRIVATE
             -fsanitize=fuzzer,address,undefined
             -fno-omit-frame-pointer
