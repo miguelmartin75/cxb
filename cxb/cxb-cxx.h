@@ -424,6 +424,9 @@ CXB_PURE bool string8_contains(const String8& s, String8 needle);
 CXB_PURE bool string8_contains_chars(const String8& s, String8 chars);
 CXB_PURE size_t string8_find(const String8& s, String8 needle);
 CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading = true, bool trailing = true);
+CXB_PURE String8 string8_trim_all(const String8& s, String8 chars, bool leading = true, bool trailing = true);
+CXB_PURE bool string8_starts_with(const String8& s, String8 prefix);
+CXB_PURE bool string8_ends_with(const String8& s, String8 suffix);
 
 template <typename T>
 Array<T> arena_push_array(Arena* arena, size_t n);
@@ -946,8 +949,29 @@ CXB_C_TYPE struct String8 {
     CXB_INLINE size_t find(String8 needle) const {
         return string8_find(*this, needle);
     }
+    CXB_INLINE bool starts_with(String8 prefix) const {
+        return string8_starts_with(*this, prefix);
+    }
+    CXB_INLINE bool ends_with(String8 suffix) const {
+        return string8_ends_with(*this, suffix);
+    }
     CXB_INLINE String8 trim(String8 chars, bool leading = true, bool trailing = true) const {
         return string8_trim(*this, chars, leading, trailing);
+    }
+    CXB_INLINE String8 trim_all(String8 chars, bool leading = true, bool trailing = true) const {
+        return string8_trim_all(*this, chars, leading, trailing);
+    }
+    CXB_INLINE String8 trim_left(String8 chars) const {
+        return string8_trim(*this, chars, true, false);
+    }
+    CXB_INLINE String8 trim_right(String8 chars) const {
+        return string8_trim(*this, chars, false, true);
+    }
+    CXB_INLINE String8 trim_all_left(String8 chars) const {
+        return string8_trim_all(*this, chars, true, false);
+    }
+    CXB_INLINE String8 trim_all_right(String8 chars) const {
+        return string8_trim_all(*this, chars, false, true);
     }
 
     // ** SECTION: arena UFCS
@@ -1055,7 +1079,7 @@ CXB_MAYBE_INLINE std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> s
 
     ArenaTmp tmp = begin_scratch();
     result.value = atof(str.c_str_maybe_copy(tmp.arena));
-    result.n_consumed = str.len - 1;  // TODO
+    result.n_consumed = str.len - 1; // TODO
     result.exists = true;
     end_scratch(tmp);
     return result;
@@ -2071,6 +2095,18 @@ CXB_PURE bool string8_contains(const String8& s, String8 needle) {
     return string8_find(s, needle) != SIZE_MAX;
 }
 
+CXB_PURE bool string8_starts_with(const String8& s, String8 prefix) {
+    if(prefix.len > s.len) return false;
+    if(prefix.len == 0) return true;
+    return memcmp(s.data, prefix.data, prefix.len) == 0;
+}
+
+CXB_PURE bool string8_ends_with(const String8& s, String8 suffix) {
+    if(suffix.len > s.len) return false;
+    if(suffix.len == 0) return true;
+    return memcmp(s.data + (s.len - suffix.len), suffix.data, suffix.len) == 0;
+}
+
 CXB_PURE static bool _string8_contains_char(String8 chars, char c) {
     for(size_t i = 0; i < chars.len; ++i) {
         if(chars.data[i] == c) {
@@ -2100,6 +2136,25 @@ CXB_PURE String8 string8_trim(const String8& s, String8 chars, bool leading, boo
     if(trailing) {
         while(end > start && _string8_contains_char(chars, s.data[end - 1])) {
             end--;
+        }
+    }
+    return s.slice((i64) start, start < end ? (i64) end - 1 : (i64) start - 1);
+}
+
+CXB_PURE String8 string8_trim_all(const String8& s, String8 chars, bool leading, bool trailing) {
+    // If chars is empty, avoid infinite loops; return input unchanged.
+    if(chars.len == 0) return s;
+
+    size_t start = 0;
+    size_t end = s.len;
+    if(leading) {
+        while(end - start >= chars.len && memcmp(s.data + start, chars.data, chars.len) == 0) {
+            start += chars.len;
+        }
+    }
+    if(trailing) {
+        while(end - start >= chars.len && memcmp(s.data + (end - chars.len), chars.data, chars.len) == 0) {
+            end -= chars.len;
         }
     }
     return s.slice((i64) start, start < end ? (i64) end - 1 : (i64) start - 1);
