@@ -32,7 +32,9 @@ cmake --build "$build_dir" --config Debug -j
 pushd "$build_dir" >/dev/null
 LLVM_PROFILE_FILE="cxb-%p.profraw" ctest --output-on-failure
 "$LLVM_PROFDATA" merge cxb-*.profraw -o coverage.profdata
-"$LLVM_COV" report $(find . -maxdepth 1 -type f -name 'test_*') -instr-profile=coverage.profdata > coverage.txt
+"$LLVM_COV" report $(find . -maxdepth 1 -type f -name 'test_*') \
+  -instr-profile=coverage.profdata \
+  -ignore-filename-regex='(deps/|tests/|^build/)' > coverage.txt
 cat coverage.txt
 
 # Parse total line coverage and emit Shields.io JSON
