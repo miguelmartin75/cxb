@@ -179,6 +179,19 @@ test_hm/fast:
 .PHONY : test_hm/fast
 
 #=============================================================================
+# Target rules for targets named test_algos
+
+# Build rule for target.
+test_algos: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_algos
+.PHONY : test_algos
+
+# fast build rule for target.
+test_algos/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/build
+.PHONY : test_algos/fast
+
+#=============================================================================
 # Target rules for targets named bench_string
 
 # Build rule for target.
@@ -231,6 +244,19 @@ bench_hm/fast:
 .PHONY : bench_hm/fast
 
 #=============================================================================
+# Target rules for targets named bench_algos
+
+# Build rule for target.
+bench_algos: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 bench_algos
+.PHONY : bench_algos
+
+# fast build rule for target.
+bench_algos/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/build
+.PHONY : bench_algos/fast
+
+#=============================================================================
 # Target rules for targets named Catch2
 
 # Build rule for target.
@@ -265,10 +291,12 @@ cxb/cxb.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/cxb/cxb.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o
 .PHONY : cxb/cxb.cpp.o
 
 cxb/cxb.i: cxb/cxb.cpp.i
@@ -280,10 +308,12 @@ cxb/cxb.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/cxb/cxb.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/cxb/cxb.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/cxb/cxb.cpp.i
 .PHONY : cxb/cxb.cpp.i
 
 cxb/cxb.s: cxb/cxb.cpp.s
@@ -295,11 +325,37 @@ cxb/cxb.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/cxb/cxb.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/cxb/cxb.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/cxb/cxb.cpp.s
 .PHONY : cxb/cxb.cpp.s
+
+tests/benchmarks/bench_algos.o: tests/benchmarks/bench_algos.cpp.o
+.PHONY : tests/benchmarks/bench_algos.o
+
+# target to build an object file
+tests/benchmarks/bench_algos.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o
+.PHONY : tests/benchmarks/bench_algos.cpp.o
+
+tests/benchmarks/bench_algos.i: tests/benchmarks/bench_algos.cpp.i
+.PHONY : tests/benchmarks/bench_algos.i
+
+# target to preprocess a source file
+tests/benchmarks/bench_algos.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.i
+.PHONY : tests/benchmarks/bench_algos.cpp.i
+
+tests/benchmarks/bench_algos.s: tests/benchmarks/bench_algos.cpp.s
+.PHONY : tests/benchmarks/bench_algos.s
+
+# target to generate assembly for a file
+tests/benchmarks/bench_algos.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.s
+.PHONY : tests/benchmarks/bench_algos.cpp.s
 
 tests/benchmarks/bench_hm.o: tests/benchmarks/bench_hm.cpp.o
 .PHONY : tests/benchmarks/bench_hm.o
@@ -396,6 +452,30 @@ tests/benchmarks/bench_string_header.s: tests/benchmarks/bench_string_header.cpp
 tests/benchmarks/bench_string_header.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/tests/benchmarks/bench_string_header.cpp.s
 .PHONY : tests/benchmarks/bench_string_header.cpp.s
+
+tests/test_algos.o: tests/test_algos.cpp.o
+.PHONY : tests/test_algos.o
+
+# target to build an object file
+tests/test_algos.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/tests/test_algos.cpp.o
+.PHONY : tests/test_algos.cpp.o
+
+tests/test_algos.i: tests/test_algos.cpp.i
+.PHONY : tests/test_algos.i
+
+# target to preprocess a source file
+tests/test_algos.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/tests/test_algos.cpp.i
+.PHONY : tests/test_algos.cpp.i
+
+tests/test_algos.s: tests/test_algos.cpp.s
+.PHONY : tests/test_algos.s
+
+# target to generate assembly for a file
+tests/test_algos.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/tests/test_algos.cpp.s
+.PHONY : tests/test_algos.cpp.s
 
 tests/test_arena.o: tests/test_arena.cpp.o
 .PHONY : tests/test_arena.o
@@ -504,10 +584,12 @@ help:
 	@echo "... test"
 	@echo "... Catch2"
 	@echo "... Catch2WithMain"
+	@echo "... bench_algos"
 	@echo "... bench_hm"
 	@echo "... bench_std_headers"
 	@echo "... bench_string"
 	@echo "... bench_string_header"
+	@echo "... test_algos"
 	@echo "... test_arena"
 	@echo "... test_array"
 	@echo "... test_hm"
@@ -515,6 +597,9 @@ help:
 	@echo "... cxb/cxb.o"
 	@echo "... cxb/cxb.i"
 	@echo "... cxb/cxb.s"
+	@echo "... tests/benchmarks/bench_algos.o"
+	@echo "... tests/benchmarks/bench_algos.i"
+	@echo "... tests/benchmarks/bench_algos.s"
 	@echo "... tests/benchmarks/bench_hm.o"
 	@echo "... tests/benchmarks/bench_hm.i"
 	@echo "... tests/benchmarks/bench_hm.s"
@@ -527,6 +612,9 @@ help:
 	@echo "... tests/benchmarks/bench_string_header.o"
 	@echo "... tests/benchmarks/bench_string_header.i"
 	@echo "... tests/benchmarks/bench_string_header.s"
+	@echo "... tests/test_algos.o"
+	@echo "... tests/test_algos.i"
+	@echo "... tests/test_algos.s"
 	@echo "... tests/test_arena.o"
 	@echo "... tests/test_arena.i"
 	@echo "... tests/test_arena.s"

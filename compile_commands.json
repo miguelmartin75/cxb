@@ -49,6 +49,18 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_algos.dir/tests/test_algos.cpp.o -c /home/runner/work/cxb/cxb/tests/test_algos.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_algos.cpp",
+  "output": "CMakeFiles/test_algos.dir/tests/test_algos.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_algos.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_algos.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
   "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp",
   "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_string.cpp",
   "output": "CMakeFiles/bench_string.dir/tests/benchmarks/bench_string.cpp.o"
@@ -94,6 +106,18 @@
   "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
   "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
   "output": "CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o -c /home/runner/work/cxb/cxb/tests/benchmarks/bench_algos.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchmarks/bench_algos.cpp",
+  "output": "CMakeFiles/bench_algos.dir/tests/benchmarks/bench_algos.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o"
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",

@@ -1,14 +1,10 @@
 CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/share/asan_ignorelist.txt \
   /home/runner/work/cxb/cxb/tests/test_string.cpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_test_macros.hpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_test_macro_impl.hpp \
-  /home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes/catch2/catch_user_config.hpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_assertion_handler.hpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_assertion_info.hpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_result_type.hpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_source_line_info.hpp \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cstddef \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_approx.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_tostring.hpp \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/vector \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/requires_hosted.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/x86_64-unknown-linux-gnu/bits/c++config.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/x86_64-unknown-linux-gnu/bits/os_defines.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/features.h \
@@ -22,6 +18,56 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/gnu/stubs-64.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/x86_64-unknown-linux-gnu/bits/cpu_defines.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/pstl/pstl_config.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_algobase.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/functexcept.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/exception_defines.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/cpp_type_traits.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/version.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/type_traits.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/numeric_traits.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_pair.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/type_traits \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/move.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/utility.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/compare \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/concepts \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_iterator_base_types.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/iterator_concepts.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ptr_traits.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ranges_cmp.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_iterator_base_funcs.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/concept_check.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/debug/assertions.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_iterator.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/new \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/exception.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_construct.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/debug/debug.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/predefined_ops.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bit \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/allocator.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/x86_64-unknown-linux-gnu/bits/c++allocator.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/new_allocator.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/memoryfwd.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_uninitialized.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/alloc_traits.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/alloc_traits.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_vector.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/initializer_list \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ranges_base.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/max_size_type.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/numbers \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_bvector.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/functional_hash.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/hash_bytes.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/refwrap.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/invoke.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_function.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/backward/binders.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/range_access.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/vector.tcc \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/memory_resource.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cstddef \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/stddef.h \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stddef_header_macro.h \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stddef_ptrdiff_t.h \
@@ -31,11 +77,13 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stddef_nullptr_t.h \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stddef_max_align_t.h \
   /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stddef_offsetof.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/version.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/iosfwd \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/requires_hosted.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/uses_allocator.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/uses_allocator_args.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/tuple \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ranges_util.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/string \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stringfwd.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/memoryfwd.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/char_traits.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/postypes.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cwchar \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/wchar.h \
@@ -54,34 +102,12 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/types/__locale_t.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/wchar2-decl.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/wchar2.h \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_stringref.hpp \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/string \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/char_traits.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/type_traits \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/compare \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/concepts \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_construct.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/new \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/exception.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/move.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_iterator_base_types.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/iterator_concepts.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ptr_traits.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ranges_cmp.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_iterator_base_funcs.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/concept_check.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/debug/assertions.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/allocator.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/x86_64-unknown-linux-gnu/bits/c++allocator.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/new_allocator.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/functexcept.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/exception_defines.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/cpp_type_traits.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/localefwd.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/x86_64-unknown-linux-gnu/bits/c++locale.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/clocale \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/locale.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/locale.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/iosfwd \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cctype \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/ctype.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/types.h \
@@ -91,30 +117,8 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/endianness.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ostream_insert.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/cxxabi_forced.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_iterator.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/type_traits.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/utility.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_function.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/backward/binders.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/numeric_traits.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_algobase.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_pair.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/debug/debug.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/predefined_ops.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bit \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/refwrap.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/invoke.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/range_access.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/initializer_list \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/basic_string.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/alloc_traits.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/alloc_traits.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/string_view \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/functional_hash.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/hash_bytes.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ranges_base.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/max_size_type.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/numbers \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/string_view.tcc \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ext/string_conversions.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cstdlib \
@@ -169,27 +173,9 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/types/error_t.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/charconv.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/basic_string.tcc \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/memory_resource.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/uses_allocator.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/uses_allocator_args.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/tuple \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ranges_util.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cassert \
-  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/assert.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cstring \
-  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/string.h \
-  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/strings.h \
-  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/strings_fortified.h \
-  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/string_fortified.h \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_decomposer.hpp \
-  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_tostring.hpp \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/vector \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_uninitialized.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_vector.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/stl_bvector.h \
-  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/vector.tcc \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_compiler_capabilities.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_platform.hpp \
+  /home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes/catch2/catch_user_config.hpp \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/optional \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/variant \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_config_wchar.hpp \
@@ -270,6 +256,14 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/ostream.tcc \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_void_type.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/interfaces/catch_interfaces_enum_values_registry.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_stringref.hpp \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cassert \
+  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/assert.h \
+  /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/cstring \
+  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/string.h \
+  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/strings.h \
+  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/strings_fortified.h \
+  /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/string_fortified.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/ratio \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/chrono \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/bits/chrono.h \
@@ -290,6 +284,13 @@ CMakeFiles/test_string.dir/tests/test_string.cpp.o: \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/interfaces/catch_interfaces_registry_hub.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_unique_ptr.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_move_and_forward.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_test_macros.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_test_macro_impl.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_assertion_handler.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/catch_assertion_info.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_result_type.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_source_line_info.hpp \
+  /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_decomposer.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_compare_traits.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_test_failure_exception.hpp \
   /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/../catch2/internal/catch_logical_traits.hpp \
