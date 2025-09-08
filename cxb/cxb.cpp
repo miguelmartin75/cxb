@@ -307,6 +307,8 @@ void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i) {
 }
 
 void string8_extend(String8& str, Arena* arena, String8 to_append) {
+    if(to_append.len == 0) return;
+
     ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
            "string not allocated on arena");
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),

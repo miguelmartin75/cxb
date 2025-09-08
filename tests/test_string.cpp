@@ -397,10 +397,50 @@ TEST_CASE("string8_trim", "[String8]") {
     REQUIRE(s.trim(S8_LIT("\t "), false, true) == S8_LIT("   abc"));
 }
 
+TEST_CASE("String8 trim_left/right members", "[String8]") {
+    String8 s = S8_LIT("   abc \t");
+    REQUIRE(s.trim_left(S8_LIT("\t ")) == S8_LIT("abc \t"));
+    REQUIRE(s.trim_right(S8_LIT("\t ")) == S8_LIT("   abc"));
+}
+
+TEST_CASE("string8_trim_all trims full substring at edges", "[String8]") {
+    String8 s = S8_LIT("abcabcXabcabc");
+    String8 chars = S8_LIT("abc");
+    REQUIRE(string8_trim_all(s, chars) == S8_LIT("X"));
+    REQUIRE(string8_trim_all(s, chars, true, false) == S8_LIT("Xabcabc"));
+    REQUIRE(string8_trim_all(s, chars, false, true) == S8_LIT("abcabcX"));
+
+    String8 s2 = S8_LIT("abXabc");
+    REQUIRE(string8_trim_all(s2, chars) == S8_LIT("abX"));
+    REQUIRE(s.trim_all(chars) == S8_LIT("X"));
+}
+
+TEST_CASE("String8 trim_all_left/right members", "[String8]") {
+    String8 s = S8_LIT("abcabcXabcabc");
+    String8 chars = S8_LIT("abc");
+    REQUIRE(s.trim_all_left(chars) == S8_LIT("Xabcabc"));
+    REQUIRE(s.trim_all_right(chars) == S8_LIT("abcabcX"));
+}
+
 TEST_CASE("string8_contains_chars", "[String8]") {
     String8 s = S8_LIT("hello world");
     REQUIRE(string8_contains_chars(s, S8_LIT("ow")));
     REQUIRE_FALSE(string8_contains_chars(s, S8_LIT("xyz")));
     REQUIRE(s.contains_chars(S8_LIT("hw")));
     REQUIRE_FALSE(s.contains_chars(S8_LIT("xyz")));
+}
+
+TEST_CASE("string8_starts_with and ends_with", "[String8]") {
+    String8 s = S8_LIT("hello world");
+    REQUIRE(string8_starts_with(s, S8_LIT("hello")));
+    REQUIRE_FALSE(string8_starts_with(s, S8_LIT("world")));
+    REQUIRE(string8_starts_with(s, S8_LIT(""))); // empty prefix
+    REQUIRE(s.starts_with(S8_LIT("hello")));
+    REQUIRE_FALSE(s.starts_with(S8_LIT("hella")));
+
+    REQUIRE(string8_ends_with(s, S8_LIT("world")));
+    REQUIRE_FALSE(string8_ends_with(s, S8_LIT("hello")));
+    REQUIRE(string8_ends_with(s, S8_LIT(""))); // empty suffix
+    REQUIRE(s.ends_with(S8_LIT("world")));
+    REQUIRE_FALSE(s.ends_with(S8_LIT("world!")));
 }
