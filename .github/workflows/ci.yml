@@ -11,6 +11,8 @@ jobs:
     name: ${{ matrix.nix_system }} ${{ matrix.compiler }} ${{ matrix.build_type }} (${{ matrix.os }})
     # All jobs run in parallel; format check runs conditionally within this job
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       matrix:
         # NOTE: this is flattened intentionally, such that it's easier to read
@@ -99,7 +101,7 @@ jobs:
             build/coverage/coverage.txt
             build/coverage/coverage.json
       - name: Publish coverage badge
-        if: matrix.os == 'ubuntu-22.04' && matrix.compiler == 'clang' && matrix.build_type == 'Debug' && matrix.nix_system == 'x86_64-linux'
+        if: github.event_name == 'push' && matrix.os == 'ubuntu-22.04' && matrix.compiler == 'clang' && matrix.build_type == 'Debug' && matrix.nix_system == 'x86_64-linux'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
