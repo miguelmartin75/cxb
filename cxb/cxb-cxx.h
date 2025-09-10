@@ -251,8 +251,7 @@ typedef _Atomic(i128) atomic_i128;
 typedef _Atomic(u128) atomic_u128;
 #endif
 
-// NOTE: GCC doesn't support _Atomic in C++
-#if defined(__STDC_NO_ATOMICS__) || (defined(__GNUC__) && !defined(__clang__))
+#if defined(__STDC_NO_ATOMICS__)
 #error "C11 _Atomic is not available, compile with C++23"
 #endif
 
