@@ -49,7 +49,7 @@ Run `./scripts/ci/coverage.sh` to build the project with clang coverage instrume
     - [ ] (P2) Group and move M/A prefixed types to bottom of header-file
     - [x] (P2) `git mv tests/benchmarks tests/benchs` with CMakeLists.txt changes
     - [x] (P2) `tests/fuzz/*_fuzz.cpp` -> `tests/fuzz/fuzz_*.cpp` with CMakeLists.txt changes
-    - [ ] (P2) remove fmtlib dependency
+    - [x] (P2) remove fmtlib dependency
         - [ ] Write the Dragonbox float conversion algorithm
 - [ ] QoL
     - [ ] defer, see: https://github.com/gingerBill/gb/blob/master/gb.h#L658

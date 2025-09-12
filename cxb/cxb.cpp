@@ -1,5 +1,7 @@
 #include "cxb.h"
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h> // for malloc, free, realloc, calloc
 #include <sys/mman.h>
 
@@ -7,9 +9,13 @@
 #include <unistd.h> // for sysconf()
 #endif
 
-// TODO: remove fmtlib
-#include "fmt/format.h"
-#include "format.cc"
+static int sprintfn(char* dst, size_t n, const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    int res = vsnprintf(dst, n, fmt, args);
+    va_end(args);
+    return res;
+}
 
 /*
 NOTES on Arenas
@@ -428,28 +434,6 @@ void format_value(Arena* a, String8& dst, String8 args, String8 s) {
     string8_extend(dst, a, s);
 }
 
-// TODO: remove fmtlib
-struct String8AppendIt {
-    Arena* a;
-    String8* dst;
-
-    using difference_type = std::ptrdiff_t;
-
-    String8AppendIt& operator=(char c) {
-        string8_push_back(*dst, a, c);
-        return *this;
-    }
-    String8AppendIt& operator*() {
-        return *this;
-    }
-    String8AppendIt& operator++() {
-        return *this;
-    }
-    String8AppendIt operator++(int) {
-        return *this;
-    }
-};
-
 template <class T>
 std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
     i64 int_part = static_cast<i64>(value);
@@ -459,14 +443,12 @@ std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, 
     ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
     u64 n_digits = digits ? min((u64) std::numeric_limits<T>::max_digits10, digits.value) : 3;
 
-    String8AppendIt out{a, &dst};
-    // TODO: remove fmtlib
-    // TODO: implement Dragonbox
-    if(digits.exists) {
-        fmt::format_to(out, "{:.{}f}", value, static_cast<int>(n_digits));
-    } else {
-        fmt::format_to(out, "{:.{}g}", value, static_cast<int>(n_digits));
-    }
+    AArenaTmp scratch = begin_scratch();
+    const char* fmt = digits.exists ? "%.*f" : "%.*g";
+    int len = sprintfn(nullptr, 0, fmt, static_cast<int>(n_digits), (double) value);
+    String8 tmp = arena_push_string8(scratch.arena, (size_t) len + 1);
+    sprintfn(tmp.data, (size_t) len + 1, fmt, static_cast<int>(n_digits), (double) value);
+    string8_extend(dst, a, tmp);
 }
 
 void format_value(Arena* a, String8& dst, String8 args, bool value) {
