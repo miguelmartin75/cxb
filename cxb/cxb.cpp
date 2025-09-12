@@ -78,7 +78,7 @@ CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
 }
 
 CXB_C_EXPORT void arena_clear(Arena* arena) {
-    arena->pos = 0;
+    arena->pos = sizeof(Arena);
 }
 
 CXB_C_EXPORT void arena_destroy(Arena* arena) {
@@ -200,7 +200,7 @@ static void arena_free_proc(void* head, size_t n_bytes, void* data) {
 
 static void arena_free_all_proc(void* data) {
     Arena* arena = (Arena*) data;
-    arena_clear(arena);
+    arena_destroy(arena);
 }
 
 Allocator make_arena_alloc(Arena* arena) {
@@ -208,6 +208,15 @@ Allocator make_arena_alloc(Arena* arena) {
                      .free_proc = arena_free_proc,
                      .free_all_proc = arena_free_all_proc,
                      .data = (void*) arena};
+}
+
+Allocator* push_arena_alloc(Arena* arena) {
+    return arena_push<Allocator>(arena,
+                                 1,
+                                 Allocator{.alloc_proc = arena_alloc_proc,
+                                           .free_proc = arena_free_proc,
+                                           .free_all_proc = arena_free_all_proc,
+                                           .data = (void*) arena});
 }
 
 String8 arena_push_string8(Arena* arena, size_t n) {
@@ -224,14 +233,16 @@ String8 arena_push_string8(Arena* arena, String8 to_copy) {
 }
 
 void string8_resize(String8& str, Arena* arena, size_t n, char fill_char) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
+    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+           "string not allocated on arena");
+    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+           "cannot resize unless array is at the end");
 
     if(n > str.len) {
-        size_t delta = n - str.len;
-        arena_push<char>(arena, delta);
-        memset(str.data + str.len, fill_char, delta);
+        size_t delta = n - str.len + (str.data ? 0 : !str.not_null_term);
+        char* data = arena_push<char>(arena, delta);
+        memset(data - !str.not_null_term, fill_char, delta);
+        str.data = str.data ? str.data : data;
         str.len += delta;
     } else {
         size_t pos = arena->pos - (sizeof(char) * (str.len - n));
