@@ -1,13 +1,13 @@
-Start testing: Sep 12 09:02 UTC
+Start testing: Sep 12 09:03 UTC
 ----------------------------------------------------------
 1/6 Testing: test_array
 1/6 Test: test_array
 Command: "/home/runner/work/cxb/cxb/build/coverage/test_array"
 Directory: /home/runner/work/cxb/cxb/build/coverage
-"test_array" start time: Sep 12 09:02 UTC
+"test_array" start time: Sep 12 09:03 UTC
 Output:
 ----------------------------------------------------------
-Randomness seeded to: 2919184465
+Randomness seeded to: 2325561344
 ===============================================================================
 All tests passed (441 assertions in 7 test cases)
 
@@ -15,7 +15,7 @@ All tests passed (441 assertions in 7 test cases)
 Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_array" end time: Sep 12 09:02 UTC
+"test_array" end time: Sep 12 09:03 UTC
 "test_array" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -23,18 +23,18 @@ Test Passed.
 2/6 Test: test_string
 Command: "/home/runner/work/cxb/cxb/build/coverage/test_string"
 Directory: /home/runner/work/cxb/cxb/build/coverage
-"test_string" start time: Sep 12 09:02 UTC
+"test_string" start time: Sep 12 09:03 UTC
 Output:
 ----------------------------------------------------------
-Randomness seeded to: 490682880
+Randomness seeded to: 3824697500
 ===============================================================================
-All tests passed (223 assertions in 35 test cases)
+All tests passed (222 assertions in 34 test cases)
 
 <end of output>
 Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_string" end time: Sep 12 09:02 UTC
+"test_string" end time: Sep 12 09:03 UTC
 "test_string" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -42,10 +42,10 @@ Test Passed.
 3/6 Test: test_arena
 Command: "/home/runner/work/cxb/cxb/build/coverage/test_arena"
 Directory: /home/runner/work/cxb/cxb/build/coverage
-"test_arena" start time: Sep 12 09:02 UTC
+"test_arena" start time: Sep 12 09:03 UTC
 Output:
 ----------------------------------------------------------
-Randomness seeded to: 3393118319
+Randomness seeded to: 1991375978
 ===============================================================================
 All tests passed (70 assertions in 9 test cases)
 
@@ -53,7 +53,7 @@ All tests passed (70 assertions in 9 test cases)
 Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_arena" end time: Sep 12 09:02 UTC
+"test_arena" end time: Sep 12 09:03 UTC
 "test_arena" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -61,10 +61,10 @@ Test Passed.
 4/6 Test: test_hm
 Command: "/home/runner/work/cxb/cxb/build/coverage/test_hm"
 Directory: /home/runner/work/cxb/cxb/build/coverage
-"test_hm" start time: Sep 12 09:02 UTC
+"test_hm" start time: Sep 12 09:03 UTC
 Output:
 ----------------------------------------------------------
-Randomness seeded to: 4289148653
+Randomness seeded to: 1147444455
 ===============================================================================
 All tests passed (28 assertions in 4 test cases)
 
@@ -72,7 +72,7 @@ All tests passed (28 assertions in 4 test cases)
 Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_hm" end time: Sep 12 09:02 UTC
+"test_hm" end time: Sep 12 09:03 UTC
 "test_hm" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -80,10 +80,10 @@ Test Passed.
 5/6 Test: test_algos
 Command: "/home/runner/work/cxb/cxb/build/coverage/test_algos"
 Directory: /home/runner/work/cxb/cxb/build/coverage
-"test_algos" start time: Sep 12 09:02 UTC
+"test_algos" start time: Sep 12 09:03 UTC
 Output:
 ----------------------------------------------------------
-Randomness seeded to: 1720302604
+Randomness seeded to: 815785380
 ===============================================================================
 All tests passed (14 assertions in 2 test cases)
 
@@ -91,7 +91,7 @@ All tests passed (14 assertions in 2 test cases)
 Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_algos" end time: Sep 12 09:02 UTC
+"test_algos" end time: Sep 12 09:03 UTC
 "test_algos" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -99,19 +99,19 @@ Test Passed.
 6/6 Test: test_format
 Command: "/home/runner/work/cxb/cxb/build/coverage/test_format"
 Directory: /home/runner/work/cxb/cxb/build/coverage
-"test_format" start time: Sep 12 09:02 UTC
+"test_format" start time: Sep 12 09:03 UTC
 Output:
 ----------------------------------------------------------
-Randomness seeded to: 2558463372
+Randomness seeded to: 3095654762
 ===============================================================================
-All tests passed (6 assertions in 3 test cases)
+All tests passed (7 assertions in 4 test cases)
 
 <end of output>
 Test time =   0.02 sec
 ----------------------------------------------------------
 Test Passed.
-"test_format" end time: Sep 12 09:02 UTC
+"test_format" end time: Sep 12 09:03 UTC
 "test_format" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Sep 12 09:02 UTC
+End testing: Sep 12 09:03 UTC
