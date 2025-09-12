@@ -4,7 +4,7 @@
 # compile CXX with /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/fmt/include -I/home/runner/work/cxb/cxb/deps/fmt/src -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes
+CXX_INCLUDES = -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes
 
 CXX_FLAGS = -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra
 
