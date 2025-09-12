@@ -36,9 +36,7 @@ LLVM_PROFILE_FILE="cxb-%p.profraw" ctest --output-on-failure
   -instr-profile=coverage.profdata \
   -ignore-filename-regex='(deps/|tests/|^build/)' > coverage.txt
 cat coverage.txt
-
-# Parse total line coverage and emit Shields.io JSON
-coverage_pct=$(grep -E '^TOTAL' coverage.txt | awk '{print $NF}' | tr -d '%')
+coverage_pct=$(grep -E '^TOTAL' coverage.txt | awk '{print $(NF-3)}' | tr -d '%')
 coverage_int=${coverage_pct%.*}
 if [ "${coverage_int:-0}" -ge 90 ]; then
   color="brightgreen"
