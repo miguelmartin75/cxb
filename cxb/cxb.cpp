@@ -9,14 +9,6 @@
 #include <unistd.h> // for sysconf()
 #endif
 
-static int sprintfn(char* dst, size_t n, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int res = vsnprintf(dst, n, fmt, args);
-    va_end(args);
-    return res;
-}
-
 /*
 NOTES on Arenas
 
@@ -435,6 +427,11 @@ void format_value(Arena* a, String8& dst, String8 args, String8 s) {
 }
 
 template <class T>
+constexpr std::enable_if_t<std::is_floating_point_v<T>, i64> max_n_digits10() {
+    return std::numeric_limits<T>::max_exponent10 + std::numeric_limits<T>::max_digits10;
+}
+
+template <class T>
 std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
     i64 int_part = static_cast<i64>(value);
     f64 frac = value - int_part;
@@ -445,9 +442,9 @@ std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, 
 
     AArenaTmp scratch = begin_scratch();
     const char* fmt = digits.exists ? "%.*f" : "%.*g";
-    int len = sprintfn(nullptr, 0, fmt, static_cast<int>(n_digits), (double) value);
-    String8 tmp = arena_push_string8(scratch.arena, (size_t) len + 1);
-    sprintfn(tmp.data, (size_t) len + 1, fmt, static_cast<int>(n_digits), (double) value);
+    constexpr size_t len = (size_t) max_n_digits10<T>();
+    String8 tmp = arena_push_string8(scratch.arena, len + 1);
+    snprintf(tmp.data, len + 1, fmt, static_cast<int>(n_digits), (double) value);
     string8_extend(dst, a, tmp);
 }
 

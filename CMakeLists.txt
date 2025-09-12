@@ -88,6 +88,7 @@ if(CXB_BUILD_TESTS)
     add_test_exe(test_arena tests/test_arena.cpp 1)
     add_test_exe(test_hm tests/test_hm.cpp 1)
     add_test_exe(test_algos tests/test_algos.cpp 1)
+    add_test_exe(test_format tests/test_format.cpp 1)
 
     add_test_exe(bench_string tests/benchs/bench_string.cpp 1)
     add_test_exe(bench_string_header tests/benchs/bench_string_header.cpp 1)
