@@ -444,3 +444,35 @@ TEST_CASE("string8_starts_with and ends_with", "[String8]") {
     REQUIRE(s.ends_with(S8_LIT("world")));
     REQUIRE_FALSE(s.ends_with(S8_LIT("world!")));
 }
+
+TEST_CASE("string8_insert and insert String8", "[String8]") {
+    ArenaTmp scratch = begin_scratch();
+    String8 s = arena_push_string8(scratch.arena, S8_LIT("Helo"));
+    string8_insert(s, scratch.arena, 'l', 2);
+    REQUIRE(s == S8_LIT("Hello"));
+    string8_insert(s, scratch.arena, S8_LIT(", World"), s.len);
+    REQUIRE(s == S8_LIT("Hello, World"));
+
+    end_scratch(scratch);
+}
+
+TEST_CASE("string8_pop_all clears string", "[String8]") {
+    ArenaTmp scratch = begin_scratch();
+    String8 s = arena_push_string8(scratch.arena, S8_LIT("Hello"));
+    string8_pop_all(s, scratch.arena);
+    REQUIRE(s.len == 0);
+    REQUIRE(s.data == nullptr);
+    end_scratch(scratch);
+}
+
+TEST_CASE("format_value formats various types", "[format]") {
+    ArenaTmp scratch = begin_scratch();
+    String8 dst = arena_push_string8(scratch.arena, 1);
+    format_value(scratch.arena, dst, S8_LIT(""), "hi");
+    format_value(scratch.arena, dst, S8_LIT(""), S8_LIT(" there"));
+    format_value(scratch.arena, dst, S8_LIT(""), true);
+    format_value(scratch.arena, dst, S8_LIT(""), 1.5f);
+    format_value(scratch.arena, dst, S8_LIT(""), 2.25);
+    REQUIRE(dst == S8_LIT("hi theretrue1.52.25"));
+    end_scratch(scratch);
+}

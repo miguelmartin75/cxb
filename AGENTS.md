@@ -79,6 +79,7 @@ Steps performed on CI:
 ## Style Guide
 - Provide C compatible code where possible.
 - Avoid the C++ standard library when cxb provides equivalent functionality (e.g., use `String8` instead of `std::string`).
+- Do not add redundant comments.
 
 ### Functions
 - Mark pure functions with `CXB_PURE`.
