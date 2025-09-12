@@ -50,3 +50,15 @@ TEST_CASE("float args constraint", "[format_value]") {
         REQUIRE(dst == S8_LIT("-0.12"));
     }
 }
+
+TEST_CASE("format_value formats various types", "[format]") {
+    ArenaTmp scratch = begin_scratch();
+    String8 dst = arena_push_string8(scratch.arena, 1);
+    format_value(scratch.arena, dst, S8_LIT(""), "hi");
+    format_value(scratch.arena, dst, S8_LIT(""), S8_LIT(" there"));
+    format_value(scratch.arena, dst, S8_LIT(""), true);
+    format_value(scratch.arena, dst, S8_LIT(""), 1.5f);
+    format_value(scratch.arena, dst, S8_LIT(""), 2.25);
+    REQUIRE(dst == S8_LIT("hi theretrue1.52.25"));
+    end_scratch(scratch);
+}
