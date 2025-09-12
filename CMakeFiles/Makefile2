@@ -156,8 +156,8 @@ deps/Catch2/src/clean: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/clean
 # Target rules for target CMakeFiles/test_array.dir
 
 # All Build rule for target.
-CMakeFiles/test_array.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/test_array.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/test_array.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_array.dir/build.make CMakeFiles/test_array.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_array.dir/build.make CMakeFiles/test_array.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=92,93 "Built target test_array"
@@ -189,8 +189,8 @@ CMakeFiles/test_array.dir/clean:
 # Target rules for target CMakeFiles/test_string.dir
 
 # All Build rule for target.
-CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=98,99,100 "Built target test_string"
@@ -222,8 +222,8 @@ CMakeFiles/test_string.dir/clean:
 # Target rules for target CMakeFiles/test_arena.dir
 
 # All Build rule for target.
-CMakeFiles/test_arena.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/test_arena.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/test_arena.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=90,91 "Built target test_arena"
@@ -255,8 +255,8 @@ CMakeFiles/test_arena.dir/clean:
 # Target rules for target CMakeFiles/test_hm.dir
 
 # All Build rule for target.
-CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=96,97 "Built target test_hm"
@@ -288,8 +288,8 @@ CMakeFiles/test_hm.dir/clean:
 # Target rules for target CMakeFiles/test_algos.dir
 
 # All Build rule for target.
-CMakeFiles/test_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/test_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/test_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=88,89 "Built target test_algos"
@@ -321,8 +321,8 @@ CMakeFiles/test_algos.dir/clean:
 # Target rules for target CMakeFiles/test_format.dir
 
 # All Build rule for target.
-CMakeFiles/test_format.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/test_format.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/test_format.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=94,95 "Built target test_format"
@@ -354,8 +354,8 @@ CMakeFiles/test_format.dir/clean:
 # Target rules for target CMakeFiles/bench_string.dir
 
 # All Build rule for target.
-CMakeFiles/bench_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/bench_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/bench_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=83,84 "Built target bench_string"
@@ -387,8 +387,8 @@ CMakeFiles/bench_string.dir/clean:
 # Target rules for target CMakeFiles/bench_string_header.dir
 
 # All Build rule for target.
-CMakeFiles/bench_string_header.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/bench_string_header.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/bench_string_header.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=85,86,87 "Built target bench_string_header"
@@ -420,8 +420,8 @@ CMakeFiles/bench_string_header.dir/clean:
 # Target rules for target CMakeFiles/bench_std_headers.dir
 
 # All Build rule for target.
-CMakeFiles/bench_std_headers.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/bench_std_headers.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/bench_std_headers.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=81,82 "Built target bench_std_headers"
@@ -453,8 +453,8 @@ CMakeFiles/bench_std_headers.dir/clean:
 # Target rules for target CMakeFiles/bench_hm.dir
 
 # All Build rule for target.
-CMakeFiles/bench_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/bench_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/bench_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=79,80 "Built target bench_hm"
@@ -486,8 +486,8 @@ CMakeFiles/bench_hm.dir/clean:
 # Target rules for target CMakeFiles/bench_algos.dir
 
 # All Build rule for target.
-CMakeFiles/bench_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 CMakeFiles/bench_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+CMakeFiles/bench_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=77,78 "Built target bench_algos"
