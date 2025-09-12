@@ -101,6 +101,7 @@ if(CXB_BUILD_TESTS)
     add_test(NAME test_arena COMMAND test_arena)
     add_test(NAME test_hm COMMAND test_hm)
     add_test(NAME test_algos COMMAND test_algos)
+    add_test(NAME test_format COMMAND test_format)
 
     # if(CXB_BUILD_C_API_TESTS)
     if(0)  # TODO

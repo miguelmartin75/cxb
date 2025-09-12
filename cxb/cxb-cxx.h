@@ -457,6 +457,7 @@ CXB_C_TYPE struct Arena {
     CXB_C_COMPAT_END
 
     CXB_MAYBE_INLINE Allocator make_alloc();
+    CXB_MAYBE_INLINE Allocator* push_alloc();
 };
 
 CXB_C_EXPORT Arena* arena_make(ArenaParams params);
@@ -835,8 +836,12 @@ CXB_C_TYPE struct Allocator {
 };
 
 Allocator make_arena_alloc(Arena* arena);
+Allocator* push_arena_alloc(Arena* arena);
 CXB_MAYBE_INLINE Allocator Arena::make_alloc() {
     return make_arena_alloc(this);
+}
+CXB_MAYBE_INLINE Allocator* Arena::push_alloc() {
+    return push_arena_alloc(this);
 }
 
 CXB_C_COMPAT_BEGIN
