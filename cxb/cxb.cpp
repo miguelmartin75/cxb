@@ -431,6 +431,8 @@ constexpr std::enable_if_t<std::is_floating_point_v<T>, i64> max_n_digits10() {
 
 template <class T>
 std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
+    constexpr size_t digits10 = (size_t) max_n_digits10<T>();
+
     i64 int_part = static_cast<i64>(value);
     f64 frac = value - int_part;
     if(frac < 0) frac *= -1;
@@ -438,12 +440,11 @@ std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, 
     ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
     u64 n_digits = digits ? min((u64) std::numeric_limits<T>::max_digits10, digits.value) : 3;
 
-    AArenaTmp scratch = begin_scratch();
     const char* fmt = digits.exists ? "%.*f" : "%.*g";
-    constexpr size_t len = (size_t) max_n_digits10<T>();
-    String8 tmp = arena_push_string8(scratch.arena, len + 1);
-    snprintf(tmp.data, len + 1, fmt, static_cast<int>(n_digits), (double) value);
-    string8_extend(dst, a, tmp);
+    i64 orig_len = dst.len;
+    string8_resize(dst, a, dst.len + digits10 + !dst.not_null_term);
+    i64 new_len = snprintf(dst.data, digits10 + 1, fmt, static_cast<int>(n_digits), (double) value);
+    string8_resize(dst, a, orig_len + new_len + 1);
 }
 
 void format_value(Arena* a, String8& dst, String8 args, bool value) {
