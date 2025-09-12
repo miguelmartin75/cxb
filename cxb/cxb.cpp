@@ -1,7 +1,5 @@
 #include "cxb.h"
 
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h> // for malloc, free, realloc, calloc
 #include <sys/mman.h>
 
