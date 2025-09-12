@@ -14,7 +14,6 @@ option(CXB_BUILD_FUZZERS "build fuzzers?" OFF)
 option(CXB_BUILD_C_API_TESTS "Build C API compatibility tests" ON)
 
 set(CXB_SRCS "cxb/cxb.cpp")
-set(CXB_DEPS_INCLUDE_DIRS deps/fmt/include deps/fmt/src)
 
 # Add compiler-specific options
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
@@ -26,8 +25,7 @@ endif()
 function(add_exe name sources)
     add_executable(${name} ${sources} ${CXB_SRCS})
     set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
-    # TODO: remove fmtlib dependency
-    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     if((CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
         target_compile_options(${name} PRIVATE
             -fsanitize=address
@@ -43,8 +41,7 @@ endfunction()
 
 function(add_test_exe name test_source fsanitize)
     add_executable(${name} ${test_source} ${CXB_SRCS})
-    # TODO: remove fmtlib dependency
-    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(${name} PRIVATE Catch2::Catch2WithMain ${ARGN})
     if(${fsanitize} AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
         target_compile_options(${name} PRIVATE
@@ -62,8 +59,7 @@ endfunction()
 function(add_fuzz_exe name sources)
     add_executable(${name} ${sources} ${CXB_SRCS})
     set_property(TARGET ${name} PROPERTY CXX_STANDARD 23)
-    # TODO: remove fmtlib dependency
-    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+    target_include_directories(${name} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
     target_compile_options(${name} PRIVATE
         -fsanitize=fuzzer,address,undefined
         -fno-omit-frame-pointer
@@ -109,12 +105,12 @@ if(CXB_BUILD_TESTS)
     if(0)  # TODO
         # Pure C test
         add_executable(test_c_api_c tests/test_c_api_c.c tests/c_api_test.cpp ${CXB_SRCS})
-        target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+        target_include_directories(test_c_api_c PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
         # target_link_libraries(test_c_api_c PRIVATE cxb)
 
         # C++ test that uses Catch2
         add_executable(test_c_api_cpp tests/test_c_api_cpp.cpp tests/c_api_test.cpp ${CXB_SRCS})
-        target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CXB_DEPS_INCLUDE_DIRS})
+        target_include_directories(test_c_api_cpp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
         target_link_libraries(test_c_api_cpp PRIVATE Catch2::Catch2WithMain)
 
         add_test(NAME test_c_api_c COMMAND test_c_api_c)
@@ -127,9 +123,11 @@ check_cxx_compiler_flag("-fsanitize=fuzzer" CXB_HAS_FUZZER)
 if(CXB_BUILD_FUZZERS AND CXB_HAS_FUZZER)
     add_fuzz_exe(fuzz_hashmap tests/fuzz/fuzz_hashmap.cpp)
     add_fuzz_exe(fuzz_string tests/fuzz/fuzz_string.cpp)
+    add_fuzz_exe(fuzz_format_float tests/fuzz/fuzz_format_float.cpp)
 
     add_test(NAME fuzz_hashmap COMMAND fuzz_hashmap -max_total_time=60)
     add_test(NAME fuzz_string COMMAND fuzz_string -max_total_time=60)
+    add_test(NAME fuzz_format_float COMMAND fuzz_format_float -max_total_time=60)
 elseif(CXB_BUILD_FUZZERS)
     message(WARNING "CXB_BUILD_FUZZERS is ON, but compiler does not support -fsanitize=fuzzer (CXB_HAS_FUZZER=${CXB_HAS_FUZZER})")
 endif()
