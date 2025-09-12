@@ -442,9 +442,9 @@ std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, 
 
     const char* fmt = digits.exists ? "%.*f" : "%.*g";
     i64 orig_len = dst.len;
-    string8_resize(dst, a, dst.len + digits10 + !dst.not_null_term);
+    dst.resize(a, dst.len + digits10 + !dst.not_null_term);
     i64 new_len = snprintf(dst.data, digits10 + 1, fmt, static_cast<int>(n_digits), (double) value);
-    string8_resize(dst, a, orig_len + new_len + 1);
+    dst.resize(a, orig_len + new_len + 1);
 }
 
 void format_value(Arena* a, String8& dst, String8 args, bool value) {
