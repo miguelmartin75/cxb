@@ -161,11 +161,6 @@ CMakeFiles/test_arena.dir/cxb/cxb.cpp.o: \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/string_fortified.h \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/initializer_list \
   /nix/store/sa7j7cddyblhcb3ch3ds10w7nw75yjj1-gcc-14.3.0/include/c++/14.3.0/limits \
-  /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stdarg_header_macro.h \
-  /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stdarg_va_list.h \
-  /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stdarg_va_arg.h \
-  /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stdarg___va_copy.h \
-  /nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/resource-root/include/__stdarg_va_copy.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/sys/mman.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/mman.h \
   /nix/store/x4cz3spvw0bwwz5sjsdn2qm4f89rcryn-glibc-2.40-66-dev/include/bits/mman-map-flags-generic.h \

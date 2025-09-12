@@ -3,6 +3,7 @@
 /home/runner/work/cxb/cxb/build/coverage/CMakeFiles/test_arena.dir
 /home/runner/work/cxb/cxb/build/coverage/CMakeFiles/test_hm.dir
 /home/runner/work/cxb/cxb/build/coverage/CMakeFiles/test_algos.dir
+/home/runner/work/cxb/cxb/build/coverage/CMakeFiles/test_format.dir
 /home/runner/work/cxb/cxb/build/coverage/CMakeFiles/bench_string.dir
 /home/runner/work/cxb/cxb/build/coverage/CMakeFiles/bench_string_header.dir
 /home/runner/work/cxb/cxb/build/coverage/CMakeFiles/bench_std_headers.dir

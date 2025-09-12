@@ -61,6 +61,18 @@
 },
 {
   "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_format.dir/tests/test_format.cpp.o -c /home/runner/work/cxb/cxb/tests/test_format.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_format.cpp",
+  "output": "CMakeFiles/test_format.dir/tests/test_format.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_format.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_format.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
   "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp",
   "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp",
   "output": "CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o"

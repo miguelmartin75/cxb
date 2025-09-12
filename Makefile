@@ -192,6 +192,19 @@ test_algos/fast:
 .PHONY : test_algos/fast
 
 #=============================================================================
+# Target rules for targets named test_format
+
+# Build rule for target.
+test_format: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_format
+.PHONY : test_format
+
+# fast build rule for target.
+test_format/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/build
+.PHONY : test_format/fast
+
+#=============================================================================
 # Target rules for targets named bench_string
 
 # Build rule for target.
@@ -292,6 +305,7 @@ cxb/cxb.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/cxb/cxb.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.o
@@ -309,6 +323,7 @@ cxb/cxb.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/cxb/cxb.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.i
@@ -326,6 +341,7 @@ cxb/cxb.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/cxb/cxb.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.s
@@ -525,6 +541,30 @@ tests/test_array.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_array.dir/build.make CMakeFiles/test_array.dir/tests/test_array.cpp.s
 .PHONY : tests/test_array.cpp.s
 
+tests/test_format.o: tests/test_format.cpp.o
+.PHONY : tests/test_format.o
+
+# target to build an object file
+tests/test_format.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/tests/test_format.cpp.o
+.PHONY : tests/test_format.cpp.o
+
+tests/test_format.i: tests/test_format.cpp.i
+.PHONY : tests/test_format.i
+
+# target to preprocess a source file
+tests/test_format.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/tests/test_format.cpp.i
+.PHONY : tests/test_format.cpp.i
+
+tests/test_format.s: tests/test_format.cpp.s
+.PHONY : tests/test_format.s
+
+# target to generate assembly for a file
+tests/test_format.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/tests/test_format.cpp.s
+.PHONY : tests/test_format.cpp.s
+
 tests/test_hm.o: tests/test_hm.cpp.o
 .PHONY : tests/test_hm.o
 
@@ -592,6 +632,7 @@ help:
 	@echo "... test_algos"
 	@echo "... test_arena"
 	@echo "... test_array"
+	@echo "... test_format"
 	@echo "... test_hm"
 	@echo "... test_string"
 	@echo "... cxb/cxb.o"
@@ -621,6 +662,9 @@ help:
 	@echo "... tests/test_array.o"
 	@echo "... tests/test_array.i"
 	@echo "... tests/test_array.s"
+	@echo "... tests/test_format.o"
+	@echo "... tests/test_format.i"
+	@echo "... tests/test_format.s"
 	@echo "... tests/test_hm.o"
 	@echo "... tests/test_hm.i"
 	@echo "... tests/test_hm.s"

@@ -68,6 +68,7 @@ all: CMakeFiles/test_string.dir/all
 all: CMakeFiles/test_arena.dir/all
 all: CMakeFiles/test_hm.dir/all
 all: CMakeFiles/test_algos.dir/all
+all: CMakeFiles/test_format.dir/all
 all: CMakeFiles/bench_string.dir/all
 all: CMakeFiles/bench_string_header.dir/all
 all: CMakeFiles/bench_std_headers.dir/all
@@ -82,6 +83,7 @@ codegen: CMakeFiles/test_string.dir/codegen
 codegen: CMakeFiles/test_arena.dir/codegen
 codegen: CMakeFiles/test_hm.dir/codegen
 codegen: CMakeFiles/test_algos.dir/codegen
+codegen: CMakeFiles/test_format.dir/codegen
 codegen: CMakeFiles/bench_string.dir/codegen
 codegen: CMakeFiles/bench_string_header.dir/codegen
 codegen: CMakeFiles/bench_std_headers.dir/codegen
@@ -100,6 +102,7 @@ clean: CMakeFiles/test_string.dir/clean
 clean: CMakeFiles/test_arena.dir/clean
 clean: CMakeFiles/test_hm.dir/clean
 clean: CMakeFiles/test_algos.dir/clean
+clean: CMakeFiles/test_format.dir/clean
 clean: CMakeFiles/bench_string.dir/clean
 clean: CMakeFiles/bench_string_header.dir/clean
 clean: CMakeFiles/bench_std_headers.dir/clean
@@ -153,16 +156,16 @@ deps/Catch2/src/clean: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/clean
 # Target rules for target CMakeFiles/test_array.dir
 
 # All Build rule for target.
-CMakeFiles/test_array.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/test_array.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/test_array.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_array.dir/build.make CMakeFiles/test_array.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_array.dir/build.make CMakeFiles/test_array.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=94,95 "Built target test_array"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=92,93 "Built target test_array"
 .PHONY : CMakeFiles/test_array.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_array.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_array.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/test_array.dir/rule
@@ -174,7 +177,7 @@ test_array: CMakeFiles/test_array.dir/rule
 # codegen rule for target.
 CMakeFiles/test_array.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_array.dir/build.make CMakeFiles/test_array.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=94,95 "Finished codegen for target test_array"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=92,93 "Finished codegen for target test_array"
 .PHONY : CMakeFiles/test_array.dir/codegen
 
 # clean rule for target.
@@ -186,8 +189,8 @@ CMakeFiles/test_array.dir/clean:
 # Target rules for target CMakeFiles/test_string.dir
 
 # All Build rule for target.
-CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_string.dir/build.make CMakeFiles/test_string.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=98,99,100 "Built target test_string"
@@ -195,7 +198,7 @@ CMakeFiles/test_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/al
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_string.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 80
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_string.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/test_string.dir/rule
@@ -219,16 +222,16 @@ CMakeFiles/test_string.dir/clean:
 # Target rules for target CMakeFiles/test_arena.dir
 
 # All Build rule for target.
-CMakeFiles/test_arena.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/test_arena.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/test_arena.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=92,93 "Built target test_arena"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=90,91 "Built target test_arena"
 .PHONY : CMakeFiles/test_arena.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_arena.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_arena.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/test_arena.dir/rule
@@ -240,7 +243,7 @@ test_arena: CMakeFiles/test_arena.dir/rule
 # codegen rule for target.
 CMakeFiles/test_arena.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_arena.dir/build.make CMakeFiles/test_arena.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=92,93 "Finished codegen for target test_arena"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=90,91 "Finished codegen for target test_arena"
 .PHONY : CMakeFiles/test_arena.dir/codegen
 
 # clean rule for target.
@@ -252,8 +255,8 @@ CMakeFiles/test_arena.dir/clean:
 # Target rules for target CMakeFiles/test_hm.dir
 
 # All Build rule for target.
-CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_hm.dir/build.make CMakeFiles/test_hm.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=96,97 "Built target test_hm"
@@ -261,7 +264,7 @@ CMakeFiles/test_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_hm.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_hm.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/test_hm.dir/rule
@@ -285,16 +288,16 @@ CMakeFiles/test_hm.dir/clean:
 # Target rules for target CMakeFiles/test_algos.dir
 
 # All Build rule for target.
-CMakeFiles/test_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/test_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/test_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=89,90,91 "Built target test_algos"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=88,89 "Built target test_algos"
 .PHONY : CMakeFiles/test_algos.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/test_algos.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 80
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_algos.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/test_algos.dir/rule
@@ -306,7 +309,7 @@ test_algos: CMakeFiles/test_algos.dir/rule
 # codegen rule for target.
 CMakeFiles/test_algos.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_algos.dir/build.make CMakeFiles/test_algos.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=89,90,91 "Finished codegen for target test_algos"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=88,89 "Finished codegen for target test_algos"
 .PHONY : CMakeFiles/test_algos.dir/codegen
 
 # clean rule for target.
@@ -315,19 +318,52 @@ CMakeFiles/test_algos.dir/clean:
 .PHONY : CMakeFiles/test_algos.dir/clean
 
 #=============================================================================
+# Target rules for target CMakeFiles/test_format.dir
+
+# All Build rule for target.
+CMakeFiles/test_format.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/test_format.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=94,95 "Built target test_format"
+.PHONY : CMakeFiles/test_format.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/test_format.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/test_format.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
+.PHONY : CMakeFiles/test_format.dir/rule
+
+# Convenience name for target.
+test_format: CMakeFiles/test_format.dir/rule
+.PHONY : test_format
+
+# codegen rule for target.
+CMakeFiles/test_format.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=94,95 "Finished codegen for target test_format"
+.PHONY : CMakeFiles/test_format.dir/codegen
+
+# clean rule for target.
+CMakeFiles/test_format.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/test_format.dir/build.make CMakeFiles/test_format.dir/clean
+.PHONY : CMakeFiles/test_format.dir/clean
+
+#=============================================================================
 # Target rules for target CMakeFiles/bench_string.dir
 
 # All Build rule for target.
-CMakeFiles/bench_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/bench_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/bench_string.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=85,86 "Built target bench_string"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=83,84 "Built target bench_string"
 .PHONY : CMakeFiles/bench_string.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/bench_string.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_string.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/bench_string.dir/rule
@@ -339,7 +375,7 @@ bench_string: CMakeFiles/bench_string.dir/rule
 # codegen rule for target.
 CMakeFiles/bench_string.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string.dir/build.make CMakeFiles/bench_string.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=85,86 "Finished codegen for target bench_string"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=83,84 "Finished codegen for target bench_string"
 .PHONY : CMakeFiles/bench_string.dir/codegen
 
 # clean rule for target.
@@ -351,11 +387,11 @@ CMakeFiles/bench_string.dir/clean:
 # Target rules for target CMakeFiles/bench_string_header.dir
 
 # All Build rule for target.
-CMakeFiles/bench_string_header.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/bench_string_header.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/bench_string_header.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=87,88 "Built target bench_string_header"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=85,86,87 "Built target bench_string_header"
 .PHONY : CMakeFiles/bench_string_header.dir/all
 
 # Build rule for subdir invocation for target.
@@ -372,7 +408,7 @@ bench_string_header: CMakeFiles/bench_string_header.dir/rule
 # codegen rule for target.
 CMakeFiles/bench_string_header.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_string_header.dir/build.make CMakeFiles/bench_string_header.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=87,88 "Finished codegen for target bench_string_header"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=85,86,87 "Finished codegen for target bench_string_header"
 .PHONY : CMakeFiles/bench_string_header.dir/codegen
 
 # clean rule for target.
@@ -384,16 +420,16 @@ CMakeFiles/bench_string_header.dir/clean:
 # Target rules for target CMakeFiles/bench_std_headers.dir
 
 # All Build rule for target.
-CMakeFiles/bench_std_headers.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/bench_std_headers.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/bench_std_headers.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=83,84 "Built target bench_std_headers"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=81,82 "Built target bench_std_headers"
 .PHONY : CMakeFiles/bench_std_headers.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/bench_std_headers.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_std_headers.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/bench_std_headers.dir/rule
@@ -405,7 +441,7 @@ bench_std_headers: CMakeFiles/bench_std_headers.dir/rule
 # codegen rule for target.
 CMakeFiles/bench_std_headers.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_std_headers.dir/build.make CMakeFiles/bench_std_headers.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=83,84 "Finished codegen for target bench_std_headers"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=81,82 "Finished codegen for target bench_std_headers"
 .PHONY : CMakeFiles/bench_std_headers.dir/codegen
 
 # clean rule for target.
@@ -417,16 +453,16 @@ CMakeFiles/bench_std_headers.dir/clean:
 # Target rules for target CMakeFiles/bench_hm.dir
 
 # All Build rule for target.
-CMakeFiles/bench_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/bench_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/bench_hm.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=81,82 "Built target bench_hm"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=79,80 "Built target bench_hm"
 .PHONY : CMakeFiles/bench_hm.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/bench_hm.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 79
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_hm.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/bench_hm.dir/rule
@@ -438,7 +474,7 @@ bench_hm: CMakeFiles/bench_hm.dir/rule
 # codegen rule for target.
 CMakeFiles/bench_hm.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_hm.dir/build.make CMakeFiles/bench_hm.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=81,82 "Finished codegen for target bench_hm"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=79,80 "Finished codegen for target bench_hm"
 .PHONY : CMakeFiles/bench_hm.dir/codegen
 
 # clean rule for target.
@@ -450,16 +486,16 @@ CMakeFiles/bench_hm.dir/clean:
 # Target rules for target CMakeFiles/bench_algos.dir
 
 # All Build rule for target.
-CMakeFiles/bench_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 CMakeFiles/bench_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
+CMakeFiles/bench_algos.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=78,79,80 "Built target bench_algos"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=77,78 "Built target bench_algos"
 .PHONY : CMakeFiles/bench_algos.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/bench_algos.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 80
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 78
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/bench_algos.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : CMakeFiles/bench_algos.dir/rule
@@ -471,7 +507,7 @@ bench_algos: CMakeFiles/bench_algos.dir/rule
 # codegen rule for target.
 CMakeFiles/bench_algos.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/bench_algos.dir/build.make CMakeFiles/bench_algos.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=78,79,80 "Finished codegen for target bench_algos"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=77,78 "Finished codegen for target bench_algos"
 .PHONY : CMakeFiles/bench_algos.dir/codegen
 
 # clean rule for target.
@@ -486,12 +522,12 @@ CMakeFiles/bench_algos.dir/clean:
 deps/Catch2/src/CMakeFiles/Catch2.dir/all:
 	$(MAKE) $(MAKESILENT) -f deps/Catch2/src/CMakeFiles/Catch2.dir/build.make deps/Catch2/src/CMakeFiles/Catch2.dir/depend
 	$(MAKE) $(MAKESILENT) -f deps/Catch2/src/CMakeFiles/Catch2.dir/build.make deps/Catch2/src/CMakeFiles/Catch2.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76 "Built target Catch2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74 "Built target Catch2"
 .PHONY : deps/Catch2/src/CMakeFiles/Catch2.dir/all
 
 # Build rule for subdir invocation for target.
 deps/Catch2/src/CMakeFiles/Catch2.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 76
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 74
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : deps/Catch2/src/CMakeFiles/Catch2.dir/rule
@@ -503,7 +539,7 @@ Catch2: deps/Catch2/src/CMakeFiles/Catch2.dir/rule
 # codegen rule for target.
 deps/Catch2/src/CMakeFiles/Catch2.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f deps/Catch2/src/CMakeFiles/Catch2.dir/build.make deps/Catch2/src/CMakeFiles/Catch2.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76 "Finished codegen for target Catch2"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74 "Finished codegen for target Catch2"
 .PHONY : deps/Catch2/src/CMakeFiles/Catch2.dir/codegen
 
 # clean rule for target.
@@ -518,12 +554,12 @@ deps/Catch2/src/CMakeFiles/Catch2.dir/clean:
 deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all: deps/Catch2/src/CMakeFiles/Catch2.dir/all
 	$(MAKE) $(MAKESILENT) -f deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/build.make deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/depend
 	$(MAKE) $(MAKESILENT) -f deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/build.make deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=77 "Built target Catch2WithMain"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=75,76 "Built target Catch2WithMain"
 .PHONY : deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 
 # Build rule for subdir invocation for target.
 deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 77
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 76
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/runner/work/cxb/cxb/build/coverage/CMakeFiles 0
 .PHONY : deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/rule
@@ -535,7 +571,7 @@ Catch2WithMain: deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/rule
 # codegen rule for target.
 deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/codegen:
 	$(MAKE) $(MAKESILENT) -f deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/build.make deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/codegen
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=77 "Finished codegen for target Catch2WithMain"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/home/runner/work/cxb/cxb/build/coverage/CMakeFiles --progress-num=75,76 "Finished codegen for target Catch2WithMain"
 .PHONY : deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/codegen
 
 # clean rule for target.
