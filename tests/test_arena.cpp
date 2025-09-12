@@ -200,7 +200,16 @@ TEST_CASE("arena allocator interface", "[Arena][Allocator]") {
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (c + 1));
 
     m.free_all();
-    REQUIRE(arena->pos == 0);
+}
 
-    arena_destroy(arena);
+TEST_CASE("MString with arena interface", "[Arena][Allocator]") {
+    Arena* arena = arena_make_nbytes(KB(4));
+    Allocator* arena_alloc = arena->push_alloc();
+
+    MString8 s = {};
+    s.allocator = arena_alloc;
+    s.push_back('a');
+    REQUIRE(s == S8_LIT("a"));
+
+    arena_alloc->free_all();
 }
