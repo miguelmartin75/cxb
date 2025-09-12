@@ -78,7 +78,7 @@ CXB_C_EXPORT void arena_pop_to(Arena* arena, u64 pos) {
 }
 
 CXB_C_EXPORT void arena_clear(Arena* arena) {
-    arena->pos = 0;
+    arena->pos = sizeof(Arena);
 }
 
 CXB_C_EXPORT void arena_destroy(Arena* arena) {
@@ -200,7 +200,7 @@ static void arena_free_proc(void* head, size_t n_bytes, void* data) {
 
 static void arena_free_all_proc(void* data) {
     Arena* arena = (Arena*) data;
-    arena_clear(arena);
+    arena_destroy(arena);
 }
 
 Allocator make_arena_alloc(Arena* arena) {
@@ -208,6 +208,15 @@ Allocator make_arena_alloc(Arena* arena) {
                      .free_proc = arena_free_proc,
                      .free_all_proc = arena_free_all_proc,
                      .data = (void*) arena};
+}
+
+Allocator* push_arena_alloc(Arena* arena) {
+    return arena_push<Allocator>(arena,
+                                 1,
+                                 Allocator{.alloc_proc = arena_alloc_proc,
+                                           .free_proc = arena_free_proc,
+                                           .free_all_proc = arena_free_all_proc,
+                                           .data = (void*) arena});
 }
 
 String8 arena_push_string8(Arena* arena, size_t n) {
@@ -224,14 +233,16 @@ String8 arena_push_string8(Arena* arena, String8 to_copy) {
 }
 
 void string8_resize(String8& str, Arena* arena, size_t n, char fill_char) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
+    DEBUG_ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+                 "string not allocated on arena");
+    DEBUG_ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+                 "cannot resize unless array is at the end");
 
     if(n > str.len) {
         size_t delta = n - str.len;
-        arena_push<char>(arena, delta);
-        memset(str.data + str.len, fill_char, delta);
+        char* data = arena_push<char>(arena, delta + (str.data ? 0 : !str.not_null_term));
+        memset(data - !str.not_null_term, fill_char, delta);
+        str.data = str.data ? str.data : data;
         str.len += delta;
     } else {
         size_t pos = arena->pos - (sizeof(char) * (str.len - n));
@@ -241,10 +252,10 @@ void string8_resize(String8& str, Arena* arena, size_t n, char fill_char) {
 }
 
 void string8_push_back(String8& str, Arena* arena, char ch) {
-    ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
-           "string not allocated on arena");
-    ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
+    DEBUG_ASSERT(str.data == nullptr || (void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+                 "string not allocated on arena");
+    DEBUG_ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+                 "cannot push unless array is at the end");
 
     char* data = arena_push<char>(arena, str.data == nullptr && str.len == 0 && !str.not_null_term ? 2 : 1);
     str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
@@ -255,9 +266,10 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
 
 void string8_pop_back(String8& str, Arena* arena) {
     ASSERT(str.len > 0, "empty string provided to string8_pop_back");
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
+    DEBUG_ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+                 "string not allocated on arena");
+    DEBUG_ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+                 "cannot push unless array is at the end");
 
     arena_pop_to(arena, arena->pos - sizeof(char));
     str.len -= 1;
@@ -266,9 +278,10 @@ void string8_pop_back(String8& str, Arena* arena) {
 }
 
 void string8_pop_all(String8& str, Arena* arena) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
+    DEBUG_ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+                 "string not allocated on arena");
+    DEBUG_ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+                 "cannot push unless array is at the end");
 
     arena_pop_to(arena, arena->pos - str.n_bytes());
     str.len = 0;
@@ -276,10 +289,11 @@ void string8_pop_all(String8& str, Arena* arena) {
 }
 
 void string8_insert(String8& str, Arena* arena, char ch, size_t i) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-    ASSERT(i <= str.len, "insert position out of bounds");
+    DEBUG_ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+                 "string not allocated on arena");
+    DEBUG_ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+                 "cannot push unless array is at the end");
+    DEBUG_ASSERT(i <= str.len, "insert position out of bounds");
 
     arena_push<char>(arena, 1);
     str.len += 1;
@@ -288,10 +302,11 @@ void string8_insert(String8& str, Arena* arena, char ch, size_t i) {
 }
 
 void string8_insert(String8& str, Arena* arena, String8 to_insert, size_t i) {
-    ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end, "string not allocated on arena");
-    ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
-           "cannot push unless array is at the end");
-    ASSERT(i <= str.len, "insert position out of bounds");
+    DEBUG_ASSERT((void*) str.data >= (void*) arena->start && (void*) str.data < arena->end,
+                 "string not allocated on arena");
+    DEBUG_ASSERT((void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
+                 "cannot push unless array is at the end");
+    DEBUG_ASSERT(i <= str.len, "insert position out of bounds");
 
     arena_push<char>(arena, to_insert.len);
 
@@ -350,32 +365,29 @@ CXB_C_EXPORT bool string8_split_next(String8SplitIterator* iter, String8* out) {
         } else {
             iter->pos = iter->s.len + 1;
         }
-
-        return true;
-    }
-
-    while(iter->pos < iter->s.len) {
-        if(iter->pos + iter->delim.len <= iter->s.len &&
-           memcmp(iter->s.data + iter->pos, iter->delim.data, iter->delim.len) == 0) {
-            break;
-        }
-        iter->pos += 1;
-    }
-
-    size_t end = iter->pos;
-    bool at_end = end == iter->s.len;
-    *out = String8{
-        .data = iter->s.data + start,
-        .len = end - start,
-        .not_null_term = at_end ? iter->s.not_null_term : true,
-    };
-
-    if(iter->pos < iter->s.len) {
-        iter->pos += iter->delim.len;
     } else {
-        iter->pos = iter->s.len + 1;
-    }
+        while(iter->pos < iter->s.len) {
+            if(iter->pos + iter->delim.len <= iter->s.len &&
+               memcmp(iter->s.data + iter->pos, iter->delim.data, iter->delim.len) == 0) {
+                break;
+            }
+            iter->pos += 1;
+        }
 
+        size_t end = iter->pos;
+        bool at_end = end == iter->s.len;
+        *out = String8{
+            .data = iter->s.data + start,
+            .len = end - start,
+            .not_null_term = at_end ? iter->s.not_null_term : true,
+        };
+
+        if(iter->pos < iter->s.len) {
+            iter->pos += iter->delim.len;
+        } else {
+            iter->pos = iter->s.len + 1;
+        }
+    }
     return true;
 }
 
@@ -433,18 +445,14 @@ template <class T>
 std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
     constexpr size_t digits10 = (size_t) max_n_digits10<T>();
 
-    i64 int_part = static_cast<i64>(value);
-    f64 frac = value - int_part;
-    if(frac < 0) frac *= -1;
-
     ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
     u64 n_digits = digits ? min((u64) std::numeric_limits<T>::max_digits10, digits.value) : 3;
 
     const char* fmt = digits.exists ? "%.*f" : "%.*g";
     i64 orig_len = dst.len;
-    dst.resize(a, dst.len + digits10 + !dst.not_null_term);
-    i64 new_len = snprintf(dst.data, digits10 + 1, fmt, static_cast<int>(n_digits), (double) value);
-    dst.resize(a, orig_len + new_len + 1);
+    dst.resize(a, orig_len + digits10);
+    i64 new_len = snprintf(dst.data + orig_len, digits10 + 1, fmt, static_cast<int>(n_digits), (double) value);
+    dst.resize(a, orig_len + new_len);
 }
 
 void format_value(Arena* a, String8& dst, String8 args, bool value) {
