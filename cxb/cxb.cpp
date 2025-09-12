@@ -1,21 +1,11 @@
 #include "cxb.h"
 
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h> // for malloc, free, realloc, calloc
 #include <sys/mman.h>
 
 #ifdef __APPLE__
 #include <unistd.h> // for sysconf()
 #endif
-
-static int sprintfn(char* dst, size_t n, const char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    int res = vsnprintf(dst, n, fmt, args);
-    va_end(args);
-    return res;
-}
 
 /*
 NOTES on Arenas
@@ -435,7 +425,14 @@ void format_value(Arena* a, String8& dst, String8 args, String8 s) {
 }
 
 template <class T>
+constexpr std::enable_if_t<std::is_floating_point_v<T>, i64> max_n_digits10() {
+    return std::numeric_limits<T>::max_exponent10 + std::numeric_limits<T>::max_digits10;
+}
+
+template <class T>
 std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, String8& dst, String8 args, T value) {
+    constexpr size_t digits10 = (size_t) max_n_digits10<T>();
+
     i64 int_part = static_cast<i64>(value);
     f64 frac = value - int_part;
     if(frac < 0) frac *= -1;
@@ -443,12 +440,11 @@ std::enable_if_t<std::is_floating_point_v<T>, void> format_float_impl(Arena* a, 
     ParseResult<u64> digits = args.slice(1, args.len && args.back() == 'f' ? -2 : -1).parse<u64>();
     u64 n_digits = digits ? min((u64) std::numeric_limits<T>::max_digits10, digits.value) : 3;
 
-    AArenaTmp scratch = begin_scratch();
     const char* fmt = digits.exists ? "%.*f" : "%.*g";
-    int len = sprintfn(nullptr, 0, fmt, static_cast<int>(n_digits), (double) value);
-    String8 tmp = arena_push_string8(scratch.arena, (size_t) len + 1);
-    sprintfn(tmp.data, (size_t) len + 1, fmt, static_cast<int>(n_digits), (double) value);
-    string8_extend(dst, a, tmp);
+    i64 orig_len = dst.len;
+    dst.resize(a, dst.len + digits10 + !dst.not_null_term);
+    i64 new_len = snprintf(dst.data, digits10 + 1, fmt, static_cast<int>(n_digits), (double) value);
+    dst.resize(a, orig_len + new_len + 1);
 }
 
 void format_value(Arena* a, String8& dst, String8 args, bool value) {
