@@ -1,5 +1,12 @@
 .vscode
-build**/**
+build/
+build-*/
 .cache
-prototype/**
+prototype/
 compile_commands.json
+CMakeFiles/
+CMakeCache.txt
+*.o
+*.a
+/test_*
+/bench_*
