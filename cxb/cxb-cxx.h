@@ -2216,7 +2216,7 @@ void print(FILE* f, Arena* a, const char* fmt, const Args&... args) {
 }
 
 template <typename... Args>
-void print(FILE* f, const char* fmt, const Args&... args) {
+void write(FILE* f, const char* fmt, const Args&... args) {
     ArenaTmp a = begin_scratch();
     String8 str = format(a.arena, fmt, args...);
     if(str.data) {
@@ -2239,10 +2239,10 @@ CXB_INLINE void println(const char* fmt, const Args&... args) {
 }
 
 template <typename... Args>
-CXB_INLINE void println(FILE* f, const char* fmt, const Args&... args) {
+CXB_INLINE void writeln(FILE* f, const char* fmt, const Args&... args) {
     ArenaTmp a = begin_scratch();
     String8 str = format(a.arena, fmt, args...);
-    print(f, "{}\n", str);
+    write(f, "{}\n", str);
     end_scratch(a);
 }
 
