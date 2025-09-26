@@ -110,7 +110,7 @@ CXB_C_COMPAT_BEGIN
 #define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
 
 // see: https://github.com/EpicGamesExt/raddebugger/blob/master/src/base/base_core.h
-#define Bytes(n) ((u64) (n))
+#define BYTES(n) ((u64) (n))
 #define KB(n) ((u64) (n) << 10)
 #define MB(n) ((u64) (n) << 20)
 #define GB(n) ((u64) (n) << 30)
