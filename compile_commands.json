@@ -1,0 +1,758 @@
+[
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_array.dir/tests/test_array.cpp.o -c /home/runner/work/cxb/cxb/tests/test_array.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_array.cpp",
+  "output": "CMakeFiles/test_array.dir/tests/test_array.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_array.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_array.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_string.dir/tests/test_string.cpp.o -c /home/runner/work/cxb/cxb/tests/test_string.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_string.cpp",
+  "output": "CMakeFiles/test_string.dir/tests/test_string.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_string.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_string.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_arena.dir/tests/test_arena.cpp.o -c /home/runner/work/cxb/cxb/tests/test_arena.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_arena.cpp",
+  "output": "CMakeFiles/test_arena.dir/tests/test_arena.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_arena.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_arena.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_hm.dir/tests/test_hm.cpp.o -c /home/runner/work/cxb/cxb/tests/test_hm.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_hm.cpp",
+  "output": "CMakeFiles/test_hm.dir/tests/test_hm.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_hm.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_hm.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_algos.dir/tests/test_algos.cpp.o -c /home/runner/work/cxb/cxb/tests/test_algos.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_algos.cpp",
+  "output": "CMakeFiles/test_algos.dir/tests/test_algos.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_algos.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_algos.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_format.dir/tests/test_format.cpp.o -c /home/runner/work/cxb/cxb/tests/test_format.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/test_format.cpp",
+  "output": "CMakeFiles/test_format.dir/tests/test_format.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/test_format.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/test_format.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_string.cpp",
+  "output": "CMakeFiles/bench_string.dir/tests/benchs/bench_string.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/bench_string.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_string_header.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_string_header.cpp",
+  "output": "CMakeFiles/bench_string_header.dir/tests/benchs/bench_string_header.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/bench_string_header.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_std_headers.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_std_headers.cpp",
+  "output": "CMakeFiles/bench_std_headers.dir/tests/benchs/bench_std_headers.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/bench_std_headers.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_hm.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_hm.cpp",
+  "output": "CMakeFiles/bench_hm.dir/tests/benchs/bench_hm.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer -o CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/bench_hm.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o -c /home/runner/work/cxb/cxb/tests/benchs/bench_algos.cpp",
+  "file": "/home/runner/work/cxb/cxb/tests/benchs/bench_algos.cpp",
+  "output": "CMakeFiles/bench_algos.dir/tests/benchs/bench_algos.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -o CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o -c /home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "file": "/home/runner/work/cxb/cxb/cxb/cxb.cpp",
+  "output": "CMakeFiles/bench_algos.dir/cxb/cxb.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/benchmark/catch_chronometer.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/catch_chronometer.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/catch_chronometer.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/benchmark/catch_chronometer.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_benchmark_function.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/detail/catch_benchmark_function.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/detail/catch_benchmark_function.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_benchmark_function.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_run_for_at_least.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/detail/catch_run_for_at_least.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/detail/catch_run_for_at_least.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_run_for_at_least.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_stats.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/detail/catch_stats.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/benchmark/detail/catch_stats.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/benchmark/detail/catch_stats.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/generators/catch_generator_exception.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/generators/catch_generator_exception.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/generators/catch_generator_exception.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/generators/catch_generator_exception.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/generators/catch_generators.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/generators/catch_generators.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/generators/catch_generators.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/generators/catch_generators.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/generators/catch_generators_random.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/generators/catch_generators_random.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/generators/catch_generators_random.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/generators/catch_generators_random.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_automake.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_automake.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_automake.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_automake.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_common_base.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_common_base.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_common_base.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_common_base.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_compact.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_compact.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_compact.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_compact.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_console.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_console.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_console.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_console.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_cumulative_base.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_cumulative_base.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_cumulative_base.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_cumulative_base.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_event_listener.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_event_listener.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_event_listener.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_event_listener.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_helpers.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_helpers.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_helpers.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_helpers.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_junit.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_junit.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_junit.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_junit.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_multi.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_multi.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_multi.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_multi.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_registrars.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_registrars.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_registrars.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_registrars.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_sonarqube.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_sonarqube.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_sonarqube.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_sonarqube.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_streaming_base.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_streaming_base.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_streaming_base.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_streaming_base.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_tap.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_tap.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_tap.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_tap.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_teamcity.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_teamcity.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_teamcity.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_teamcity.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_xml.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_xml.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/reporters/catch_reporter_xml.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/reporters/catch_reporter_xml.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_capture.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_capture.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_capture.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_capture.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_config.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_config.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_config.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_config.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_exception.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_exception.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_exception.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_exception.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_generatortracker.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_generatortracker.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_generatortracker.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_generatortracker.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_registry_hub.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_registry_hub.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_registry_hub.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_registry_hub.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_reporter.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_reporter.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_reporter.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_reporter.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_reporter_factory.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_reporter_factory.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_reporter_factory.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_reporter_factory.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_testcase.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_testcase.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/interfaces/catch_interfaces_testcase.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/interfaces/catch_interfaces_testcase.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_approx.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_approx.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_approx.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_approx.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_assertion_result.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_assertion_result.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_assertion_result.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_assertion_result.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_config.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_config.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_config.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_config.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_get_random_seed.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_get_random_seed.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_get_random_seed.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_get_random_seed.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_message.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_message.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_message.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_message.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_registry_hub.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_registry_hub.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_registry_hub.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_registry_hub.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_session.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_session.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_session.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_session.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_tag_alias_autoregistrar.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_tag_alias_autoregistrar.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_tag_alias_autoregistrar.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_tag_alias_autoregistrar.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_test_case_info.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_test_case_info.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_test_case_info.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_test_case_info.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_test_spec.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_test_spec.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_test_spec.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_test_spec.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_timer.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_timer.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_timer.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_timer.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_tostring.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_tostring.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_tostring.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_tostring.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_totals.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_totals.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_totals.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_totals.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_translate_exception.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_translate_exception.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_translate_exception.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_translate_exception.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/catch_version.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_version.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/catch_version.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/catch_version.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_assertion_handler.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_assertion_handler.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_assertion_handler.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_assertion_handler.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_case_insensitive_comparisons.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_case_insensitive_comparisons.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_case_insensitive_comparisons.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_case_insensitive_comparisons.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_clara.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_clara.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_clara.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_clara.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_commandline.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_commandline.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_commandline.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_commandline.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_console_colour.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_console_colour.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_console_colour.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_console_colour.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_context.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_context.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_context.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_context.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_debug_console.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_debug_console.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_debug_console.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_debug_console.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_debugger.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_debugger.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_debugger.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_debugger.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_decomposer.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_decomposer.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_decomposer.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_decomposer.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_enforce.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_enforce.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_enforce.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_enforce.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_enum_values_registry.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_enum_values_registry.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_enum_values_registry.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_enum_values_registry.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_errno_guard.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_errno_guard.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_errno_guard.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_errno_guard.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_exception_translator_registry.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_exception_translator_registry.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_exception_translator_registry.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_exception_translator_registry.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_fatal_condition_handler.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_fatal_condition_handler.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_fatal_condition_handler.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_fatal_condition_handler.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_floating_point_helpers.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_floating_point_helpers.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_floating_point_helpers.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_floating_point_helpers.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_getenv.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_getenv.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_getenv.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_getenv.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_istream.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_istream.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_istream.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_istream.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_lazy_expr.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_lazy_expr.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_lazy_expr.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_lazy_expr.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_leak_detector.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_leak_detector.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_leak_detector.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_leak_detector.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_list.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_list.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_list.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_list.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_message_info.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_message_info.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_message_info.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_message_info.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_output_redirect.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_output_redirect.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_output_redirect.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_output_redirect.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_parse_numbers.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_parse_numbers.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_parse_numbers.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_parse_numbers.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_polyfills.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_polyfills.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_polyfills.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_polyfills.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_random_number_generator.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_random_number_generator.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_random_number_generator.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_random_number_generator.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_random_seed_generation.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_random_seed_generation.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_random_seed_generation.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_random_seed_generation.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_reporter_registry.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_reporter_registry.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_reporter_registry.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_reporter_registry.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_reporter_spec_parser.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_reporter_spec_parser.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_reporter_spec_parser.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_reporter_spec_parser.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_result_type.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_result_type.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_result_type.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_result_type.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_reusable_string_stream.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_reusable_string_stream.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_reusable_string_stream.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_reusable_string_stream.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_run_context.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_run_context.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_run_context.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_run_context.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_section.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_section.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_section.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_section.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_singletons.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_singletons.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_singletons.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_singletons.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_source_line_info.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_source_line_info.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_source_line_info.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_source_line_info.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_startup_exception_registry.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_startup_exception_registry.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_startup_exception_registry.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_startup_exception_registry.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_stdstreams.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_stdstreams.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_stdstreams.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_stdstreams.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_string_manip.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_string_manip.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_string_manip.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_string_manip.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_stringref.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_stringref.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_stringref.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_stringref.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_tag_alias_registry.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_tag_alias_registry.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_tag_alias_registry.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_tag_alias_registry.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_info_hasher.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_case_info_hasher.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_case_info_hasher.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_info_hasher.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_registry_impl.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_case_registry_impl.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_case_registry_impl.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_registry_impl.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_tracker.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_case_tracker.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_case_tracker.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_case_tracker.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_test_failure_exception.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_failure_exception.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_failure_exception.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_failure_exception.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_test_registry.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_registry.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_registry.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_registry.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_test_spec_parser.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_spec_parser.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_test_spec_parser.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_test_spec_parser.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_textflow.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_textflow.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_textflow.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_textflow.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_uncaught_exceptions.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_uncaught_exceptions.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_uncaught_exceptions.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_uncaught_exceptions.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_wildcard_pattern.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_wildcard_pattern.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_wildcard_pattern.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_wildcard_pattern.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/internal/catch_xmlwriter.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_xmlwriter.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_xmlwriter.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/internal/catch_xmlwriter.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_container_properties.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_container_properties.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_container_properties.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_container_properties.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_exception.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_exception.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_exception.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_exception.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_floating_point.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_floating_point.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_floating_point.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_floating_point.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_predicate.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_predicate.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_predicate.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_predicate.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_quantifiers.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_quantifiers.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_quantifiers.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_quantifiers.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_string.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_string.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_string.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_string.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_templated.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_templated.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/catch_matchers_templated.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/catch_matchers_templated.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2.dir/catch2/matchers/internal/catch_matchers_impl.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/internal/catch_matchers_impl.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/matchers/internal/catch_matchers_impl.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2.dir/catch2/matchers/internal/catch_matchers_impl.cpp.o"
+},
+{
+  "directory": "/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/src",
+  "command": "/nix/store/3awwcrqv9lpcq553zs2zb7y0mr5niswd-clang-wrapper-19.1.7/bin/clang++  -I/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/.. -I/home/runner/work/cxb/cxb/build/coverage/deps/Catch2/generated-includes -fprofile-instr-generate -fcoverage-mapping -g -std=gnu++23 -ftime-trace -Wall -Wextra -ffile-prefix-map=/home/runner/work/cxb/cxb/deps/Catch2/= -o CMakeFiles/Catch2WithMain.dir/catch2/internal/catch_main.cpp.o -c /home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_main.cpp",
+  "file": "/home/runner/work/cxb/cxb/deps/Catch2/src/catch2/internal/catch_main.cpp",
+  "output": "deps/Catch2/src/CMakeFiles/Catch2WithMain.dir/catch2/internal/catch_main.cpp.o"
+}
+]
