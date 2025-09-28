@@ -10,7 +10,7 @@ size_t hash(const int& x) {
     return static_cast<size_t>(x);
 }
 
-TEST_CASE("HashMap vs std::unordered_map", "[benchmark][HashMap]") {
+TEST_CASE("AHashMap vs std::unordered_map", "[benchmark][AHashMap]") {
     constexpr int N = 2000;
 
     std::vector<int> keys;
