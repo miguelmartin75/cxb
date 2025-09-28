@@ -1,7 +1,7 @@
-test_array 1 0.0293229
-test_string 1 0.0179613
-test_arena 1 0.0172217
-test_hm 1 0.0175435
-test_algos 1 0.0174021
-test_format 1 0.017435
+test_array 1 0.0170517
+test_string 1 0.0177704
+test_arena 1 0.0170349
+test_hm 1 0.0171562
+test_algos 1 0.0170971
+test_format 1 0.0170982
 ---
