@@ -45,7 +45,7 @@ Run `./scripts/ci/coverage.sh` to build the project with clang coverage instrume
         - [ ] Arena macros
     - [ ] (P0) remove C11's atomic usage in header file or fix GCC compilation
     - [ ] (P1) C++ specific code in `cxb` namespace
-    - [ ] (P1) MHashMap<K, V>: don't inherit from HashMap<K, V, Hasher>
+    - [x] (P1) MHashMap<K, V>: don't inherit from HashMap<K, V, Hasher>
     - [ ] (P2) Group and move M/A prefixed types to bottom of header-file
     - [x] (P2) `git mv tests/benchmarks tests/benchs` with CMakeLists.txt changes
     - [x] (P2) `tests/fuzz/*_fuzz.cpp` -> `tests/fuzz/fuzz_*.cpp` with CMakeLists.txt changes
