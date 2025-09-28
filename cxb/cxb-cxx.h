@@ -2404,11 +2404,14 @@ struct KvPair {
 
 template <typename K, typename V, typename Hasher = DefaultHasher>
 struct MHashMap {
-    using Kv = KvPair<K, V>;
+    /* NOTE: key and value are not default constructed, due allocation function in Allocator* */
     struct Entry {
         Kv kv;
         HashMapState state /* NOTE: ZII = HM_STATE_EMPTY */;
     };
+
+    using Kv = KvPair<K, V>;
+    using Table = Array<Entry>;
 
     struct Iterator {
         MHashMap& hm;
@@ -2436,8 +2439,6 @@ struct MHashMap {
             return !(*this == it);
         }
     };
-
-    using Table = Array<Entry>;
 
     Table table;
     size_t len;
