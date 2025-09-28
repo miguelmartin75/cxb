@@ -44,8 +44,8 @@ free the memory
     * Mat44f
 */
 
-#ifndef CXB_H
-#define CXB_H
+#ifndef CXB_CXX_H
+#define CXB_CXX_H
 
 #ifndef __cplusplus
 #error "Include <cxb/cxb-c.h> when compiling C code. <cxb/cxb-cxx.h> is C++-only."
@@ -2827,4 +2827,4 @@ inline String8 operator""_s8(const char* s, size_t len) {
     return String8{.data = (char*) s, .len = len, .not_null_term = false};
 }
 
-#endif
+#endif /* CXB_CXX_H */

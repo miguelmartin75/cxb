@@ -31,7 +31,8 @@ int main(int argc, char* argv[]) {
     String8SplitIterator line_iter = in_data_str.split("\n"_s8);
 
     String8 line;
-    writeln(out_f, "#pragma once\n");
+    writeln(out_f, "#ifndef CXB_C_H");
+    writeln(out_f, "#define CXB_C_H\n");
     while(line_iter.next(line)) {
         if(line.starts_with("CXB_C_IMPORT"_s8)) {
             writeln(out_f, "{}", line.trim_all_left("CXB_C_IMPORT"_s8).trim(" "_s8));
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
             writeln(out_f, "{}", line);
         }
     }
+    writeln(out_f, "\n#endif /* CXB_C_H */");
 
     return 0;
 }

@@ -1,10 +1,12 @@
-#pragma once
+#ifndef CXB_C_H
+#define CXB_C_H
 
 #include <stdatomic.h> // _Atomic(T)
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h> // atof
 #include <string.h>
 #define CXB_EXPORT
 #define CXB_INTERNAL static
@@ -12,7 +14,7 @@
 #define LENGTHOF_LIT(s) (COUNTOF_LIT(s) - 1)
 
 // see: https://github.com/EpicGamesExt/raddebugger/blob/master/src/base/base_core.h
-#define Bytes(n) ((u64) (n))
+#define BYTES(n) ((u64) (n))
 #define KB(n) ((u64) (n) << 10)
 #define MB(n) ((u64) (n) << 20)
 #define GB(n) ((u64) (n) << 30)
@@ -140,8 +142,7 @@ typedef _Atomic(i128) atomic_i128;
 typedef _Atomic(u128) atomic_u128;
 #endif
 
-// NOTE: GCC doesn't support _Atomic in C++
-#if defined(__STDC_NO_ATOMICS__) || (defined(__GNUC__) && !defined(__clang__))
+#if defined(__STDC_NO_ATOMICS__)
 #error "C11 _Atomic is not available, compile with C++23"
 #endif
 
@@ -275,3 +276,5 @@ struct Utf8IterBatch {
     u32 data[512];
     u64 len;
 };
+
+#endif /* CXB_C_H */
