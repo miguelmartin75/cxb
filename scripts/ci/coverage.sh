@@ -47,4 +47,10 @@ else
 fi
 printf '{\n  "schemaVersion": 1,\n  "label": "coverage",\n  "message": "%s%%",\n  "color": "%s"\n}\n' "$coverage_pct" "$color" > coverage.json
 cat coverage.json
+cat <<'EOF' > .gitignore
+*
+!coverage.txt
+!coverage.json
+!.gitignore
+EOF
 popd >/dev/null
