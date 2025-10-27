@@ -2497,13 +2497,11 @@ struct MHashMap {
         return pow2mod(h, table.len);
     }
 
-    Iterator begin() {
-        if(len == 0 || table.len == 0) {
-            return Iterator{*this, table.len};
-        }
+    CXB_MAYBE_INLINE Iterator begin() {
         return Iterator{*this, 0}.ensure_occupied();
     }
-    Iterator end() {
+
+    CXB_MAYBE_INLINE Iterator end() {
         return Iterator{*this, table.len};
     }
 
@@ -2538,7 +2536,24 @@ struct MHashMap {
 
     CXB_MAYBE_INLINE bool put(Kv kv) {
         maybe_rehash();
-        return _insert(::move(kv), true);
+
+        size_t ii = _key_hash_index(kv.key);
+        size_t i = ii;
+        while(table[i].state != HM_STATE_EMPTY) {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].kv.key == kv.key) {
+                return false;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+            if(i == ii) {
+                break;
+            }
+        }
+        DEBUG_ASSERT(table[i].state != HM_STATE_OCCUPIED);
+        ::construct(&table[i].kv.key, 1, kv.key);
+        ::construct(&table[i].kv.value, 1, kv.value);
+        table[i].state = HM_STATE_OCCUPIED;
+        len++;
+        return true;
     }
 
     CXB_MAYBE_INLINE bool erase(const K& key) {
@@ -2553,11 +2568,10 @@ struct MHashMap {
                 ::destroy(&entry.kv.value, 1);
                 len -= 1;
                 return true;
+            } else if(entry.state == HM_STATE_EMPTY) {
+                break;
             }
-            if(entry.state == HM_STATE_EMPTY) {
-                return false;
-            }
-            i = pow2mod(i + 1, table.len);
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
         } while(i != ii);
         return false;
     }
@@ -2570,11 +2584,10 @@ struct MHashMap {
             const Entry& entry = table[i];
             if(entry.state == HM_STATE_OCCUPIED && entry.kv.key == key) {
                 return &entry;
+            } else if(entry.state == HM_STATE_EMPTY) {
+                break;
             }
-            if(entry.state == HM_STATE_EMPTY) {
-                return nullptr;
-            }
-            i = pow2mod(i + 1, table.len);
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
         } while(i != ii);
         return nullptr;
     }
@@ -2587,11 +2600,10 @@ struct MHashMap {
             Entry& entry = table[i];
             if(entry.state == HM_STATE_OCCUPIED && entry.kv.key == key) {
                 return &entry;
+            } else if(entry.state == HM_STATE_EMPTY) {
+                break;
             }
-            if(entry.state == HM_STATE_EMPTY) {
-                return nullptr;
-            }
-            i = pow2mod(i + 1, table.len);
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
         } while(i != ii);
         return nullptr;
     }
@@ -2631,60 +2643,41 @@ struct MHashMap {
         DEBUG_ASSERT(round_up_pow2(capacity) == capacity, "{} is not a power of 2", capacity);
         ASSERT(allocator != nullptr);
 
-        Entry* old_data = table.data;
-        size_t old_cap = table.len;
+        Table old_table{};
+        old_table.data = table.data;
+        old_table.len = table.len;
 
         table.data = allocator->calloc<Entry>(0, capacity);
         table.len = capacity;
-        size_t old_len = len;
-        len = 0;
 
-        if(old_data) {
-            for(size_t i = 0; i < old_cap; ++i) {
-                if(old_data[i].state == HM_STATE_OCCUPIED) {
-                    Kv kv{::move(old_data[i].kv.key), ::move(old_data[i].kv.value)};
-                    bool inserted = _insert_into_table(::move(kv), table.data, table.len, false);
-                    ASSERT(inserted);
-                    ::destroy(&old_data[i].kv.key, 1);
-                    ::destroy(&old_data[i].kv.value, 1);
-                }
+        for(size_t i = 0; i < old_table.len; ++i) {
+            if(old_table[i].state == HM_STATE_OCCUPIED) {
+                Kv kv{::move(old_table[i].kv.key), ::move(old_table[i].kv.value)};
+                bool inserted = insert_no_dupe_check(::move(kv));
+                DEBUG_ASSERT(inserted);
+                ::destroy(&old_table[i].kv.key, 1);
+                ::destroy(&old_table[i].kv.value, 1);
             }
-            allocator->free(old_data, old_cap);
-            DEBUG_ASSERT(len == old_len, "rehash lost entries");
         }
+        allocator->free(old_table.data, old_table.len);
+
     }
 
-    CXB_MAYBE_INLINE bool _insert(Kv&& kv, bool check_duplicates) {
-        if(!table.data || table.len == 0) {
-            _reserve(CXB_HM_MIN_CAP);
-        }
-        return _insert_into_table(::move(kv), table.data, table.len, check_duplicates);
-    }
-
-    CXB_MAYBE_INLINE bool _insert_into_table(Kv&& kv, Entry* data, size_t capacity, bool check_duplicates) {
-        DEBUG_ASSERT(data != nullptr && capacity > 0, "hash map table not initialized");
-        size_t ii = pow2mod(hasher(kv.key), capacity);
+    CXB_MAYBE_INLINE bool insert_no_dupe_check(Kv&& kv) {
+        DEBUG_ASSERT(table.data != nullptr && table.len > 0, "hash map table not initialized");
+        size_t ii = _key_hash_index(kv.key);
         size_t i = ii;
-        size_t tombstone = capacity;
 
-        while(data[i].state != HM_STATE_EMPTY) {
-            if(data[i].state == HM_STATE_OCCUPIED) {
-                if(check_duplicates && data[i].kv.key == kv.key) {
-                    return false;
-                }
-            } else if(tombstone == capacity) {
-                tombstone = i;
-            }
-            i = pow2mod(i + 1, capacity);
+        while(table[i].state != HM_STATE_EMPTY) {
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
             if(i == ii) {
                 return false;
             }
         }
 
-        size_t target = tombstone != capacity ? tombstone : i;
-        ::construct(&data[target].kv.key, 1, ::move(kv.key));
-        ::construct(&data[target].kv.value, 1, ::move(kv.value));
-        data[target].state = HM_STATE_OCCUPIED;
+        ::construct(&table[i].kv.key, 1, ::move(kv.key));
+        ::construct(&table[i].kv.value, 1, ::move(kv.value));
+        table[i].state = HM_STATE_OCCUPIED;
         len += 1;
         return true;
     }
