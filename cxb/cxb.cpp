@@ -240,7 +240,7 @@ void string8_resize(String8& str, Arena* arena, size_t n, char fill_char) {
 
     if(n > str.len) {
         size_t delta = n - str.len;
-        char* data = arena_push<char>(arena, delta + (str.data ? 0 : !str.not_null_term));
+        char* data = arena_push<char>(arena, delta + UNLIKELY(str.data == nullptr && !str.not_null_term));
         memset(data - !str.not_null_term, fill_char, delta);
         str.data = str.data ? str.data : data;
         str.len += delta;
@@ -257,7 +257,7 @@ void string8_push_back(String8& str, Arena* arena, char ch) {
     DEBUG_ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
                  "cannot push unless array is at the end");
 
-    char* data = arena_push<char>(arena, str.data == nullptr && str.len == 0 && !str.not_null_term ? 2 : 1);
+    char* data = arena_push<char>(arena, 1 + UNLIKELY(str.data == nullptr && !str.not_null_term));
     str.data = UNLIKELY(str.data == nullptr) ? data : str.data;
     str.data[str.len] = ch;
     str.len += 1;
@@ -325,7 +325,7 @@ void string8_extend(String8& str, Arena* arena, String8 to_append) {
     ASSERT(str.data == nullptr || (void*) (str.data + str.n_bytes()) == (void*) (arena->start + arena->pos),
            "cannot push unless array is at the end");
 
-    void* data = arena_push<char>(arena, to_append.len);
+    void* data = arena_push<char>(arena, to_append.len + UNLIKELY(str.data == nullptr && !str.not_null_term));
     str.data = UNLIKELY(str.data == nullptr) ? (char*) data : str.data;
 
     size_t old_len = str.len;

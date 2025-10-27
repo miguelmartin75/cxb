@@ -26,6 +26,8 @@ TEST_CASE("push and pop", "[Arena]") {
 
     array_pop_all(foos, arena);
     REQUIRE(arena->pos == sizeof(Arena) + 0);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("string push/pop", "[Arena]") {
@@ -40,6 +42,8 @@ TEST_CASE("string push/pop", "[Arena]") {
     REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
     REQUIRE(str == S8_LIT("ba"));
     REQUIRE(str.n_bytes() == 3);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("string insert", "[Arena]") {
@@ -59,6 +63,8 @@ TEST_CASE("string insert", "[Arena]") {
 
     string8_pop_all(str, arena);
     REQUIRE(arena->pos == sizeof(Arena) + 0);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("string extend", "[Arena]") {
@@ -80,6 +86,23 @@ TEST_CASE("string extend", "[Arena]") {
 
     string8_pop_all(str, arena);
     REQUIRE(arena->pos == sizeof(Arena) + 0);
+
+    arena_destroy(arena);
+}
+
+TEST_CASE("ZII string extend then push_back", "[Arena]") {
+    Arena* arena = arena_make_nbytes(KB(4));
+    REQUIRE(arena->end - arena->start == KB(4));
+
+    String8 str = {};
+    string8_extend(str, arena, S8_LIT("abc"));
+    string8_push_back(str, arena, '.');
+    REQUIRE((void*) (arena->start + arena->pos) == (void*) (str.data + str.n_bytes()));
+
+    REQUIRE(str == S8_LIT("abc."));
+    REQUIRE(str.n_bytes() == 5);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("array insert", "[Arena]") {
@@ -101,6 +124,8 @@ TEST_CASE("array insert", "[Arena]") {
     REQUIRE(xs[2] == 40);
     REQUIRE(xs[3] == 60);
     REQUIRE(xs[4] == 30);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("String8 arena member functions", "[String8][Arena]") {
@@ -136,6 +161,8 @@ TEST_CASE("String8 arena member functions", "[String8][Arena]") {
     num.pop_all(arena);
 
     REQUIRE(arena->pos == sizeof(Arena) + 0);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("Array arena member functions", "[Array][Arena]") {
@@ -172,6 +199,8 @@ TEST_CASE("Array arena member functions", "[Array][Arena]") {
     arr.pop_all(arena);
     REQUIRE(arr.size() == 0);
     REQUIRE(arena->pos == sizeof(Arena) + 0);
+
+    arena_destroy(arena);
 }
 
 TEST_CASE("arena allocator interface", "[Arena][Allocator]") {
