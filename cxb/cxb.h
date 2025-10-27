@@ -1122,8 +1122,7 @@ inline std::enable_if_t<std::is_integral_v<T>, ParseResult<T>> string8_parse(Str
 }
 
 template <typename T>
-inline std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> string8_parse(String8 str,
-                                                                                             u64 base = 10) {
+inline std::enable_if_t<std::is_floating_point_v<T>, ParseResult<T>> string8_parse(String8 str, u64 base = 10) {
     ASSERT(base == 10, "only base 10 supported for floats");
     ParseResult<T> result = {.value = {}, .exists = str.len > 0, .n_consumed = 0};
 
@@ -2746,7 +2745,6 @@ struct MHashMap {
             }
         }
         allocator->free(old_table.data, old_table.len);
-
     }
 
     inline bool insert_no_dupe_check(Kv&& kv) {
