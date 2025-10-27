@@ -2384,7 +2384,7 @@ CXB_MAYBE_INLINE Array<u32> decode_string8(Arena* a, String8 s) {
 }
 
 enum HashMapState {
-    HM_STATE_EMPTY,
+    HM_STATE_EMPTY = 0,
     HM_STATE_OCCUPIED,
     HM_STATE_TOMBSTONE,
 };
@@ -2403,252 +2403,64 @@ struct KvPair {
 };
 
 template <typename K, typename V, typename Hasher = DefaultHasher>
-struct HashMap {
-    /* NOTE: key and value are not default constructed, due to custom allocation methods (arena or Allocator*) */
+struct MHashMap {
+    using Kv = KvPair<K, V>;
+
+    /* NOTE: key and value are not default constructed, due allocation function in Allocator* */
     struct Entry {
-        K key;
-        V value;
-        HashMapState state = HM_STATE_EMPTY;
+        Kv kv;
+        HashMapState state /* NOTE: ZII = HM_STATE_EMPTY */;
     };
 
+    using Table = Array<Entry>;
+
     struct Iterator {
-        HashMap& hm;
+        MHashMap& hm;
         size_t idx;
 
         Entry& operator*() {
             return hm.table[idx];
         }
         Iterator& ensure_occupied() {
+            if(UNLIKELY(hm.table.len == 0)) return *this;
             while(LIKELY(hm.table.len != idx) && hm.table[idx].state != HM_STATE_OCCUPIED) {
-                idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
+                idx = pow2mod(idx + 1, hm.table.len);
             }
             return *this;
         }
         Iterator& operator++() {
-            idx += pow2mod(idx + 1, hm.table.len); // TODO: quad probe?
-            ensure_occupied();
-            return *this;
+            if(UNLIKELY(hm.table.len == 0)) return *this;
+            idx = pow2mod(idx + 1, hm.table.len);
+            return ensure_occupied();
         }
         bool operator==(const Iterator& it) const {
             return idx == it.idx && LIKELY(&hm == &it.hm);
         }
         bool operator!=(const Iterator& it) const {
-            return idx != it.idx || UNLIKELY(&hm != &it.hm);
+            return !(*this == it);
         }
     };
 
-    using Table = Array<Entry>;
-
     Table table;
     size_t len;
+    Allocator* allocator;
     Hasher hasher;
 
-    HashMap() : table{}, len{0}, hasher{} {}
-    HashMap(Arena* arena, size_t bucket_size) : table{}, len{0}, hasher{} {
-        size_t cap = (size_t) round_up_pow2(bucket_size);
-        if(cap < CXB_HM_MIN_CAP) cap = CXB_HM_MIN_CAP;
-        table.resize_fast(arena, cap);
+    MHashMap(Allocator* allocator = &heap_alloc) : table{}, len{0}, allocator{allocator}, hasher{} {}
+    explicit MHashMap(size_t bucket_size, Allocator* allocator = &heap_alloc) : MHashMap(allocator) {
+        reserve(bucket_size);
     }
-    HashMap(Arena* arena, std::initializer_list<KvPair<K, V>> xs) : table{}, len{0}, hasher{} {
-        extend(arena, Array<KvPair<K, V>>{xs});
-    }
-    HashMap(const HashMap&) = delete;
-    HashMap(HashMap&&) = delete;
-    HashMap& operator=(const HashMap&) = delete;
-    HashMap& operator=(HashMap&&) = delete;
-    ~HashMap() = default;
-
-    f64 load_factor() const {
-        return (f64) (len) / (f64) (table.len);
-    }
-    bool needs_rehash() const {
-        return UNLIKELY(!table.data) || load_factor() >= CXB_HM_LOAD_CAP_THRESHOLD;
-    }
-
-    template <class T>
-    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
-        size_t h = hasher(x);
-        return pow2mod(h, table.len);
-    }
-
-    Iterator begin() {
-        // TODO: enable clang-format to form the below lines into one line and then delete this comment
-        return Iterator{
-            .hm = *this,
-            .idx = 0,
-        }
-            .ensure_occupied();
-    }
-    Iterator end() {
-        return Iterator{
-            .hm = *this,
-            .idx = len,
-        };
-    }
-
-    bool extend(Arena* a, Array<KvPair<K, V>> xs) {
-        // TODO optimize
-        for(auto& x : xs) {
-            if(!put(a, x)) return false;
-        }
-        return true;
-    }
-
-    void _reserve(Arena* a, size_t cap) {
-        size_t capacity = cap < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : cap;
-        DEBUG_ASSERT(round_up_pow2(capacity) == capacity, "{} is not a power of 2", capacity);
-
-        Table old_table{};
-        old_table.data = table.data;
-        old_table.len = table.len;
-        table.data = nullptr;
-        table.len = 0;
-
-        // TODO: maybe optimize
-        table.resize_fast(a, capacity);
-        for(size_t i = 0; i < old_table.len; ++i) {
-            if(old_table[i].state == HM_STATE_OCCUPIED) {
-                ASSERT(put(a, {old_table[i].key, old_table[i].value}));
-            }
-        }
-    }
-
-    void maybe_rehash(Arena* a) {
-        if(needs_rehash()) {
-            size_t capacity = table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : table.len * 2;
-            reserve(a, capacity);
-        }
-    }
-
-    void reserve(Arena* a, size_t bucket_size) {
-        size_t cap = (size_t) round_up_pow2(bucket_size);
-        if(cap > table.len) {
-            _reserve(a, cap);
-        }
-    }
-
-    bool put(Arena* a, const KvPair<K, V>& kv) {
-        maybe_rehash(a);
-
-        size_t ii = _key_hash_index(kv.key);
-        size_t i = ii;
-        while(table[i].state != HM_STATE_EMPTY) {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == kv.key) {
-                return false;
-            }
-            i = pow2mod(i + 1, table.len); // TODO: quad probe?
-            if(i == ii) {
-                break;
-            }
-        }
-        DEBUG_ASSERT(table[i].state != HM_STATE_OCCUPIED);
-        ::construct(&table[i].key, 1, kv.key);
-        ::construct(&table[i].value, 1, kv.value);
-        table[i].state = HM_STATE_OCCUPIED;
-        len++;
-        return true;
-    }
-
-    bool erase(const K& key) {
-        size_t ii = _key_hash_index(key);
-        size_t i = ii;
-        do {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
-                table[i].state = HM_STATE_TOMBSTONE;
-                ::destroy(&table[i].key, 1);
-                ::destroy(&table[i].value, 1);
-                len--;
-                return true;
-            } else if(table[i].state == HM_STATE_EMPTY) {
-                break;
-            }
-            i = (i + 1) & (table.len - 1); // TODO: quad probe?
-        } while(i != ii);
-        return false;
-    }
-
-    const Entry* occupied_entry_for(const K& key) const {
-        size_t ii = _key_hash_index(key);
-        size_t i = ii;
-        do {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
-                return &table[i];
-            } else if(table[i].state == HM_STATE_EMPTY) {
-                return nullptr;
-            }
-            i = pow2mod(i + 1, table.len); // TODO: quad probe?
-        } while(i != ii);
-        return nullptr;
-    }
-
-    Entry* occupied_entry_for(const K& key) {
-        size_t ii = _key_hash_index(key);
-        size_t i = ii;
-        do {
-            if(table[i].state == HM_STATE_OCCUPIED && table[i].key == key) {
-                return &table[i];
-            } else if(table[i].state == HM_STATE_EMPTY) {
-                return nullptr;
-            }
-            i = pow2mod(i + 1, table.len); // TODO: quad probe?
-        } while(i != ii);
-        return nullptr;
-    }
-
-    bool contains(const K& key) const {
-        return occupied_entry_for(key) != nullptr;
-    }
-
-    V& operator[](const K& key) {
-        Entry* entry = occupied_entry_for(key);
-        DEBUG_ASSERT(entry != nullptr, "entry not present");
-        return entry->value;
-    }
-
-    const V& operator[](const K& key) const {
-        auto entry = occupied_entry_for(key);
-        DEBUG_ASSERT(entry != nullptr, "entry not present");
-        return entry->value;
-    }
-};
-
-template <typename K, typename V, typename Hasher = DefaultHasher>
-struct MHashMap : HashMap<K, V, Hasher> {
-    using Base = HashMap<K, V, Hasher>;
-    using Entry = typename Base::Entry;
-    using Kv = KvPair<K, V>;
-
-    Allocator* allocator;
-
-    MHashMap(Allocator* allocator = &heap_alloc) : Base{}, allocator{allocator} {}
-    MHashMap(size_t bucket_size, Allocator* allocator = &heap_alloc) : Base{}, allocator{allocator} {
-        size_t cap = (size_t) round_up_pow2(bucket_size);
-        if(cap < CXB_HM_MIN_CAP) cap = CXB_HM_MIN_CAP;
-        this->table.data = allocator->calloc<Entry>(0, cap);
-        this->table.len = cap;
-        this->len = 0;
+    MHashMap(Arena* arena, std::initializer_list<Kv> xs) : MHashMap(push_arena_alloc(arena)) {
+        extend(xs);
     }
     MHashMap(std::initializer_list<Kv> xs, Allocator* allocator = &heap_alloc) : MHashMap(allocator) {
-        extend(Array<Kv>{xs});
+        extend(xs);
     }
-    MHashMap(const MHashMap& o) : Base{}, allocator{o.allocator} {
-        this->table = o.table;
-        this->len = o.len;
-        this->hasher = o.hasher;
-    }
-    MHashMap& operator=(const MHashMap& o) {
-        if(this != &o) {
-            this->table = o.table;
-            this->len = o.len;
-            this->hasher = o.hasher;
-            allocator = o.allocator;
-        }
-        return *this;
-    }
-    MHashMap(MHashMap&& o) : Base{}, allocator{o.allocator} {
-        this->table = o.table;
-        this->len = o.len;
-        this->hasher = o.hasher;
+    MHashMap(const MHashMap&) = delete;
+    MHashMap& operator=(const MHashMap&) = delete;
+
+    MHashMap(MHashMap&& o)
+        : table{o.table}, len{o.len}, allocator{o.allocator ? o.allocator : &heap_alloc}, hasher{o.hasher} {
         o.table.data = nullptr;
         o.table.len = 0;
         o.len = 0;
@@ -2657,9 +2469,9 @@ struct MHashMap : HashMap<K, V, Hasher> {
     MHashMap& operator=(MHashMap&& o) {
         if(this != &o) {
             destroy();
-            this->table = o.table;
-            this->len = o.len;
-            this->hasher = o.hasher;
+            table = o.table;
+            len = o.len;
+            hasher = o.hasher;
             allocator = o.allocator;
             o.table.data = nullptr;
             o.table.len = 0;
@@ -2670,78 +2482,203 @@ struct MHashMap : HashMap<K, V, Hasher> {
     }
     ~MHashMap() = default;
 
-    CXB_MAYBE_INLINE void destroy() {
-        if(this->table.data && allocator) {
-            for(size_t i = 0; i < this->table.len; ++i) {
-                if(this->table[i].state == HM_STATE_OCCUPIED) {
-                    ::destroy(&this->table[i].key, 1);
-                    ::destroy(&this->table[i].value, 1);
-                }
-            }
-            allocator->free(this->table.data, this->table.len);
-            this->table.data = nullptr;
-            this->table.len = 0;
-            this->len = 0;
+    f64 load_factor() const {
+        if(table.len == 0) return 0.0;
+        return (f64) (len) / (f64) (table.len);
+    }
+    bool needs_rehash() const {
+        return UNLIKELY(!table.data) || load_factor() >= CXB_HM_LOAD_CAP_THRESHOLD;
+    }
+
+    template <class T>
+    CXB_MAYBE_INLINE size_t _key_hash_index(const T& x) const {
+        DEBUG_ASSERT(table.len > 0, "hash map table not initialized");
+        size_t h = hasher(x);
+        return pow2mod(h, table.len);
+    }
+
+    CXB_MAYBE_INLINE Iterator begin() {
+        return Iterator{*this, 0}.ensure_occupied();
+    }
+
+    CXB_MAYBE_INLINE Iterator end() {
+        return Iterator{*this, table.len};
+    }
+
+    CXB_MAYBE_INLINE bool extend(Array<Kv> xs) {
+        for(auto& x : xs) {
+            if(!put(x)) return false;
         }
+        return true;
+    }
+    CXB_MAYBE_INLINE bool extend(std::initializer_list<Kv> xs) {
+        for(const auto& x : xs) {
+            if(!put(x)) return false;
+        }
+        return true;
     }
 
     CXB_MAYBE_INLINE void maybe_rehash() {
-        if(this->needs_rehash()) {
-            size_t capacity = this->table.len < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : this->table.len * 2;
+        if(needs_rehash()) {
+            size_t capacity = table.len == 0 ? CXB_HM_MIN_CAP : table.len * 2;
+            if(capacity < CXB_HM_MIN_CAP) capacity = CXB_HM_MIN_CAP;
             _reserve(capacity);
         }
-    }
-
-    CXB_MAYBE_INLINE void _reserve(size_t capacity) {
-        Entry* old_data = this->table.data;
-        size_t old_cap = this->table.len;
-
-        this->table.data = allocator->calloc<Entry>(0, capacity);
-        this->table.len = capacity;
-        this->len = 0;
-
-        for(size_t i = 0; i < old_cap; ++i) {
-            if(old_data && old_data[i].state == HM_STATE_OCCUPIED) {
-                put({move(old_data[i].key), move(old_data[i].value)});
-                ::destroy(&old_data[i].key, 1);
-                ::destroy(&old_data[i].value, 1);
-            }
-        }
-        if(old_data) allocator->free(old_data, old_cap);
     }
 
     CXB_MAYBE_INLINE void reserve(size_t bucket_size) {
         size_t cap = (size_t) round_up_pow2(bucket_size);
         if(cap < CXB_HM_MIN_CAP) cap = CXB_HM_MIN_CAP;
-        if(!this->table.data || this->table.len != cap) _reserve(cap);
-    }
-
-    CXB_MAYBE_INLINE bool extend(Array<Kv> xs) {
-        for(auto& x : xs) {
-            if(!put(move(x))) return false;
+        if(!table.data || cap > table.len) {
+            _reserve(cap);
         }
-        return true;
     }
 
     CXB_MAYBE_INLINE bool put(Kv kv) {
         maybe_rehash();
 
-        size_t ii = this->_key_hash_index(kv.key);
+        size_t ii = _key_hash_index(kv.key);
         size_t i = ii;
-        while(this->table[i].state != HM_STATE_EMPTY) {
-            if(this->table[i].state == HM_STATE_OCCUPIED && this->table[i].key == kv.key) {
+        while(table[i].state != HM_STATE_EMPTY) {
+            if(table[i].state == HM_STATE_OCCUPIED && table[i].kv.key == kv.key) {
                 return false;
             }
-            i = pow2mod(i + 1, this->table.len);
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
             if(i == ii) {
                 break;
             }
         }
-        DEBUG_ASSERT(this->table[i].state != HM_STATE_OCCUPIED);
-        ::construct(&this->table[i].key, 1, move(kv.key));
-        ::construct(&this->table[i].value, 1, move(kv.value));
-        this->table[i].state = HM_STATE_OCCUPIED;
-        this->len++;
+        DEBUG_ASSERT(table[i].state != HM_STATE_OCCUPIED);
+        ::construct(&table[i].kv.key, 1, kv.key);
+        ::construct(&table[i].kv.value, 1, kv.value);
+        table[i].state = HM_STATE_OCCUPIED;
+        len++;
+        return true;
+    }
+
+    CXB_MAYBE_INLINE bool erase(const K& key) {
+        if(!table.data || table.len == 0) return false;
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            Entry& entry = table[i];
+            if(entry.state == HM_STATE_OCCUPIED && entry.kv.key == key) {
+                entry.state = HM_STATE_TOMBSTONE;
+                ::destroy(&entry.kv.key, 1);
+                ::destroy(&entry.kv.value, 1);
+                len -= 1;
+                return true;
+            } else if(entry.state == HM_STATE_EMPTY) {
+                break;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return false;
+    }
+
+    CXB_MAYBE_INLINE const Entry* occupied_entry_for(const K& key) const {
+        if(!table.data || table.len == 0) return nullptr;
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            const Entry& entry = table[i];
+            if(entry.state == HM_STATE_OCCUPIED && entry.kv.key == key) {
+                return &entry;
+            } else if(entry.state == HM_STATE_EMPTY) {
+                break;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return nullptr;
+    }
+
+    CXB_MAYBE_INLINE Entry* occupied_entry_for(const K& key) {
+        if(!table.data || table.len == 0) return nullptr;
+        size_t ii = _key_hash_index(key);
+        size_t i = ii;
+        do {
+            Entry& entry = table[i];
+            if(entry.state == HM_STATE_OCCUPIED && entry.kv.key == key) {
+                return &entry;
+            } else if(entry.state == HM_STATE_EMPTY) {
+                break;
+            }
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+        } while(i != ii);
+        return nullptr;
+    }
+
+    CXB_MAYBE_INLINE bool contains(const K& key) const {
+        return occupied_entry_for(key) != nullptr;
+    }
+
+    CXB_MAYBE_INLINE V& operator[](const K& key) {
+        Entry* entry = occupied_entry_for(key);
+        DEBUG_ASSERT(entry != nullptr, "entry not present");
+        return entry->kv.value;
+    }
+
+    CXB_MAYBE_INLINE const V& operator[](const K& key) const {
+        const Entry* entry = occupied_entry_for(key);
+        DEBUG_ASSERT(entry != nullptr, "entry not present");
+        return entry->kv.value;
+    }
+
+    CXB_MAYBE_INLINE void destroy() {
+        if(!table.data || !allocator) return;
+        for(size_t i = 0; i < table.len; ++i) {
+            if(table[i].state == HM_STATE_OCCUPIED) {
+                ::destroy(&table[i].kv.key, 1);
+                ::destroy(&table[i].kv.value, 1);
+            }
+        }
+        allocator->free(table.data, table.len);
+        table.data = nullptr;
+        table.len = 0;
+        len = 0;
+    }
+
+    CXB_MAYBE_INLINE void _reserve(size_t cap) {
+        size_t capacity = cap < CXB_HM_MIN_CAP ? CXB_HM_MIN_CAP : cap;
+        DEBUG_ASSERT(round_up_pow2(capacity) == capacity, "{} is not a power of 2", capacity);
+        ASSERT(allocator != nullptr);
+
+        Table old_table{};
+        old_table.data = table.data;
+        old_table.len = table.len;
+
+        table.data = allocator->calloc<Entry>(0, capacity);
+        table.len = capacity;
+
+        for(size_t i = 0; i < old_table.len; ++i) {
+            if(old_table[i].state == HM_STATE_OCCUPIED) {
+                Kv kv{::move(old_table[i].kv.key), ::move(old_table[i].kv.value)};
+                bool inserted = insert_no_dupe_check(::move(kv));
+                DEBUG_ASSERT(inserted);
+                ::destroy(&old_table[i].kv.key, 1);
+                ::destroy(&old_table[i].kv.value, 1);
+            }
+        }
+        allocator->free(old_table.data, old_table.len);
+
+    }
+
+    CXB_MAYBE_INLINE bool insert_no_dupe_check(Kv&& kv) {
+        DEBUG_ASSERT(table.data != nullptr && table.len > 0, "hash map table not initialized");
+        size_t ii = _key_hash_index(kv.key);
+        size_t i = ii;
+
+        while(table[i].state != HM_STATE_EMPTY) {
+            i = pow2mod(i + 1, table.len); // TODO: quad probe?
+            if(i == ii) {
+                return false;
+            }
+        }
+
+        ::construct(&table[i].kv.key, 1, ::move(kv.key));
+        ::construct(&table[i].kv.value, 1, ::move(kv.value));
+        table[i].state = HM_STATE_OCCUPIED;
+        len += 1;
         return true;
     }
 };
@@ -2752,34 +2689,34 @@ struct AHashMap : MHashMap<K, V, Hasher> {
     using Kv = KvPair<K, V>;
 
     AHashMap(Allocator* allocator = &heap_alloc) : Base{allocator} {}
-    AHashMap(size_t bucket_size, Allocator* allocator = &heap_alloc) : Base{allocator} {
+    explicit AHashMap(size_t bucket_size, Allocator* allocator = &heap_alloc) : Base{allocator} {
         this->reserve(bucket_size);
     }
     AHashMap(std::initializer_list<Kv> xs, Allocator* allocator = &heap_alloc) : Base{allocator} {
-        this->extend(Array<Kv>{xs});
+        this->extend(xs);
     }
     AHashMap(const AHashMap&) = delete;
     AHashMap& operator=(const AHashMap&) = delete;
 
-    AHashMap(AHashMap&& o) : Base{&heap_alloc} {
+    AHashMap(AHashMap&& o) : Base{o.allocator ? o.allocator : &heap_alloc} {
         this->table = o.table;
         this->len = o.len;
         this->hasher = o.hasher;
         this->allocator = o.allocator;
-        o.allocator = nullptr;
         o.table.data = nullptr;
         o.table.len = 0;
         o.len = 0;
+        o.allocator = nullptr;
     }
-    AHashMap(Base&& o) : Base{&heap_alloc} {
+    AHashMap(Base&& o) : Base{o.allocator ? o.allocator : &heap_alloc} {
         this->table = o.table;
         this->len = o.len;
         this->hasher = o.hasher;
         this->allocator = o.allocator;
-        o.allocator = nullptr;
         o.table.data = nullptr;
         o.table.len = 0;
         o.len = 0;
+        o.allocator = nullptr;
     }
 
     AHashMap& operator=(AHashMap&& o) {
@@ -2789,10 +2726,10 @@ struct AHashMap : MHashMap<K, V, Hasher> {
             this->len = o.len;
             this->hasher = o.hasher;
             this->allocator = o.allocator;
-            o.allocator = nullptr;
             o.table.data = nullptr;
             o.table.len = 0;
             o.len = 0;
+            o.allocator = nullptr;
         }
         return *this;
     }
@@ -2802,10 +2739,10 @@ struct AHashMap : MHashMap<K, V, Hasher> {
         this->len = o.len;
         this->hasher = o.hasher;
         this->allocator = o.allocator;
-        o.allocator = nullptr;
         o.table.data = nullptr;
         o.table.len = 0;
         o.len = 0;
+        o.allocator = nullptr;
         return *this;
     }
 
@@ -2814,12 +2751,17 @@ struct AHashMap : MHashMap<K, V, Hasher> {
     }
 
     Base release() {
-        Base self = *this;
+        Base out{this->allocator ? this->allocator : &heap_alloc};
+        out.table = this->table;
+        out.len = this->len;
+        out.hasher = this->hasher;
+        out.allocator = this->allocator;
+
         this->allocator = nullptr;
         this->table.data = nullptr;
         this->table.len = 0;
         this->len = 0;
-        return self;
+        return out;
     }
 };
 
