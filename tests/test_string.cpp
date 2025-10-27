@@ -266,7 +266,6 @@ TEST_CASE("Seq<String> memory management", "[Seq][String]") {
 }
 
 TEST_CASE("String8 and String operator<", "[String8][String]") {
-    // Test String8 operator<
     String8 s1 = S8_LIT("apple");
     String8 s2 = S8_LIT("banana");
     String8 s3 = S8_LIT("app");
@@ -288,7 +287,6 @@ TEST_CASE("String8 and String operator<", "[String8][String]") {
     REQUIRE(empty1 < non_empty);    // empty < non-empty
     REQUIRE(!(non_empty < empty1)); // non-empty not < empty
 
-    // Test case sensitivity
     String8 lower = S8_LIT("apple");
     String8 upper = S8_LIT("APPLE");
 
